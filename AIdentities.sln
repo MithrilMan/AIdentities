@@ -10,6 +10,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		.editorconfig = .editorconfig
 		.gitignore = .gitignore
 		.config\dotnet-tools.json = .config\dotnet-tools.json
+		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.Shared", "src\AIdentities.Shared\AIdentities.Shared.csproj", "{D2D49CCB-D6CB-4221-9AE7-A00B5D3A4910}"
