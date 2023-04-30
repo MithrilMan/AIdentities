@@ -1,0 +1,44 @@
+﻿@inherits LayoutComponentBase
+
+<PageTitle>@APP_TITLE</PageTitle>
+
+<MudThemeProvider @bind-IsDarkMode="@_state.IsDarkMode" Theme="_theme" @ref="_mudThemeProvider" />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout Class="d-flex flex-column">
+   <MudAppBar Elevation="1" DisableGutters="true" Dense="true" Color="Color.Primary">
+      <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="px-7" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
+      <MudText Typo="Typo.h5">@APP_TITLE</MudText>
+      <MudSpacer />
+      <MudToggleIconButton @bind-Toggled="@_state.IsDarkMode" @bind-Toggled:after="@SaveTheme"
+                           Icon="@Icons.Material.Filled.DarkMode" Title="Dark"
+                           ToggledIcon="@Icons.Material.Filled.LightMode" ToggledTitle="Light" />
+      <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+   </MudAppBar>
+
+   <MudDrawer @bind-Open="@_state.IsDrawerOpen" ClipMode="DrawerClipMode.Always" Style="height:calc(100% - 96px)" Class="mud-theme-dark"
+              Anchor="Anchor.Left"
+              Elevation="2" Variant="@DrawerVariant.Mini">
+      <MudNavMenu Bordered="true" Margin="Margin.Dense" Color="Color.Secondary" Class="mud-height-full d-flex flex-column mud-theme-dark">
+         <AIdentities.UI.Features.Core.Components.AvailablePages />
+         <MudSpacer />
+         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/settings" Class="object-bottom">Settings</MudNavLink>
+      </MudNavMenu>
+   </MudDrawer>
+
+   <MudMainContent Class="d-flex flex-grow-1" Style="padding-bottom: 48px; height: 100vh;">
+      <MudContainer MaxWidth="MaxWidth.False" Class="d-flex flex-grow-1 pa-1 overflow-hidden">
+         @Body
+      </MudContainer>
+   </MudMainContent>
+
+   <MudAppBar Bottom="true" DisableGutters="true" Elevation="3" Dense="true" Color="Color.Primary" Style="top: auto; bottom: 0">
+      <MudText Typo="Typo.body2" Class="ml-3">&copy; Mithril Man 2023</MudText>
+   </MudAppBar>
+
+</MudLayout>
+
+@code {
+   const string APP_TITLE = "AIdentities - Road to AGI";
+}

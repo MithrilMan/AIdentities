@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "libsassbuilder-tool": {
+      "version": "3.0.0",
+      "commands": [
+        "lsb"
+      ]
+    }
+  }
+}

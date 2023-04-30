@@ -1,0 +1,15 @@
+﻿<div class="d-flex flex-column gap-1 overflow-y-auto @Class">
+   <MudTextField T="string" Placeholder="Search Task..." @bind-Value="_state.DutySearchText" @bind-Value:after="@ApplyFilter"
+                 Variant="Variant.Outlined" Label=""
+                 DebounceInterval="250" Class="ma-2"
+                 Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                 AdornmentColor="Color.Secondary" />
+
+   <div class="d-flex flex-column gap-2 px-2 overflow-y-auto">
+      @foreach (var duty in _state.Duties.Items)
+      {
+         <DutyItem Duty="@duty" />
+      }
+
+   </div>
+</div>

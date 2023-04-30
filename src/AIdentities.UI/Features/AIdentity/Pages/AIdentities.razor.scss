@@ -1,0 +1,13 @@
+::deep {
+   .animate-enter {
+      opacity: 0;
+      animation-delay: 0.35s;
+      animation-duration: 0.5s;
+      animation-fill-mode: forwards;
+   }
+
+   .animate-exit {
+      animation-duration: 0.5s;
+      animation-fill-mode: forwards;
+   }
+}

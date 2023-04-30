@@ -1,0 +1,133 @@
+﻿@page "/aidentities"
+@inherits AppPage<AIdentities>
+
+<div class="d-flex flex-column gap-1 flex-grow-1">
+   <MudGrid>
+      <MudItem xs="4" Class="d-flex flex-column">
+         <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Tertiary">AIdentities</MudText>
+         <MudSpacer />
+         <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.PersonAdd" IconSize="Size.Large" Size="Size.Large"
+                    OnClick="CreateNewAIdentity">
+            Create a new AIdentity
+         </MudButton>
+         <MudSpacer />
+      </MudItem>
+      <MudItem xs="8">
+         <MudPaper>
+            <MudCarousel Class="flex-shrink-0 pa-0 ma-0" Style="height:200px;" AutoCycle="true" AutoCycleTime="TimeSpan.FromSeconds(5)"
+                         TData="Shared.Features.Core.AIdentity"
+                         ArrowsPosition="Position.Bottom" BulletsPosition="Position.Bottom">
+               @foreach (var aIdentity in AIdentityProvider.All())
+               {
+                  <MudCarouselItem @key="aIdentity" Transition="Transition.Custom" Color="@Color.Primary" Class="pa-1"
+                                CustomTransitionEnter="animate-enter animate__rollIn"
+                                CustomTransitionExit="animate-exit animate__rollOut">
+                     <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center">
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center">
+                           <MudAvatar Size="Size.Large">
+                              <MudImage Src="@aIdentity.Image" />
+                           </MudAvatar>
+                           <MudText Typo="Typo.h4">@aIdentity.Name</MudText>
+                        </MudStack>
+                        <MudText Typo="Typo.body1" Align="Align.Center">@aIdentity.Description</MudText>
+                        <MudToolBar>
+                           <MudButton EndIcon="@Icons.Material.Filled.Edit" Color="Color.Secondary" Variant="Variant.Filled" Class="mx-auto"
+                                   OnClick="(() => EditAIdentity(aIdentity))">Edit</MudButton>
+                        </MudToolBar>
+                     </MudStack>
+                  </MudCarouselItem>
+               }
+            </MudCarousel>
+         </MudPaper>
+      </MudItem>
+   </MudGrid>
+
+   <MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-h-fix gap-2" Disabled="@(_state.CurrentAIDentity == null)">
+      <MudItem xs="4" Class="d-flex flex-column mat-elevation-1">
+         <MudPaper Class="flex-1 d-flex flex-column gap-2 overflow-y-auto">
+            <MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="false" Accept="@VALID_FILE_TYPES" MaximumFileCount="1"
+                           Class="flex-shrink-0" InputClass="absolute cursor-pointer mud-width-full mud-height-full z-20" InputStyle="opacity:0"
+                           OnFilesChanged="OnImageUpload" @ondragenter="@OnDragEnter" @ondragleave="@OnDragLeave" @ondragend="@OnDragEnd">
+               <ButtonTemplate>
+                  <MudPaper Outlined="true" Class="@(GetDragClass() + ((_state.CurrentAIDentity is null) ? " cursor-none mud-theme-default":" mud-theme-secondary" ))">
+                     <MudText Typo="Typo.h4" Align="Align.Center">Drop Here or Click to select the image</MudText>
+                  </MudPaper>
+               </ButtonTemplate>
+            </MudFileUpload>
+            <MudPaper Elevation="3" Class="flex-grow-1 d-flex flex-column align-content-center justify-center overflow-y-auto">
+               @if (_state.Image != null)
+               {
+                  <MudImage Src="@_state.Image" Class="mud-height-full" ObjectFit="ObjectFit.Contain" ObjectPosition="ObjectPosition.Center" />
+               }
+               else
+               {
+                  <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="flex-1" Animation="Animation.Wave"></MudSkeleton>
+                  <MudText Class="absolute align-self-center" Typo="Typo.h3" Style="opacity:0.5">NO IMAGE</MudText>
+               }
+            </MudPaper>
+         </MudPaper>
+      </MudItem>
+
+      <MudItem xs="8" Class="d-flex flex-column">
+         <MudPaper Class="d-flex flex-column flex-initial overflow-y-auto pa-2">
+            <MudGrid Spacing="1" Class="">
+               <MudItem xs="12">
+                  <MudTextField @bind-Value="@_state.Name" Label="Name" For="() => _state.Name"
+                                Variant="Variant.Filled" Immediate="true"
+                                Placeholder="@HELP_NAME" />
+               </MudItem>
+               <MudItem xs="6">
+                  <MudTextField @bind-Value="@_state.Description" For="() => _state.Description"
+                                Label="Description" Variant="Variant.Filled" Immediate="true" Lines="3"
+                                Placeholder="@HELP_DESCRIPTION" />
+               </MudItem>
+               <MudItem xs="6">
+                  <MudTextField @bind-Value="@_state.FirstMessage" Immediate="true" Lines="3" For="() => _state.FirstMessage"
+                                Label="First Message" Variant="Variant.Filled"
+                                Placeholder="@HELP_FIRST_MESSAGE" />
+               </MudItem>
+               <MudItem xs="12">
+                  <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center">
+                     <MudText Typo="Typo.body1" Class="mr-2">Wizard</MudText>
+                     <MudSwitch @bind-Checked="@_state.IsAdvancedMode" Color="Color.Primary" />
+                     <MudText Typo="Typo.body1" Class="ml-2">Advanced</MudText>
+                  </MudStack>
+               </MudItem>
+               @if (_state.IsAdvancedMode)
+               {
+                  <MudItem xs="12">
+                     <MudTextField @bind-Value="@_state.FullPrompt" Immediate="true" Lines="8" For="() => _state.FullPrompt"
+                                Label="Full Prompt" Variant="Variant.Filled"
+                                Placeholder="@HELP_FULL_PROMPT" Disabled="!_state.IsAdvancedMode" />
+                  </MudItem>
+               }
+               else
+               {
+                  <MudItem xs="6">
+                     <MudTextField @bind-Value="@_state.Background" For="() => _state.Background"
+                                Label="Background" Variant="Variant.Filled" Immediate="true" Lines="5"
+                                Placeholder="@HELP_BACKGROUND" Disabled="_state.IsAdvancedMode" />
+                  </MudItem>
+                  <MudItem xs="6">
+                     <MudTextField @bind-Value="@_state.Personality" Immediate="true" Lines="5" For="() => _state.Personality"
+                                Label="Personality" Variant="Variant.Filled"
+                                Placeholder="@HELP_FULL_PERSONALITY" Disabled="_state.IsAdvancedMode" />
+                  </MudItem>
+               }
+            </MudGrid>
+         </MudPaper>
+         <MudToolBar Dense="true" DisableGutters="true" Class="ma-2 gap-2">
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Error" FullWidth="true" IconSize="Size.Large" StartIcon="@Icons.Material.Filled.Undo" OnClick="@OnUndo" Size="Size.Large">Undo Changes</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" IconSize="Size.Large" EndIcon="@Icons.Material.Filled.Save" OnClick="@OnSave" Size="Size.Large">Save</MudButton>
+            <MudSpacer />
+         </MudToolBar>
+         <MudSpacer />
+      </MudItem>
+   </MudForm>
+</div>
+
+@code {
+   const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-4 mud-width-full mud-height-full z-10";
+   string GetDragClass() => _state.IsDragging ? $"{DEFAULT_DRAG_CLASS} mud-border-primary mud-theme-dark" : DEFAULT_DRAG_CLASS;
+}

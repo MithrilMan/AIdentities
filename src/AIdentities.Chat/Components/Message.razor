@@ -1,0 +1,22 @@
+﻿<div class="">
+   @if (ChatMessage.IsGenerated)
+   {
+      <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
+         <MudAvatar Color="Color.Secondary" Size="Size.Medium">@ChatMessage.User?.ToUpper() </MudAvatar>
+         <MudPaper Class="pa-1" Elevation="2">
+            <MudText Typo="Typo.body2" Align="Align.Start" Class="message">@ChatMessage.Message</MudText>
+         </MudPaper>
+         <MudItem xs="3"></MudItem>
+      </MudStack>
+   }
+   else
+   {
+      <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
+         <MudItem xs="3"></MudItem>
+         <MudPaper Class="pa-1" Elevation="2">
+            <MudText Typo="Typo.body2" Align="Align.End" Class="message">@ChatMessage.Message</MudText>
+         </MudPaper>
+         <MudAvatar Color="Color.Secondary" Size="Size.Medium">@ChatMessage.User?.ToUpper() </MudAvatar>
+      </MudStack>
+   }
+</div>

@@ -1,0 +1,9 @@
+.text-ellipsis {
+   overflow: hidden;
+   white-space: nowrap;
+   text-overflow: ellipsis;
+}
+
+.flex-h-fix {
+   min-height: 0;
+}

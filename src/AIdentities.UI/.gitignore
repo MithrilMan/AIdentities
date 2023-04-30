@@ -1,0 +1,4 @@
+# Ignore compiled css
+Features/**/*.css
+wwwroot/css/app.css
+App.razor.css

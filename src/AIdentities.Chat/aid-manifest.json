@@ -1,0 +1,14 @@
+{
+   "Signature": {
+      "Name": "Chat",
+      "Version": "1.0.0-alpha",
+      "Author": "Mithril Man",
+      "Entry": "lib/net7.0/AIdentities.Chat.dll"
+   },
+   "Description": "Allows the user to chat with a LLM.",
+   "Website": "",
+   "Email": "",
+   "License": "MIT",
+   "LicenseUrl": "",
+   "Icon": "icon.png"
+}

@@ -1,0 +1,59 @@
+{
+   "help": "https://go.microsoft.com/fwlink/?linkid=866610",
+   "root": true,
+
+   "dependentFileProviders": {
+      "add": {
+         "fileSuffixToExtension": {
+            "add": {
+               ".Actions.razor.cs": [
+                  ".razor"
+               ],
+               ".State.razor.cs": [
+                  ".razor"
+               ]
+            }
+         },
+         "extensionToExtension": {
+            "add": {
+               ".css": [
+                  ".scss"
+               ]
+            }
+         },
+         "pathSegment": {
+            "add": {
+               ".*": [
+                  ".js",
+                  ".css",
+                  ".html",
+                  ".htm",
+                  ".less",
+                  ".scss",
+                  ".coffee",
+                  ".iced",
+                  ".config",
+                  ".cs",
+                  ".vb",
+                  ".json",
+                  ".resx"
+               ]
+            }
+         },
+         "fileToFile": {
+            "add": {
+               "package-lock.json": [
+                  "package.json"
+               ],
+               "assemble-css.js": [
+                  "package.json"
+               ],
+               "tailwind_colors_generator.js": [
+                  "tailwind.config.js"
+               ]
+            }
+         },
+         "addedExtension": {}
+      }
+   }
+}

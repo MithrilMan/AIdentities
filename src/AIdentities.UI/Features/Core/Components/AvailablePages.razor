@@ -1,0 +1,6 @@
+﻿@foreach (var pageDefinition in PageDefinitionProvider.GetPageDefinitions())
+{
+   <MudTooltip Text="@pageDefinition.Description" Arrow="true" Placement="Placement.Right" Color="Color.Secondary" Delay="600" Class="ml-n3" RootClass="d-flex mud-width-full">
+      <MudNavLink Match="NavLinkMatch.All" Icon="@pageDefinition.Icon" Href="@pageDefinition.Url" Class="d-flex mud-width-full">@pageDefinition.Title</MudNavLink>
+   </MudTooltip>
+}

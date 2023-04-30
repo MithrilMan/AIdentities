@@ -1,0 +1,55 @@
+﻿@page "/chat"
+
+@inherits AppPage<Chat>
+
+<HeadContent>
+   <link href="_content/AIdentities.Chat/AIdentities.Chat.bundle.scp.css" rel="stylesheet">
+</HeadContent>
+
+<MudGrid Class="flex-grow-1" Spacing="1" Justify="Justify.SpaceBetween">
+   <MudItem xs="9" Class="mud-height-full d-flex flex-column gap-1">
+      <MudStack Row="true" AlignItems="AlignItems.Center" Class="mud-elevation-3 px-1">
+         <MudText Class="flex-1 text-ellipsis" Typo="Typo.h6">@GetConversationTitle()</MudText>
+         <MudTextField T="string" Placeholder="Search Message..." @bind-Value="_state.MessageSearchText" @bind-Value:after="@ApplyFilter"
+                       Variant="Variant.Filled" DebounceInterval="250" Class="flex-1 ma-0" Margin="Margin.Dense"
+                       Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                       AdornmentColor="Color.Secondary" />
+      </MudStack>
+
+      <MudPaper Class="d-flex flex-column flex-grow-1 pa-2 gap-1 overflow-y-auto" Outlined="true">
+         <MudList Class="d-flex flex-column flex-grow-1" Clickable="true" DisablePadding="true" DisableGutters="true" Dense="true">
+            <MudSpacer />
+            @foreach (var message in _state.Messages.Items)
+            {
+               <MudListItem Class="flex-shrink-0" @key="message">
+                  <Message ChatMessage="message" />
+               </MudListItem>
+            }
+         </MudList>
+      </MudPaper>
+
+      <MudPaper Class="flex-shrink-0 d-flex flex-row pa-0" Style="" Elevation="3">
+         <MudTextField Variant="Variant.Outlined" Lines="_state.MessageTextLines"
+                       Placeholder="Enter your message..." Immediate="true" Margin="Margin.Dense" Class="pa-0 ma-0"
+                       @bind-Value="_state.Message" @bind-Value:after="_state.SetMessageTextLines" />
+         <MudButton OnClick="SubmitAsync" StartIcon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button" Disabled="@(_state.SelectedConversation == null)" />
+      </MudPaper>
+   </MudItem>
+
+   <MudItem xs="3" Class="mud-height-full">
+      <MudPaper Class="mud-height-full">
+         <ConversationList Class="mud-height-full" @bind-Conversation="_state.SelectedConversation" @bind-Conversation:after="OnConversationChanged" />
+      </MudPaper>
+   </MudItem>
+</MudGrid>
+
+@code {
+   string GetConversationTitle()
+   {
+      if (_state.SelectedConversation == null)
+      {
+         return "Select a conversation";
+      }
+      return _state.SelectedConversation.Title;
+   }
+}
