@@ -7,10 +7,12 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
-COPY ["AIdentities.UI/AIdentities.UI.csproj", "AIdentities.UI/"]
-RUN dotnet restore "AIdentities.UI/AIdentities.UI.csproj"
+COPY ["src/AIdentities.UI/AIdentities.UI.csproj", "src/AIdentities.UI/"]
+COPY ["src/AIdentities.Chat/AIdentities.Chat.csproj", "src/AIdentities.Chat/"]
+COPY ["src/AIdentities.Shared/AIdentities.Shared.csproj", "src/AIdentities.Shared/"]
+RUN dotnet restore "src/AIdentities.UI/AIdentities.UI.csproj"
 COPY . .
-WORKDIR "/src/AIdentities.UI"
+WORKDIR "/src/src/AIdentities.UI"
 RUN dotnet build "AIdentities.UI.csproj" -c Release -o /app/build
 
 FROM build AS publish

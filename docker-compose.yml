@@ -1,0 +1,8 @@
+version: '3.4'
+
+services:
+  aidentities.ui:
+    image: ${DOCKER_REGISTRY-}aidentitiesui
+    build:
+      context: .
+      dockerfile: src/AIdentities.UI/Dockerfile

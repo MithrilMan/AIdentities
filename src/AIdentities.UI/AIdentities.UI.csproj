@@ -6,6 +6,8 @@
       <ImplicitUsings>enable</ImplicitUsings>
       <UserSecretsId>ea1e0d63-da95-4dff-9daf-bd71044f404a</UserSecretsId>
       <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+      <DockerfileContext>..\..</DockerfileContext>
+      <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
    </PropertyGroup>
 
    <ItemGroup>
