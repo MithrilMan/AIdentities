@@ -19,9 +19,8 @@ public static class AppConstants
 
       /// <summary>
       /// The name of the folder where the aidentities are located.
+      /// It's a subfolder of <see cref="STORAGE"/>.
       /// </summary>
-      public const string AIDENTITIES = "_aidentities_";
-
-      public static string[] ALL_FOLDERS = new[] { STORAGE, AIDENTITIES };
+      public const string AIDENTITIES = "aidentities";
    }
 }

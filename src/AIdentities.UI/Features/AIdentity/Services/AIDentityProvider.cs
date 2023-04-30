@@ -20,10 +20,13 @@ public class AIdentityProvider : IAIdentityProvider
       FetchAIdentities();
    }
 
+   private string GetAIdentitiesPath() => Path.Combine(_options.Value.PackageFolder, AppConstants.SpecialFolders.STORAGE, AppConstants.SpecialFolders.AIDENTITIES);
+   private string GetAIdentityFileName(Guid aidentityId) => Path.Combine(GetAIdentitiesPath(), $"{aidentityId}.json");
+
+
    private void FetchAIdentities()
    {
-      var path = Path.Combine(_options.Value.PackageFolder, AppConstants.SpecialFolders.AIDENTITIES);
-      var files = Directory.GetFiles(path, "*.json");
+      var files = Directory.GetFiles(GetAIdentitiesPath(), "*.json");
       foreach (var file in files)
       {
          var json = File.ReadAllText(file);
@@ -32,14 +35,13 @@ public class AIdentityProvider : IAIdentityProvider
       }
    }
 
-   private string GetAIdentitiesPath() => Path.Combine(_options.Value.PackageFolder, AppConstants.SpecialFolders.AIDENTITIES);
-   private string GetAIdentityFileName(Guid aidentityId) => Path.Combine(GetAIdentitiesPath(), $"{aidentityId}.json");
-
    private void CheckPath()
    {
       var path = GetAIdentitiesPath();
       if (!Directory.Exists(path))
+      {
          Directory.CreateDirectory(path);
+      }
    }
 
    public IEnumerable<Entities.AIdentity> All()

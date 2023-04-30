@@ -25,7 +25,9 @@ I'm not here to enforce anyone on my view, I'm instead trying to create somethin
 
 # Current Status
 
-==The project is currently in its very early stage, everything is subject to change, join the discord server to help shaping it!==
+{% note %}
+**Note** The project is currently in its very early stage, everything is subject to change, join the discord server to help shaping it!==
+{% endnote %}
 
 Current implemented features:
 
@@ -46,6 +48,7 @@ The docker file is in the src/AIdentities.UI folder but there is already a docke
 
 and then access the web app to the address https://localhost:5001/
 If your system doesn't have the port 5000 available you should edit the docker-compose.override.yml file and edit the port with one available (or you can go deeper and add an environment file and configure it externally, that's the preferred way to deal with this kind of apps).
+
 At current state of development a proper guide doesn't exists yet, so be patient or help writing one 😊
 
 

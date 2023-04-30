@@ -266,7 +266,8 @@ public class PluginManager : IPluginManager
 
          foreach (string pluginFolder in Directory.GetDirectories(GetPluginPackagePath()))
          {
-            if (AppConstants.SpecialFolders.ALL_FOLDERS.Any(folder => pluginFolder.EndsWith(folder))) continue;
+            // skip the special folder that contains the storage
+            if (pluginFolder.EndsWith(AppConstants.SpecialFolders.STORAGE)) continue;
 
             PluginManifest manifest;
             try
