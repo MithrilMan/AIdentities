@@ -50,6 +50,12 @@ public class AppComponentSettingsManager : IAppComponentSettingsManager
    {
       try
       {
+         if(!File.Exists(SETTINGS_FILE))
+         {
+            _logger.LogWarning("Settings file not found: {SettingsFile}", SETTINGS_FILE);
+            return new();
+         }
+
          var file = File.ReadAllText(SETTINGS_FILE);
          return JsonSerializer.Deserialize<Dictionary<string, object>>(file) ?? new();
       }

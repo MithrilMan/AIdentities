@@ -22,7 +22,8 @@
    -->
 
    <ItemGroup>
-     <None Include=".filenesting.json" />
+      <Content Remove=".filenesting.json" />
+      <None Include=".filenesting.json" />
    </ItemGroup>
 
    <ItemGroup>

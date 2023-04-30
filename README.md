@@ -35,6 +35,21 @@ Current implemented features:
 
 
 
+# Try it out
+
+This project has been developed by using Visual Studio 2022, it shouldn't be a problem run it on other IDEs, I can't just give support to it by myself.
+If you are just interested to try the software and not on the development, You can still run it easily by running it on a docker instance (I suggest to do so in any case because it's always better to run unknown programs on a sandboxed environment...)
+
+The docker file is in the src/AIdentities.UI folder but there is already a docker-compose file here in the root folder and if you are lucky and the port aren't already taken in your environment you can just run
+
+`docker-compose up --build`
+
+and then access the web app to the address https://localhost:5001/
+If your system doesn't have the port 5000 available you should edit the docker-compose.override.yml file and edit the port with one available (or you can go deeper and add an environment file and configure it externally, that's the preferred way to deal with this kind of apps).
+At current state of development a proper guide doesn't exists yet, so be patient or help writing one 😊
+
+
+
 # Community
 
 Join the discord server to help shaping the software!
