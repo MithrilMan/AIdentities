@@ -1,7 +1,7 @@
 ﻿using AIdentities.Chat.Extendability;
-
+using AIdentities.Chat.Services.Connectors.OpenAI;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 
 namespace AIdentities.Chat;
 public class ChatPlugin : IPluginEntry
@@ -23,10 +23,15 @@ public class ChatPlugin : IPluginEntry
 
    public void RegisterServices(IServiceCollection services)
    {
-      services.AddScoped<IChatConnector, ChatConnectorBase>();
+      services.AddScoped<IChatConnector, OpenAIConnector>();
       services.AddScoped<IChatStorage>(sp => new ChatStorage(
          logger: sp.GetRequiredService<ILogger<ChatStorage>>(),
          pluginStorage: _storage
          ));
+
+      services.AddOptions<OpenAIOptions>()
+         .BindConfiguration(OpenAIOptions.SECTION_NAME)
+         .Validate<OpenAIOptionsValidator>((o, validator) => validator.Validate(o))
+         .ValidateOnStart();
    }
 }

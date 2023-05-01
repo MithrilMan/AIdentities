@@ -26,7 +26,7 @@ public static class DependencyInjection
 
       services.AddSingleton<AppOptionsValidator>();
       services.AddOptions<AppOptions>()
-         .BindConfiguration(AppOptions.SectionName)
+         .BindConfiguration(AppOptions.SECTION_NAME)
          .Validate<AppOptionsValidator>((o, validator) => validator.Validate(o))
          .ValidateOnStart();
 
