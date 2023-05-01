@@ -16,23 +16,26 @@
                        AdornmentColor="Color.Secondary" />
       </MudStack>
 
-      <MudPaper Class="d-flex flex-column flex-grow-1 pa-2 gap-1 overflow-y-auto" Outlined="true">
-         <MudList Class="d-flex flex-column flex-grow-1" Clickable="true" DisablePadding="true" DisableGutters="true" Dense="true">
-            <MudSpacer />
-            @foreach (var message in _state.Messages.Items)
-            {
-               <MudListItem Class="flex-shrink-0" @key="message">
-                  <Message ChatMessage="message" />
-               </MudListItem>
-            }
-         </MudList>
-      </MudPaper>
+      <div class="d-flex flex-column flex-grow-1 overflow-y-auto" id="@LIST_ID">
+         <MudPaper Class="d-flex flex-column flex-grow-1 pa-2 gap-1" Outlined="true">
+            <MudList Class="list d-flex flex-column flex-grow-1" Clickable="true" DisablePadding="true" DisableGutters="true" Dense="true">
+               <MudSpacer />
+               @foreach (var message in _state.Messages.Items)
+               {
+                  <MudListItem Class="flex-shrink-0" @key="message">
+                     <Message ChatMessage="message" />
+                  </MudListItem>
+               }
+            </MudList>
+         </MudPaper>
+      </div>
 
       <MudPaper Class="flex-shrink-0 d-flex flex-row pa-0" Style="" Elevation="3">
-         <MudTextField Variant="Variant.Outlined" Lines="_state.MessageTextLines"
+         <MudTextField Variant="Variant.Outlined" Lines="_state.MessageTextLines" @ref="_messageTextField"
                        Placeholder="Enter your message..." Immediate="true" Margin="Margin.Dense" Class="pa-0 ma-0"
+                       OnKeyDown="OnKeyDown" Disabled="@(_state.SelectedConversation == null)"
                        @bind-Value="_state.Message" @bind-Value:after="_state.SetMessageTextLines" />
-         <MudButton OnClick="SubmitAsync" StartIcon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button" Disabled="@(_state.SelectedConversation == null)" />
+         <MudButton OnClick="SendMessageAsync" StartIcon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button" Disabled="@(_state.SelectedConversation == null)" />
       </MudPaper>
    </MudItem>
 

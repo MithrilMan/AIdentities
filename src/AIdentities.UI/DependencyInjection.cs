@@ -38,13 +38,16 @@ public static class DependencyInjection
       services.AddScoped<IPageDefinitionProvider, PageDefinitionProvider>();
       services.AddScoped<INotificationService, NotificationService>();
       services.AddScoped<IAppComponentSettingsManager, AppComponentSettingsManager>();
-      services.AddScoped<EventAggregator.Blazor.IEventAggregator, EventAggregator.Blazor.EventAggregator>();
-      services.AddScoped<IEventBus, EventBus>();
+      
+      services
+         .AddScoped<EventAggregator.Blazor.IEventAggregator, EventAggregator.Blazor.EventAggregator>()
+         .AddScoped<IEventBus, EventBus>();
 
       services
          .AddSingleton<IAIdentityProvider, AIdentityProvider>()
          .AddSingleton<AIdentityProviderSerializationSettings>();
 
+      services.AddScoped<IScrollService, ScrollService>();
 
       startupLogger = RegisterPlugins(services, webHostEnvironment);
 

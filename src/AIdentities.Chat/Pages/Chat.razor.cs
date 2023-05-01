@@ -1,4 +1,5 @@
 ﻿using AIdentities.Chat.Extendability;
+using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 
 namespace AIdentities.Chat.Pages;
@@ -6,8 +7,14 @@ namespace AIdentities.Chat.Pages;
 [PageDefinition("Chat", Icons.Material.Filled.ChatBubble, "chat", Description = "Allow the user to chat with one or multiple other AIdentities")]
 public partial class Chat : AppPage<Chat>
 {
+   const string LIST_ID = "message-list-wrapper";
+   const string LIST_SELECTOR = $"#{LIST_ID}";
+
    [Inject] private IChatConnector ChatConnector { get; set; } = null!;
    [Inject] private IChatStorage ChatStorage { get; set; } = null!;
+   [Inject] private IScrollService ScrollService { get; set; } = null!;
+
+   MudTextField<string>? _messageTextField = default!;
 
    protected override void OnInitialized()
    {
@@ -29,7 +36,7 @@ public partial class Chat : AppPage<Chat>
 
    private Task ApplyFilter() => _state.Messages.ApplyFilterAsync().AsTask();
 
-   private async Task SubmitAsync()
+   private async Task SendMessageAsync()
    {
       if (_state.SelectedConversation is null)
       {
@@ -48,12 +55,22 @@ public partial class Chat : AppPage<Chat>
          };
 
          await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, message).ConfigureAwait(false);
-         await _state.Messages.AppendItemAsync(message).ConfigureAwait(false);
+
+         // the append has to be done on the same thread the UI is using to render, to prevent "a collection has been modified" exceptions
+         await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
 
          _state.Message = string.Empty;
+         _state.SetMessageTextLines();
+
+         await ScrollToEndOfMessageList().ConfigureAwait(false);
       }
    }
 
+   private async Task ScrollToEndOfMessageList()
+   {
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+      await ScrollService.ScrollToBottom(LIST_SELECTOR).ConfigureAwait(false);
+   }
 
    async Task OnConversationChanged()
    {
@@ -65,5 +82,19 @@ public partial class Chat : AppPage<Chat>
 
       var conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation.ConversationId).ConfigureAwait(false);
       await _state.Messages.LoadItemsAsync(conversation.Messages).ConfigureAwait(false);
-   } 
+
+      await ScrollToEndOfMessageList().ConfigureAwait(false);
+   }
+
+
+   async Task OnKeyDown(KeyboardEventArgs e)
+   {
+      if (e.Key is "Enter" or "NumppadEnter" && !e.ShiftKey)
+      {
+         await _messageTextField!.BlurAsync().ConfigureAwait(false);
+         await SendMessageAsync().ConfigureAwait(false);
+         await _messageTextField!.FocusAsync().ConfigureAwait(false);
+         return;
+      }
+   }
 }

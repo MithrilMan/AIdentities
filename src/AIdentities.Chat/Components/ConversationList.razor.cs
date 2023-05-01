@@ -1,5 +1,4 @@
-﻿using AIdentities.Shared.Services;
-using Microsoft.AspNetCore.Components.Web;
+﻿using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 
 
@@ -73,6 +72,7 @@ public partial class ConversationList : ComponentBase
 
       await ChatStorage.StartConversationAsync(conversation).ConfigureAwait(false);
       await _state.Conversations.AppendItemAsync(conversation.Metadata).ConfigureAwait(false);
+      await InvokeAsync(() => OnSelectConversation(conversation.Metadata)).ConfigureAwait(false);
       await ApplyFilterAsync().ConfigureAwait(false);
    }
 
