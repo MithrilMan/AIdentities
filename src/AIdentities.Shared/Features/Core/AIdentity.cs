@@ -1,4 +1,5 @@
 ﻿using AIdentities.Shared.Common;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Shared.Features.Core;
 
@@ -64,4 +65,16 @@ public record AIdentity : Entity
    /// The first message sent by the AIdentity when a new conversation starts.
    /// </summary>
    public string? FirstMessage { get; set; }
+
+   /// <summary>
+   /// Whether the AIdentity should use the full prompt or not.
+   /// When using the full prompt, the LLM will ignore the other fields and use the FullPrompt to start the conversation.
+   /// </summary>
+   public bool UseFullPrompt { get; set; }
+
+   /// <summary>
+   /// The features of the AIdentity.
+   /// Plugin developers can use this to add and manage custom features to their AIdentities or access other plugins' features.
+   /// </summary>
+   public FeatureCollection Features { get; set; } = new();
 }

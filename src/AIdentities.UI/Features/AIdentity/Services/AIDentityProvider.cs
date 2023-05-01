@@ -8,13 +8,14 @@ public class AIdentityProvider : IAIdentityProvider
 {
    readonly ILogger<AIdentityProvider> _logger;
    readonly IOptions<AppOptions> _options;
-
+   readonly AIdentityProviderSerializationSettings _serializationSettings;
    readonly Dictionary<Guid, Entities.AIdentity> _aidentities = new();
 
-   public AIdentityProvider(ILogger<AIdentityProvider> logger, IOptions<AppOptions> options)
+   public AIdentityProvider(ILogger<AIdentityProvider> logger, IOptions<AppOptions> options, AIdentityProviderSerializationSettings serializationSettings)
    {
       _logger = logger;
       _options = options;
+      _serializationSettings = serializationSettings;
 
       CheckPath();
       FetchAIdentities();
@@ -29,9 +30,18 @@ public class AIdentityProvider : IAIdentityProvider
       var files = Directory.GetFiles(GetAIdentitiesPath(), "*.json");
       foreach (var file in files)
       {
-         var json = File.ReadAllText(file);
-         var aidentity = JsonSerializer.Deserialize<Entities.AIdentity>(json)!;
-         _aidentities[aidentity.Id] = aidentity;
+         var filename = Path.GetFileNameWithoutExtension(file);
+         if (!Guid.TryParse(filename, out var id))
+         {
+            _logger.LogWarning($"Unable to parse filename {filename} to Guid");
+            continue;
+         }
+
+         var aidentity = ReadAIdentity(id);
+         if (aidentity != null)
+         {
+            _aidentities[aidentity.Id] = aidentity;
+         }
       }
    }
 
@@ -69,7 +79,9 @@ public class AIdentityProvider : IAIdentityProvider
          //try to read again from disk
          aidentity = ReadAIdentity(id);
          if (aidentity != null)
+         {
             _aidentities[aidentity.Id] = aidentity;
+         }
       }
 
       return aidentity;
@@ -87,7 +99,7 @@ public class AIdentityProvider : IAIdentityProvider
       if (!File.Exists(GetAIdentityFileName(id))) return null;
 
       var json = File.ReadAllText(GetAIdentityFileName(id));
-      var aidentity = JsonSerializer.Deserialize<Entities.AIdentity>(json);
+      var aidentity = JsonSerializer.Deserialize<Entities.AIdentity>(json, _serializationSettings.SerializerOptions);
       return aidentity;
    }
 
@@ -97,7 +109,7 @@ public class AIdentityProvider : IAIdentityProvider
    /// <param name="aidentity"></param>
    private void WriteAIdentity(Entities.AIdentity aidentity)
    {
-      var json = JsonSerializer.Serialize(aidentity);
+      var json = JsonSerializer.Serialize(aidentity, _serializationSettings.SerializerOptions);
       File.WriteAllText(GetAIdentityFileName(aidentity.Id), json);
    }
 }

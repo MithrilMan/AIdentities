@@ -46,7 +46,7 @@ It has no impact on how it responds, It's purely cosmetic.";
          return;
       }
 
-      var modifiedAIdentity = _state.CurrentAIDentity with
+      var modifiedAIdentity = _state.CurrentAIDentity! with
       {
          Name = _state.Name!,
          Description = _state.Description!,
@@ -54,8 +54,11 @@ It has no impact on how it responds, It's purely cosmetic.";
          Background = _state.Background,
          FullPrompt = _state.FullPrompt!,
          Personality = _state.Personality,
-         FirstMessage = _state.FirstMessage
+         FirstMessage = _state.FirstMessage,
+         UseFullPrompt = _state.UseFullPrompt
       };
+
+      modifiedAIdentity.Features.Set("PROVA");
 
       AIdentityProvider.Update(modifiedAIdentity);
       NotificationService.ShowSuccess("AIdentity updated successfully!");

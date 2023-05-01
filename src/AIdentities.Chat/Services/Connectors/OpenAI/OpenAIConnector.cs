@@ -1,8 +1,8 @@
 ﻿using System.Net.Http.Json;
 using AIdentities.Chat.Extendability;
 using AIdentities.Chat.Services.Connectors.OpenAI.API;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
-using static AIdentities.Chat.Services.Connectors.OpenAI.API.ChatCompletionRequestMessage;
 
 namespace AIdentities.Chat.Services.Connectors.OpenAI;
 public class OpenAIConnector : IChatConnector
@@ -17,7 +17,7 @@ public class OpenAIConnector : IChatConnector
    public string Name => NAME;
    public string Description => DESCRIPTION;
 
-   public IChatApiRequest Settings => throw new NotImplementedException();
+   public IFeatureCollection Features => new FeatureCollection();
 
    public OpenAIConnector(ILogger<OpenAIConnector> logger, IOptions<OpenAIOptions> options)
    {

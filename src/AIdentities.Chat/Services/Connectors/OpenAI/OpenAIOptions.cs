@@ -5,7 +5,7 @@ namespace AIdentities.Chat.Services.Connectors.OpenAI;
 public class OpenAIOptions
 {
    public const string SECTION_NAME = "OpenAI";
-   const bool DEFAULT_ENABLED = true;
+   const bool DEFAULT_ENABLED = false;
 
    /// <summary>
    /// Enable or disable the OpenAI API.

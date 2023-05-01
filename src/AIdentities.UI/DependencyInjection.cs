@@ -40,7 +40,11 @@ public static class DependencyInjection
       services.AddScoped<IAppComponentSettingsManager, AppComponentSettingsManager>();
       services.AddScoped<EventAggregator.Blazor.IEventAggregator, EventAggregator.Blazor.EventAggregator>();
       services.AddScoped<IEventBus, EventBus>();
-      services.AddSingleton<IAIdentityProvider, AIdentityProvider>();
+
+      services
+         .AddSingleton<IAIdentityProvider, AIdentityProvider>()
+         .AddSingleton<AIdentityProviderSerializationSettings>();
+
 
       startupLogger = RegisterPlugins(services, webHostEnvironment);
 

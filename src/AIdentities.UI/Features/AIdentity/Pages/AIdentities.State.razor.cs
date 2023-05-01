@@ -17,7 +17,7 @@ public partial class AIdentities
 
       public Entities.AIdentity? CurrentAIDentity { get; set; }
       public bool IsDragging { get; set; } = false;
-      public bool IsAdvancedMode { get; set; } = false;
+      public bool UseFullPrompt { get; set; } = false;
 
       internal void SetFormFields(Entities.AIdentity? aIdentity)
       {
@@ -28,6 +28,7 @@ public partial class AIdentities
          FullPrompt = aIdentity?.FullPrompt;
          Personality = aIdentity?.Personality;
          FirstMessage = aIdentity?.FirstMessage;
+         UseFullPrompt = aIdentity?.UseFullPrompt ?? false;
       }
    }
 
