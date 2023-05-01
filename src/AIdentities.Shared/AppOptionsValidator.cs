@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Options;
 
 namespace AIdentities.Shared;
-public class AppOptionsValidator
+public class AppOptionsValidator :IValidateOptions<AppOptions>
 {
    const string INVALID_CHARACTERS_IN_PACKAGEFOLDER = $"Invalid {nameof(AppOptions.PackageFolder)} value, contains invalid characters";
    const string INVALID_PLUGINS_FILES_EXTENSIONS_EMPTY = $"Invalid {nameof(AppOptions.AllowedPluginResourceExtensions)}. Cannot be null or empty.";
@@ -14,7 +15,7 @@ public class AppOptionsValidator
       _logger = logger;
    }
 
-   public bool Validate(AppOptions options)
+   public ValidateOptionsResult Validate(string? name, AppOptions options)
    {
       _logger.LogInformation("Validating settings {AIdentitiesConfiguration}", JsonSerializer.Serialize(options));
 
@@ -22,8 +23,7 @@ public class AppOptionsValidator
       //check if it's a valid relative path
       if (!PathUtils.IsValidPath(options.PackageFolder))
       {
-         _logger.LogCritical(INVALID_CHARACTERS_IN_PACKAGEFOLDER);
-         throw new ValidationException(INVALID_CHARACTERS_IN_PACKAGEFOLDER);
+         return ValidateOptionsResult.Fail(INVALID_CHARACTERS_IN_PACKAGEFOLDER);
       }
 
       if (options.AllowedPluginResourceExtensions?.Any() ?? false)
@@ -34,8 +34,7 @@ public class AppOptionsValidator
             var extension = options.AllowedPluginResourceExtensions[i];
             if (string.IsNullOrEmpty(extension))
             {
-               _logger.LogCritical(INVALID_CHARACTERS_IN_PACKAGEFOLDER);
-               throw new ValidationException(INVALID_PLUGINS_FILES_EXTENSIONS_EMPTY);
+               return ValidateOptionsResult.Fail(INVALID_PLUGINS_FILES_EXTENSIONS_EMPTY);
             }
 
             //sanitize extension
@@ -43,8 +42,7 @@ public class AppOptionsValidator
 
             if (!extension.StartsWith(".") || Path.GetInvalidFileNameChars().Any(extension.Contains))
             {
-               _logger.LogCritical(INVALID_CHARACTERS_IN_PACKAGEFOLDER);
-               throw new ValidationException(INVALID_PLUGINS_FILES_EXTENSIONS);
+               return ValidateOptionsResult.Fail(INVALID_PLUGINS_FILES_EXTENSIONS);
             }
          }
       }
@@ -53,6 +51,6 @@ public class AppOptionsValidator
          _logger.LogWarning($"{nameof(AppOptions.AllowedPluginResourceExtensions)} is empty, all plugin files will be copied");
       }
 
-      return true;
+      return ValidateOptionsResult.Success;
    }
 }

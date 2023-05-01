@@ -1,6 +1,7 @@
 ﻿using AIdentities.Chat.Extendability;
 using AIdentities.Chat.Services.Connectors.OpenAI;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 
 namespace AIdentities.Chat;
@@ -29,9 +30,10 @@ public class ChatPlugin : IPluginEntry
          pluginStorage: _storage
          ));
 
-      services.AddOptions<OpenAIOptions>()
+      services
+         .AddSingleton<IValidateOptions<OpenAIOptions>,OpenAIOptionsValidator>()
+         .AddOptions<OpenAIOptions>()
          .BindConfiguration(OpenAIOptions.SECTION_NAME)
-         .Validate<OpenAIOptionsValidator>((o, validator) => validator.Validate(o))
          .ValidateOnStart();
    }
 }

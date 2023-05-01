@@ -54,6 +54,8 @@ public class OpenAIConnector : IChatConnector
          User = request.UserId,
       };
 
+      //CONTINUE
+
       _logger.LogDebug("Performing request");
       using HttpResponseMessage response = await client.PostAsJsonAsync(Endpoint, apiRequest).ConfigureAwait(false);
       _logger.LogDebug("Request completed");

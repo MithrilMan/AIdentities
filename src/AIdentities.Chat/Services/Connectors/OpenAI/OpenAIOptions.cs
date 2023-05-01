@@ -1,4 +1,6 @@
-﻿namespace AIdentities.Chat.Services.Connectors.OpenAI;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace AIdentities.Chat.Services.Connectors.OpenAI;
 
 public class OpenAIOptions
 {
@@ -13,7 +15,8 @@ public class OpenAIOptions
    /// <summary>
    /// OpenAI API Endpoint.
    /// </summary>
-   public string EndPoint { get; set; } = default!;
+   public string? EndPoint { get; set; } = default!;
+
 
    /// <summary>
    /// OpenAI API Key.
