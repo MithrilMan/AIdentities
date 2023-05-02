@@ -18,6 +18,8 @@ public partial class AIdentities
       public bool IsDragging { get; set; } = false;
       public bool UseFullPrompt { get; set; } = false;
 
+      public bool IsEditing => CurrentAIDentity != null;
+
       internal void SetFormFields(AIdentity? aIdentity)
       {
          Name = aIdentity?.Name;

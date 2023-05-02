@@ -7,9 +7,10 @@
          <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Tertiary">AIdentities</MudText>
          <MudSpacer />
          <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.PersonAdd" IconSize="Size.Large" Size="Size.Large"
-                    OnClick="CreateNewAIdentity">
-            Create a new AIdentity
-         </MudButton>
+                    OnClick="CreateNewAIdentity">Create a new AIdentity</MudButton>
+         <MudSpacer />
+         <MudButton Variant="Variant.Filled" EndIcon="@("<path d=\"M14,12L10,8V11H2V13H10V16M20,18V6C20,4.89 19.1,4 18,4H6A2,2 0 0,0 4,6V9H6V6H18V18H6V15H4V18A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18Z\" />")" IconSize="Size.Large" Size="Size.Large"
+                    OnClick="ImportAIdentity">Import AIdentity</MudButton>
          <MudSpacer />
       </MudItem>
       <MudItem xs="8">
@@ -46,10 +47,11 @@
       <MudItem xs="4" Class="d-flex flex-column mat-elevation-1">
          <MudPaper Class="flex-1 d-flex flex-column gap-2 overflow-y-auto">
             <MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="false" Accept="@VALID_FILE_TYPES" MaximumFileCount="1"
-                           Class="flex-shrink-0" InputClass="absolute cursor-pointer mud-width-full mud-height-full z-20" InputStyle="opacity:0"
-                           OnFilesChanged="OnImageUpload" @ondragenter="@OnDragEnter" @ondragleave="@OnDragLeave" @ondragend="@OnDragEnd">
+                           Class="flex-shrink-0" InputClass="absolute mud-width-full mud-height-full z-20" InputStyle="opacity:0"
+                           Disabled="!_state.IsEditing" OnFilesChanged="OnImageUpload"
+                           @ondragenter="@StartDragging" @ondragleave="@StopDragging" @ondragend="@StopDragging">
                <ButtonTemplate>
-                  <MudPaper Outlined="true" Class="@(GetDragClass() + ((_state.CurrentAIDentity is null) ? " cursor-none mud-theme-default":" mud-theme-secondary" ))">
+                  <MudPaper Outlined="true" Class="@(GetDragClass() + ((_state.IsEditing) ? " cursor-pointer mud-theme-secondary" : " cursor-none mud-theme-default"))">
                      <MudText Typo="Typo.h4" Align="Align.Center">Drop Here or Click to select the image</MudText>
                   </MudPaper>
                </ButtonTemplate>

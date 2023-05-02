@@ -165,5 +165,6 @@ public static class DependencyInjection
    private static void RegisterDebuggableModules(IServiceCollection services)
    {
       services.AddSingleton<IDebuggableModule, Chat.DebuggableModule>();
+      services.AddSingleton<IDebuggableModule, BooruAIdentityImporter.DebuggableModule>();
    }
 }

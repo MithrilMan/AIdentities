@@ -1,4 +1,7 @@
 ﻿using System.Buffers;
+using AIdentities.Chat.Components;
+using AIdentities.Chat.Models;
+using AIdentities.UI.Features.AIdentityManagement.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 
@@ -27,6 +30,7 @@ This is injected in the LLM prompt to make the AIdentity behave following a spec
 It has no impact on how it responds, It's purely cosmetic.";
 
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
+   [Inject] IDialogService DialogService { get; set; } = null!;
 
    MudForm? _form;
 
@@ -67,6 +71,22 @@ It has no impact on how it responds, It's purely cosmetic.";
    {
       _state.CurrentAIDentity = new();
       _state.SetFormFields(_state.CurrentAIDentity);
+   }
+
+   async Task ImportAIdentity()
+   {
+      var dialog = await DialogService.ShowAsync<ImportAIdentity>("Import a new AIdentity", new DialogOptions()
+      {
+         CloseButton = true,
+         CloseOnEscapeKey = true,
+         Position = DialogPosition.Center,
+         FullWidth = true,
+      }).ConfigureAwait(false);
+
+      var result = await dialog.Result.ConfigureAwait(false);
+      if (result.Data is not AIdentity aIdentity) return;
+
+      EditAIdentity(aIdentity);
    }
 
    void EditAIdentity(AIdentity aIdentity)
@@ -116,7 +136,4 @@ It has no impact on how it responds, It's purely cosmetic.";
 
    void StopDragging() => _state.IsDragging = false;
    void StartDragging() => _state.IsDragging = true;
-   void OnDragEnter() => StartDragging();
-   void OnDragLeave() => StopDragging();
-   void OnDragEnd() => StopDragging();
 }

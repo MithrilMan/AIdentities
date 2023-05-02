@@ -11,6 +11,7 @@ global using AIdentities.Shared.Services;
 global using AIdentities.Shared.Services.EventBus;
 global using AIdentities.Shared.Services.Javascript;
 global using AIdentities.Shared.Utils;
+global using AIdentities.Shared.Validation;
 global using AIdentities.UI.Features.Core.Services.Javascript;
 global using AIdentities.UI.Features.Settings.Services;
 global using Blazored.LocalStorage;

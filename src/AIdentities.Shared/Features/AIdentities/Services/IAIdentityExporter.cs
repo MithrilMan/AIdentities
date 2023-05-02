@@ -7,6 +7,16 @@
 interface IAIdentityExporter
 {
    /// <summary>
+   /// The name of the importer.
+   /// </summary>
+   string Name { get; }
+
+   /// <summary>
+   /// A description of the importer.
+   /// </summary>
+   string Description { get; }
+
+   /// <summary>
    /// Exports a <see cref="AIdentity"/> to a file.
    /// </summary>
    /// <param name="aIdentity">The <see cref="AIdentity"/> to export.</param>
