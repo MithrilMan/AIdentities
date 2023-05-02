@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 
-
 namespace AIdentities.Chat.Components;
 
 public partial class ConversationList : ComponentBase

@@ -1,15 +1,14 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Options;
-using Entities = AIdentities.Shared.Features.Core;
 
-namespace AIdentities.UI.Features.AIdentity.Services;
+namespace AIdentities.UI.Features.AIdentityManagement.Services;
 
 public class AIdentityProvider : IAIdentityProvider
 {
    readonly ILogger<AIdentityProvider> _logger;
    readonly IOptions<AppOptions> _options;
    readonly AIdentityProviderSerializationSettings _serializationSettings;
-   readonly Dictionary<Guid, Entities.AIdentity> _aidentities = new();
+   readonly Dictionary<Guid, AIdentity> _aidentities = new();
 
    public AIdentityProvider(ILogger<AIdentityProvider> logger, IOptions<AppOptions> options, AIdentityProviderSerializationSettings serializationSettings)
    {
@@ -54,25 +53,25 @@ public class AIdentityProvider : IAIdentityProvider
       }
    }
 
-   public IEnumerable<Entities.AIdentity> All()
+   public IEnumerable<AIdentity> All()
    {
       return _aidentities.Values;
    }
 
-   public bool Create(Entities.AIdentity newAIdentity)
+   public bool Create(AIdentity newAIdentity)
    {
       WriteAIdentity(newAIdentity);
       _aidentities[newAIdentity.Id] = newAIdentity;
       return true;
    }
 
-   public bool Delete(Entities.AIdentity deletedAIdentity)
+   public bool Delete(AIdentity deletedAIdentity)
    {
       File.Delete(GetAIdentityFileName(deletedAIdentity.Id));
       return _aidentities.Remove(deletedAIdentity.Id);
    }
 
-   public Entities.AIdentity? Get(Guid id)
+   public AIdentity? Get(Guid id)
    {
       if (!_aidentities.TryGetValue(id, out var aidentity))
       {
@@ -87,19 +86,19 @@ public class AIdentityProvider : IAIdentityProvider
       return aidentity;
    }
 
-   public bool Update(Entities.AIdentity updatedAIdentity)
+   public bool Update(AIdentity updatedAIdentity)
    {
       WriteAIdentity(updatedAIdentity);
       _aidentities[updatedAIdentity.Id] = updatedAIdentity;
       return true;
    }
 
-   private Entities.AIdentity? ReadAIdentity(Guid id)
+   private AIdentity? ReadAIdentity(Guid id)
    {
       if (!File.Exists(GetAIdentityFileName(id))) return null;
 
       var json = File.ReadAllText(GetAIdentityFileName(id));
-      var aidentity = JsonSerializer.Deserialize<Entities.AIdentity>(json, _serializationSettings.SerializerOptions);
+      var aidentity = JsonSerializer.Deserialize<AIdentity>(json, _serializationSettings.SerializerOptions);
       return aidentity;
    }
 
@@ -107,7 +106,7 @@ public class AIdentityProvider : IAIdentityProvider
    /// Writes the aidentity to disk.
    /// </summary>
    /// <param name="aidentity"></param>
-   private void WriteAIdentity(Entities.AIdentity aidentity)
+   private void WriteAIdentity(AIdentity aidentity)
    {
       var json = JsonSerializer.Serialize(aidentity, _serializationSettings.SerializerOptions);
       File.WriteAllText(GetAIdentityFileName(aidentity.Id), json);

@@ -2,6 +2,8 @@
 global using AIdentities.Chat.Models;
 global using AIdentities.Chat.Services;
 global using AIdentities.Shared.Collections;
+global using AIdentities.Shared.Features.AIdentities.Models;
+global using AIdentities.Shared.Features.AIdentities.Services;
 global using AIdentities.Shared.Plugins;
 global using AIdentities.Shared.Plugins.Connectors;
 global using AIdentities.Shared.Plugins.Pages;

@@ -1,5 +1,4 @@
 ﻿using FluentValidation;
-using AIdentities.Shared.Features.Core;
 
 namespace AIdentities.Chat.Components;
 

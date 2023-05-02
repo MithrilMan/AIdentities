@@ -80,9 +80,20 @@ public partial class Chat : AppPage<Chat>
          return;
       }
 
-      var conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation.ConversationId).ConfigureAwait(false);
-      await _state.Messages.LoadItemsAsync(conversation.Messages).ConfigureAwait(false);
+      Conversation conversation;
 
+      try
+      {
+         conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation.ConversationId).ConfigureAwait(false);
+      }
+      catch (Exception ex)
+      {
+         NotificationService.ShowError($"Failed to load conversation: {ex.Message}");
+         await _state.Messages.LoadItemsAsync(null).ConfigureAwait(false);
+         return;
+      }
+
+      await _state.Messages.LoadItemsAsync(conversation.Messages).ConfigureAwait(false);
       await ScrollToEndOfMessageList().ConfigureAwait(false);
    }
 

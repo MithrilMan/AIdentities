@@ -1,5 +1,5 @@
 ﻿using AIdentities.Shared.Plugins.Storage;
-using AIdentities.UI.Features.AIdentity.Services;
+using AIdentities.UI.Features.AIdentityManagement.Services;
 using AIdentities.UI.Features.Core.Services.PageManager;
 using Microsoft.Extensions.Options;
 

@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace AIdentities.UI.Features.AIdentity.Services;
+namespace AIdentities.UI.Features.AIdentityManagement.Services;
 
 public class AIdentityProviderSerializationSettings
 {
@@ -8,6 +8,6 @@ public class AIdentityProviderSerializationSettings
 
    public AIdentityProviderSerializationSettings()
    {
-      SerializerOptions.Converters.Add(new AIdentities.Shared.Serialization.FeatureCollectionJsonConverter());
+      SerializerOptions.Converters.Add(new Shared.Serialization.FeatureCollectionJsonConverter());
    }
 }

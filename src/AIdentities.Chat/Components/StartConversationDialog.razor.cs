@@ -1,5 +1,4 @@
-﻿using AIdentities.Shared.Features.Core;
-using MudBlazor;
+﻿using MudBlazor;
 
 namespace AIdentities.Chat.Components;
 

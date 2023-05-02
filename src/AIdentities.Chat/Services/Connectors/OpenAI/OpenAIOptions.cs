@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace AIdentities.Chat.Services.Connectors.OpenAI;
+﻿namespace AIdentities.Chat.Services.Connectors.OpenAI;
 
 public class OpenAIOptions
 {

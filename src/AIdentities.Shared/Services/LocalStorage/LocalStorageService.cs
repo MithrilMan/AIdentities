@@ -1,6 +1,4 @@
-﻿using Microsoft.Extensions.Logging;
-
-namespace AIdentities.Shared.Services.LocalStorage;
+﻿namespace AIdentities.Shared.Services.LocalStorage;
 internal class LocalStorageService : ILocalStorage
 {
    readonly ILogger<LocalStorageService> _logger;

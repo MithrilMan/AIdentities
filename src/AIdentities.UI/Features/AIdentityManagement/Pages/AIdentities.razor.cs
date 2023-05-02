@@ -1,9 +1,8 @@
 ﻿using System.Buffers;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Entities = AIdentities.Shared.Features.Core;
 
-namespace AIdentities.UI.Features.AIdentity.Pages;
+namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 
 [PageDefinition("AIdentities", Icons.Material.Filled.Person, "aidentities", Description = "Create and manage your set of AIdentities.")]
 public partial class AIdentities : AppPage<AIdentities>
@@ -70,7 +69,7 @@ It has no impact on how it responds, It's purely cosmetic.";
       _state.SetFormFields(_state.CurrentAIDentity);
    }
 
-   void EditAIdentity(Entities.AIdentity aIdentity)
+   void EditAIdentity(AIdentity aIdentity)
    {
       _state.CurrentAIDentity = aIdentity;
       _state.SetFormFields(aIdentity);

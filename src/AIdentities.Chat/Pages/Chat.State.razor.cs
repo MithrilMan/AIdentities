@@ -1,7 +1,4 @@
-﻿using AIdentities.Chat.Models;
-using AIdentities.Shared.Collections;
-
-namespace AIdentities.Chat.Pages;
+﻿namespace AIdentities.Chat.Pages;
 
 public partial class Chat
 {

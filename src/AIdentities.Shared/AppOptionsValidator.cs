@@ -1,5 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 
 namespace AIdentities.Shared;
 public class AppOptionsValidator :IValidateOptions<AppOptions>
