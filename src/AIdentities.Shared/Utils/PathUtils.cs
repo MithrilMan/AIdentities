@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using Microsoft.Extensions.Hosting;
 
 namespace AIdentities.Shared.Utils;
 public static partial class PathUtils

@@ -2,10 +2,10 @@
 
 public class AppOptions
 {
+   public const string SECTION_NAME = "AIdentities";
+
    const string DEFAULT_PACKAGE_FOLDER = "plugins_packages";
    const string DEFAULT_ALLOWED_PLUGIN_RESOURCE_EXTENSIONS = ".dll,.pdb,.css,.js,.png,.jpg,.jpeg,.gif,.json,.txt,.csv";
-
-   public static string SectionName => "AIdentities";
 
    /// <summary>
    /// Whether to allow plugins to be installed and loaded.

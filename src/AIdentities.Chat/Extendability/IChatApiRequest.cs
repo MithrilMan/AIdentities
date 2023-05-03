@@ -1,7 +1,8 @@
 ﻿namespace AIdentities.Chat.Extendability;
 
-public interface IChatSettings
+public interface IChatApiRequest
 {
+
    /// <summary>
    /// Determines how creative the model should be.
    /// A higher temperature allows the model to use words with lower probabilities, resulting in more diverse output.

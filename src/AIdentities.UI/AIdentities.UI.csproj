@@ -20,14 +20,18 @@
       <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.5" />
       <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
-      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.29.0" />
+      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.30.0" />
       <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
       <PackageReference Include="LibSassBuilder" Version="3.0.0" />
    </ItemGroup>
 
    <ItemGroup>
-      <ProjectReference Include="..\AIdentities.Chat\AIdentities.Chat.csproj" />
       <ProjectReference Include="..\AIdentities.Shared\AIdentities.Shared.csproj" />
+   </ItemGroup>
+   
+   <ItemGroup>
+      <ProjectReference Include="..\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
+      <ProjectReference Include="..\AIdentities.Chat\AIdentities.Chat.csproj" />
    </ItemGroup>
 
    <Target Name="Restore Local Tools" BeforeTargets="Compile">

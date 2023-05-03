@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace AIdentities.Chat.Extendability;
 
-
-namespace AIdentities.Chat.Extendability;
 public interface IChatConnector : IEndpointConnector
 {
-   IChatSettings Settings { get; }
+   Task<ChatApiResponse?> Request(ChatApiRequest request);
 }

@@ -1,7 +1,6 @@
 ﻿using AIdentities.Shared.Validation;
-using Entities = AIdentities.Shared.Features.Core;
 
-namespace AIdentities.UI.Features.AIdentity.Pages;
+namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 
 public partial class AIdentities
 {
@@ -15,11 +14,13 @@ public partial class AIdentities
       public string? Personality { get; set; }
       public string? FirstMessage { get; set; }
 
-      public Entities.AIdentity? CurrentAIDentity { get; set; }
+      public AIdentity? CurrentAIDentity { get; set; }
       public bool IsDragging { get; set; } = false;
-      public bool IsAdvancedMode { get; set; } = false;
+      public bool UseFullPrompt { get; set; } = false;
 
-      internal void SetFormFields(Entities.AIdentity? aIdentity)
+      public bool IsEditing => CurrentAIDentity != null;
+
+      internal void SetFormFields(AIdentity? aIdentity)
       {
          Name = aIdentity?.Name;
          Description = aIdentity?.Description;
@@ -28,6 +29,7 @@ public partial class AIdentities
          FullPrompt = aIdentity?.FullPrompt;
          Personality = aIdentity?.Personality;
          FirstMessage = aIdentity?.FirstMessage;
+         UseFullPrompt = aIdentity?.UseFullPrompt ?? false;
       }
    }
 

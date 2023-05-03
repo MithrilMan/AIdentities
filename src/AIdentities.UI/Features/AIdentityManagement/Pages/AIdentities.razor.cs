@@ -1,9 +1,11 @@
 ﻿using System.Buffers;
+using AIdentities.Chat.Components;
+using AIdentities.Chat.Models;
+using AIdentities.UI.Features.AIdentityManagement.Components;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using Entities = AIdentities.Shared.Features.Core;
 
-namespace AIdentities.UI.Features.AIdentity.Pages;
+namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 
 [PageDefinition("AIdentities", Icons.Material.Filled.Person, "aidentities", Description = "Create and manage your set of AIdentities.")]
 public partial class AIdentities : AppPage<AIdentities>
@@ -28,6 +30,7 @@ This is injected in the LLM prompt to make the AIdentity behave following a spec
 It has no impact on how it responds, It's purely cosmetic.";
 
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
+   [Inject] IDialogService DialogService { get; set; } = null!;
 
    MudForm? _form;
 
@@ -46,7 +49,7 @@ It has no impact on how it responds, It's purely cosmetic.";
          return;
       }
 
-      var modifiedAIdentity = _state.CurrentAIDentity with
+      var modifiedAIdentity = _state.CurrentAIDentity! with
       {
          Name = _state.Name!,
          Description = _state.Description!,
@@ -54,8 +57,11 @@ It has no impact on how it responds, It's purely cosmetic.";
          Background = _state.Background,
          FullPrompt = _state.FullPrompt!,
          Personality = _state.Personality,
-         FirstMessage = _state.FirstMessage
+         FirstMessage = _state.FirstMessage,
+         UseFullPrompt = _state.UseFullPrompt
       };
+
+      modifiedAIdentity.Features.Set("PROVA");
 
       AIdentityProvider.Update(modifiedAIdentity);
       NotificationService.ShowSuccess("AIdentity updated successfully!");
@@ -67,7 +73,23 @@ It has no impact on how it responds, It's purely cosmetic.";
       _state.SetFormFields(_state.CurrentAIDentity);
    }
 
-   void EditAIdentity(Entities.AIdentity aIdentity)
+   async Task ImportAIdentity()
+   {
+      var dialog = await DialogService.ShowAsync<ImportAIdentity>("Import a new AIdentity", new DialogOptions()
+      {
+         CloseButton = true,
+         CloseOnEscapeKey = true,
+         Position = DialogPosition.Center,
+         FullWidth = true,
+      }).ConfigureAwait(false);
+
+      var result = await dialog.Result.ConfigureAwait(false);
+      if (result.Data is not AIdentity aIdentity) return;
+
+      EditAIdentity(aIdentity);
+   }
+
+   void EditAIdentity(AIdentity aIdentity)
    {
       _state.CurrentAIDentity = aIdentity;
       _state.SetFormFields(aIdentity);
@@ -114,7 +136,4 @@ It has no impact on how it responds, It's purely cosmetic.";
 
    void StopDragging() => _state.IsDragging = false;
    void StartDragging() => _state.IsDragging = true;
-   void OnDragEnter() => StartDragging();
-   void OnDragLeave() => StopDragging();
-   void OnDragEnd() => StopDragging();
 }

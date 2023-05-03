@@ -20,6 +20,10 @@ public class DebuggablePagesManager : IDebuggablePagesManager
       RegisterAssemblies();
    }
 
+   /// <summary>
+   /// Register all assemblies from debuggable modules.
+   /// _debuggableModuleAssemblies is populated by registering into a DI the IDebuggableModule with.
+   /// </summary>
    private void RegisterAssemblies()
    {
       foreach (var module in _debuggableModules)

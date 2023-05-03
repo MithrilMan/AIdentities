@@ -1,20 +1,20 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Options;
-using Entities = AIdentities.Shared.Features.Core;
 
-namespace AIdentities.UI.Features.AIdentity.Services;
+namespace AIdentities.UI.Features.AIdentityManagement.Services;
 
 public class AIdentityProvider : IAIdentityProvider
 {
    readonly ILogger<AIdentityProvider> _logger;
    readonly IOptions<AppOptions> _options;
+   readonly AIdentityProviderSerializationSettings _serializationSettings;
+   readonly Dictionary<Guid, AIdentity> _aidentities = new();
 
-   readonly Dictionary<Guid, Entities.AIdentity> _aidentities = new();
-
-   public AIdentityProvider(ILogger<AIdentityProvider> logger, IOptions<AppOptions> options)
+   public AIdentityProvider(ILogger<AIdentityProvider> logger, IOptions<AppOptions> options, AIdentityProviderSerializationSettings serializationSettings)
    {
       _logger = logger;
       _options = options;
+      _serializationSettings = serializationSettings;
 
       CheckPath();
       FetchAIdentities();
@@ -29,9 +29,18 @@ public class AIdentityProvider : IAIdentityProvider
       var files = Directory.GetFiles(GetAIdentitiesPath(), "*.json");
       foreach (var file in files)
       {
-         var json = File.ReadAllText(file);
-         var aidentity = JsonSerializer.Deserialize<Entities.AIdentity>(json)!;
-         _aidentities[aidentity.Id] = aidentity;
+         var filename = Path.GetFileNameWithoutExtension(file);
+         if (!Guid.TryParse(filename, out var id))
+         {
+            _logger.LogWarning($"Unable to parse filename {filename} to Guid");
+            continue;
+         }
+
+         var aidentity = ReadAIdentity(id);
+         if (aidentity != null)
+         {
+            _aidentities[aidentity.Id] = aidentity;
+         }
       }
    }
 
@@ -44,50 +53,52 @@ public class AIdentityProvider : IAIdentityProvider
       }
    }
 
-   public IEnumerable<Entities.AIdentity> All()
+   public IEnumerable<AIdentity> All()
    {
       return _aidentities.Values;
    }
 
-   public bool Create(Entities.AIdentity newAIdentity)
+   public bool Create(AIdentity newAIdentity)
    {
       WriteAIdentity(newAIdentity);
       _aidentities[newAIdentity.Id] = newAIdentity;
       return true;
    }
 
-   public bool Delete(Entities.AIdentity deletedAIdentity)
+   public bool Delete(AIdentity deletedAIdentity)
    {
       File.Delete(GetAIdentityFileName(deletedAIdentity.Id));
       return _aidentities.Remove(deletedAIdentity.Id);
    }
 
-   public Entities.AIdentity? Get(Guid id)
+   public AIdentity? Get(Guid id)
    {
       if (!_aidentities.TryGetValue(id, out var aidentity))
       {
          //try to read again from disk
          aidentity = ReadAIdentity(id);
          if (aidentity != null)
+         {
             _aidentities[aidentity.Id] = aidentity;
+         }
       }
 
       return aidentity;
    }
 
-   public bool Update(Entities.AIdentity updatedAIdentity)
+   public bool Update(AIdentity updatedAIdentity)
    {
       WriteAIdentity(updatedAIdentity);
       _aidentities[updatedAIdentity.Id] = updatedAIdentity;
       return true;
    }
 
-   private Entities.AIdentity? ReadAIdentity(Guid id)
+   private AIdentity? ReadAIdentity(Guid id)
    {
       if (!File.Exists(GetAIdentityFileName(id))) return null;
 
       var json = File.ReadAllText(GetAIdentityFileName(id));
-      var aidentity = JsonSerializer.Deserialize<Entities.AIdentity>(json);
+      var aidentity = JsonSerializer.Deserialize<AIdentity>(json, _serializationSettings.SerializerOptions);
       return aidentity;
    }
 
@@ -95,9 +106,9 @@ public class AIdentityProvider : IAIdentityProvider
    /// Writes the aidentity to disk.
    /// </summary>
    /// <param name="aidentity"></param>
-   private void WriteAIdentity(Entities.AIdentity aidentity)
+   private void WriteAIdentity(AIdentity aidentity)
    {
-      var json = JsonSerializer.Serialize(aidentity);
+      var json = JsonSerializer.Serialize(aidentity, _serializationSettings.SerializerOptions);
       File.WriteAllText(GetAIdentityFileName(aidentity.Id), json);
    }
 }

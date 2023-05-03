@@ -7,15 +7,16 @@
          <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Tertiary">AIdentities</MudText>
          <MudSpacer />
          <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.PersonAdd" IconSize="Size.Large" Size="Size.Large"
-                    OnClick="CreateNewAIdentity">
-            Create a new AIdentity
-         </MudButton>
+                    OnClick="CreateNewAIdentity">Create a new AIdentity</MudButton>
+         <MudSpacer />
+         <MudButton Variant="Variant.Filled" EndIcon="@("<path d=\"M14,12L10,8V11H2V13H10V16M20,18V6C20,4.89 19.1,4 18,4H6A2,2 0 0,0 4,6V9H6V6H18V18H6V15H4V18A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18Z\" />")" IconSize="Size.Large" Size="Size.Large"
+                    OnClick="ImportAIdentity">Import AIdentity</MudButton>
          <MudSpacer />
       </MudItem>
       <MudItem xs="8">
          <MudPaper>
             <MudCarousel Class="flex-shrink-0 pa-0 ma-0" Style="height:200px;" AutoCycle="true" AutoCycleTime="TimeSpan.FromSeconds(5)"
-                         TData="Shared.Features.Core.AIdentity"
+                         TData="AIdentity"
                          ArrowsPosition="Position.Bottom" BulletsPosition="Position.Bottom">
                @foreach (var aIdentity in AIdentityProvider.All())
                {
@@ -46,10 +47,11 @@
       <MudItem xs="4" Class="d-flex flex-column mat-elevation-1">
          <MudPaper Class="flex-1 d-flex flex-column gap-2 overflow-y-auto">
             <MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="false" Accept="@VALID_FILE_TYPES" MaximumFileCount="1"
-                           Class="flex-shrink-0" InputClass="absolute cursor-pointer mud-width-full mud-height-full z-20" InputStyle="opacity:0"
-                           OnFilesChanged="OnImageUpload" @ondragenter="@OnDragEnter" @ondragleave="@OnDragLeave" @ondragend="@OnDragEnd">
+                           Class="flex-shrink-0" InputClass="absolute mud-width-full mud-height-full z-20" InputStyle="opacity:0"
+                           Disabled="!_state.IsEditing" OnFilesChanged="OnImageUpload"
+                           @ondragenter="@StartDragging" @ondragleave="@StopDragging" @ondragend="@StopDragging">
                <ButtonTemplate>
-                  <MudPaper Outlined="true" Class="@(GetDragClass() + ((_state.CurrentAIDentity is null) ? " cursor-none mud-theme-default":" mud-theme-secondary" ))">
+                  <MudPaper Outlined="true" Class="@(GetDragClass() + ((_state.IsEditing) ? " cursor-pointer mud-theme-secondary" : " cursor-none mud-theme-default"))">
                      <MudText Typo="Typo.h4" Align="Align.Center">Drop Here or Click to select the image</MudText>
                   </MudPaper>
                </ButtonTemplate>
@@ -78,27 +80,27 @@
                </MudItem>
                <MudItem xs="6">
                   <MudTextField @bind-Value="@_state.Description" For="() => _state.Description"
-                                Label="Description" Variant="Variant.Filled" Immediate="true" Lines="3"
+                                Label="Description" Variant="Variant.Filled" Immediate="true" Lines="5"
                                 Placeholder="@HELP_DESCRIPTION" />
                </MudItem>
                <MudItem xs="6">
-                  <MudTextField @bind-Value="@_state.FirstMessage" Immediate="true" Lines="3" For="() => _state.FirstMessage"
+                  <MudTextField @bind-Value="@_state.FirstMessage" Immediate="true" Lines="5" For="() => _state.FirstMessage"
                                 Label="First Message" Variant="Variant.Filled"
                                 Placeholder="@HELP_FIRST_MESSAGE" />
                </MudItem>
                <MudItem xs="12">
                   <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center">
                      <MudText Typo="Typo.body1" Class="mr-2">Wizard</MudText>
-                     <MudSwitch @bind-Checked="@_state.IsAdvancedMode" Color="Color.Primary" />
-                     <MudText Typo="Typo.body1" Class="ml-2">Advanced</MudText>
+                     <MudSwitch @bind-Checked="@_state.UseFullPrompt" Color="Color.Primary" />
+                     <MudText Typo="Typo.body1" Class="ml-2">Full Prompt</MudText>
                   </MudStack>
                </MudItem>
-               @if (_state.IsAdvancedMode)
+               @if (_state.UseFullPrompt)
                {
                   <MudItem xs="12">
                      <MudTextField @bind-Value="@_state.FullPrompt" Immediate="true" Lines="8" For="() => _state.FullPrompt"
                                 Label="Full Prompt" Variant="Variant.Filled"
-                                Placeholder="@HELP_FULL_PROMPT" Disabled="!_state.IsAdvancedMode" />
+                                Placeholder="@HELP_FULL_PROMPT" Disabled="!_state.UseFullPrompt" />
                   </MudItem>
                }
                else
@@ -106,12 +108,12 @@
                   <MudItem xs="6">
                      <MudTextField @bind-Value="@_state.Background" For="() => _state.Background"
                                 Label="Background" Variant="Variant.Filled" Immediate="true" Lines="5"
-                                Placeholder="@HELP_BACKGROUND" Disabled="_state.IsAdvancedMode" />
+                                Placeholder="@HELP_BACKGROUND" Disabled="_state.UseFullPrompt" />
                   </MudItem>
                   <MudItem xs="6">
                      <MudTextField @bind-Value="@_state.Personality" Immediate="true" Lines="5" For="() => _state.Personality"
                                 Label="Personality" Variant="Variant.Filled"
-                                Placeholder="@HELP_FULL_PERSONALITY" Disabled="_state.IsAdvancedMode" />
+                                Placeholder="@HELP_FULL_PERSONALITY" Disabled="_state.UseFullPrompt" />
                   </MudItem>
                }
             </MudGrid>

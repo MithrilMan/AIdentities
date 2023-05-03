@@ -1,0 +1,69 @@
+﻿@if (AIdentityImporters?.Any() != true)
+{
+   <MudDialog>
+      <DialogContent>
+         <MudAlert Severity="Severity.Error" Variant="Variant.Filled">No AIdentity Importers found!</MudAlert>
+      </DialogContent>
+   </MudDialog>
+}
+else
+{
+   <MudDialog>
+      <DialogContent>
+         <MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0">
+            <MudPaper Class="flex-1 d-flex flex-column gap-2 overflow-y-auto">
+               <MudStack>
+                  <MudAutocomplete T="IAIdentityImporter" AutoFocus="true" Immediate="true" Variant="Variant.Filled"
+                                @bind-Value="_state.SelectedImporter" For="@(() => _state.SelectedImporter)"
+                                SearchFunc="@SearchImporter" ToStringFunc="(importer => importer?.Name)"
+                                Placeholder="Select the AIdentity you want to talk with">
+                  </MudAutocomplete>
+                  <MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="false" Accept="@GetAllowedFileExtensions()" MaximumFileCount="1"
+                              Class="flex-shrink-0" InputClass="absolute mud-width-full mud-height-full z-20" InputStyle="opacity:0"
+                              Disabled="!_state.IsEditing" OnFilesChanged="OnImageUpload"
+                              @ondragenter="@StartDragging" @ondragleave="@StopDragging" @ondragend="@StopDragging">
+                     <ButtonTemplate>
+                        <MudPaper Outlined="true" Class="@(GetDragClass() + ((_state.IsEditing) ? " cursor-pointer mud-theme-secondary" : " cursor-none mud-theme-default"))">
+                           <MudText Typo="Typo.h4" Align="Align.Center">
+                              @if (_state.SelectedImporter is null)
+                              {
+                                 <span>Select an Importer</span>
+                              }
+                              else
+                              {
+                                 <span>Drop here the file to import or click to select.</span>
+                              }
+                           </MudText>
+                        </MudPaper>
+                     </ButtonTemplate>
+                  </MudFileUpload>
+               </MudStack>
+               @if (_state.File != null)
+               {
+                  <MudPaper Elevation="3" Class="flex-grow-1 d-flex flex-column align-content-center justify-center overflow-y-auto" Style="height:100px">
+                     <MudChipSet Class="flex-1">
+                        <MudChip Text="@_state.File.Name"></MudChip>
+                     </MudChipSet>
+                  </MudPaper>
+               }
+            </MudPaper>
+         </MudForm>
+      </DialogContent>
+
+      <DialogActions>
+         <MudButton OnClick="Cancel" Disabled="_state.File is null">Cancel</MudButton>
+         <MudButton Color="Color.Primary" OnClick="Import" Disabled="_state.File is null" ButtonType="ButtonType.Submit">Import AIdentity!</MudButton>
+      </DialogActions>
+   </MudDialog>
+}
+
+@code {
+   const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-4 mud-width-full mud-height-full z-10";
+   string GetDragClass() => _state.IsDragging ? $"{DEFAULT_DRAG_CLASS} mud-border-primary mud-theme-dark" : DEFAULT_DRAG_CLASS;
+
+   private string GetAllowedFileExtensions()
+   {
+      if (_state.SelectedImporter is null) return string.Empty;
+      return string.Join(",", _state.SelectedImporter.AllowedFileExtensions);
+   }
+}

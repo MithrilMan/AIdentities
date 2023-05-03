@@ -1,6 +1,4 @@
-﻿using AIdentities.Shared.Features.Core;
-
-namespace AIdentities.Shared.Services;
+﻿namespace AIdentities.Shared.Features.AIdentities.Services;
 
 /// <summary>
 /// A service that provides access to <see cref="AIdentity"/>s.

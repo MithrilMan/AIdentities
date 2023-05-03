@@ -1,4 +1,5 @@
 using AIdentities.UI;
+using Microsoft.Extensions.Options;
 using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -11,7 +12,16 @@ builder.Host.UseSerilog((context, configuration) =>
       .Enrich.FromLogContext();
 });
 
-builder.Services.AddAIdentitiesServices(builder.Environment);
+Microsoft.Extensions.Logging.ILogger startupLogger;
+
+try
+{
+   builder.Services.AddAIdentitiesServices(builder.Environment, out startupLogger);
+}
+catch (OptionsValidationException)
+{
+   return;
+}
 
 if (builder.Environment.IsDevelopment())
 {
@@ -37,4 +47,15 @@ app.UseRouting();
 app.MapBlazorHub();
 app.MapFallbackToPage("/_Host");
 
-app.Run();
+try
+{
+   app.Run();
+}
+catch (OptionsValidationException ex)
+{
+   startupLogger.LogError("Failed to validate options");
+   foreach (var failure in ex.Failures)
+   {
+      startupLogger.LogError("Validation failure: {Failure}", failure);
+   }
+}

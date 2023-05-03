@@ -1,6 +1,4 @@
-﻿using AIdentities.Chat.Models;
-
-namespace AIdentities.Chat.Services;
+﻿namespace AIdentities.Chat.Services;
 public class ChatStorage : IChatStorage
 {
    const string CONVERSATION_POSTFIX = ".conv.json";
@@ -49,22 +47,30 @@ public class ChatStorage : IChatStorage
       };
 
       var messagesFileName = $"{conversationId}{CONVERSATION_MESSAGES_POSTFIX}";
-      var messages = await _pluginStorage.ReadAsync(messagesFileName).ConfigureAwait(false);
-
-      if (string.IsNullOrWhiteSpace(messages))
+      try
       {
-         return conversation;
-      }
+         var messages = await _pluginStorage.ReadAsync(messagesFileName).ConfigureAwait(false);
 
-      //each line is a json formatted message
-      foreach (var message in messages.Split(Environment.NewLine))
-      {
-         if (string.IsNullOrWhiteSpace(message))
+         if (string.IsNullOrWhiteSpace(messages))
          {
-            continue;
+            return conversation;
          }
-         var chatMessage = JsonSerializer.Deserialize<ChatMessage>(message);
-         conversation.Messages.Add(chatMessage!);
+
+         //each line is a json formatted message
+         foreach (var message in messages.Split('\n'))
+         {
+            if (string.IsNullOrWhiteSpace(message))
+            {
+               continue;
+            }
+            var chatMessage = JsonSerializer.Deserialize<ChatMessage>(message);
+            conversation.Messages.Add(chatMessage!);
+         }
+      }
+      catch (Exception ex)
+      {
+         _logger.LogError(ex, $"Conversation with id {conversationId} is corrupted.");
+         throw new FormatException($"Conversation with id {conversationId} is corrupted.", ex);
       }
 
       return conversation!;

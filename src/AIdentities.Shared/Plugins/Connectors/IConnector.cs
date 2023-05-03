@@ -1,4 +1,6 @@
-﻿namespace AIdentities.Shared.Plugins.Connectors;
+﻿using Microsoft.AspNetCore.Http.Features;
+
+namespace AIdentities.Shared.Plugins.Connectors;
 
 /// <summary>
 /// A generic interface for connectors.
@@ -18,11 +20,8 @@ public interface IConnector
    string Description { get; }
 
    /// <summary>
-   /// Gets a feature of the specified type.
+   /// Additional features the connector can have.
+   /// Plugin developers can use this to add and manage custom features to their connectors or access other plugins' features.
    /// </summary>
-   /// <typeparam name="TFeatureType"></typeparam>
-   /// <returns></returns>
-   TFeatureType? GetFeature<TFeatureType>();
-
-   void SetFeature<TFeatureType>(TFeatureType? feature);
+   IFeatureCollection Features { get; }
 }

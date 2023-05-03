@@ -1,4 +1,6 @@
 ﻿global using AIdentities.Shared;
+global using AIdentities.Shared.Features.AIdentities.Models;
+global using AIdentities.Shared.Features.AIdentities.Services;
 global using AIdentities.Shared.Features.Automation.Models;
 global using AIdentities.Shared.Features.Core;
 global using AIdentities.Shared.Plugins;
@@ -7,7 +9,10 @@ global using AIdentities.Shared.Plugins.Events;
 global using AIdentities.Shared.Plugins.Pages;
 global using AIdentities.Shared.Services;
 global using AIdentities.Shared.Services.EventBus;
+global using AIdentities.Shared.Services.Javascript;
 global using AIdentities.Shared.Utils;
+global using AIdentities.Shared.Validation;
+global using AIdentities.UI.Features.Core.Services.Javascript;
 global using AIdentities.UI.Features.Settings.Services;
 global using Blazored.LocalStorage;
 global using FluentValidation;
