@@ -1,11 +1,8 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-
-namespace AIdentities.Chat;
+﻿namespace AIdentities.Chat.PygmalionAI;
 
 public sealed class DebuggableModule : BaseDebuggableModule<PluginEntry>
 {
-   public override string Name => "Chat";
+   public override string Name => "Chat.PygmalionPlugin";
 
    protected override void RegisterServices(IServiceCollection services, IHostEnvironment hostEnvironment)
    {

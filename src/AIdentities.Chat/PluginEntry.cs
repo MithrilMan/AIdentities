@@ -4,7 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
 namespace AIdentities.Chat;
-public class ChatPlugin : IPluginEntry
+public class PluginEntry : IPluginEntry
 {
    private PluginManifest _manifest = default!;
    private IPluginStorage _storage = default!;
@@ -26,7 +26,7 @@ public class ChatPlugin : IPluginEntry
          ));
 
       services
-         .AddSingleton<IValidateOptions<OpenAIOptions>,OpenAIOptionsValidator>()
+         .AddSingleton<IValidateOptions<OpenAIOptions>, OpenAIOptionsValidator>()
          .AddOptions<OpenAIOptions>()
          .BindConfiguration(OpenAIOptions.SECTION_NAME)
          .ValidateOnStart();

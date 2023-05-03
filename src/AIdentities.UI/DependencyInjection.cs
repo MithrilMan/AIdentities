@@ -89,14 +89,6 @@ public static class DependencyInjection
       // we are causing validation to happen during DI resolution and we won't have control on the output
       ValidateAppOptionsExplicitly(startupLogger, temporaryServiceProvider);
 
-      //var pluginManager = new PluginManager(
-      //   logger: temporaryServiceProvider.GetRequiredService<ILogger<PluginManager>>(),
-      //   options: temporaryServiceProvider.GetRequiredService<IOptions<AppOptions>>(),
-      //   webHostEnvironment: webHostEnvironment,
-      //   pluginStorageFactory: temporaryServiceProvider.GetRequiredService<IPluginStorageFactory>(),
-      //   packageInspector: temporaryServiceProvider.GetRequiredService<IPackageInspector>()
-      //   );
-
       PluginManager pluginManager = temporaryServiceProvider.GetRequiredService<PluginManager>();
       pluginManager.LoadStoredPackagesAsync(services).GetAwaiter().GetResult();
 
