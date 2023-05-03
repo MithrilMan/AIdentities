@@ -11,6 +11,9 @@
                ],
                ".State.razor.cs": [
                   ".razor"
+               ],
+               ".Validator.razor.cs": [
+                  ".razor"
                ]
             }
          },

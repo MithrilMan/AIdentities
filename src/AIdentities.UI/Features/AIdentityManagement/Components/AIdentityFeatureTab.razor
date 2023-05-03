@@ -1,0 +1,6 @@
+﻿@typeparam TFeature
+
+<MudTabPanel Text="@Title">
+   <DynamicComponent Type="@typeof(TFeature)" Parameters="_parameters" @ref="_featureTab">
+      </DynamicComponent>
+</MudTabPanel>
