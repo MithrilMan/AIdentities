@@ -7,6 +7,9 @@ namespace AIdentities.BooruAIdentityImporter.Services;
 public class BooruAIdentityImporter : IAIdentityImporter
 {
    const int MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+   const string ERROR_NO_BOORU_METADATA = "The file {FileName} doesn't have any booru metadata";
+   const string BOORU_METADATA_PREFIX = "chara:";
+
    private static readonly string[] _allowedFileExtensions = new[] { ".png", ".webp" };
    readonly ILogger<BooruAIdentityImporter> _logger;
 
@@ -38,30 +41,44 @@ public class BooruAIdentityImporter : IAIdentityImporter
          int dataLength = (int)memoryStream.Length;
          if (dataLength > 0)
          {
-            string base64Data = Convert.ToBase64String(buffer);
-            var newAIdentity = new AIdentity
-            {
-               Image = $"data:{aIdentityFile.ContentType};base64,{base64Data}"
-            };
-
             memoryStream.Position = 0;
             IReadOnlyList<MetadataExtractor.Directory> metaData = MetadataExtractor.ImageMetadataReader.ReadMetadata(memoryStream);
 
             var tEXt = metaData.FirstOrDefault(d => d.Name == "PNG-tEXt");
             if (tEXt == null)
             {
+               _logger.LogError(ERROR_NO_BOORU_METADATA, aIdentityFile.Name);
+               return null;
+            }
+
+            var description = tEXt.Tags[0].Description;
+
+            if (!description?.StartsWith(BOORU_METADATA_PREFIX) ?? false)
+            {
+               _logger.LogError(ERROR_NO_BOORU_METADATA, aIdentityFile.Name);
+               return null;
+            }
+
+            var jsonBytes = Convert.FromBase64String(description[BOORU_METADATA_PREFIX.Length..]);
+
+            var decodedJson = JsonSerializer.Deserialize<BooruMetadata>(jsonBytes);
+            if (decodedJson == null)
+            {
                _logger.LogError("The file {FileName} doesn't have any booru metadata", aIdentityFile.Name);
                return null;
             }
 
-            var description = tEXt.Tags.First().Description;
-            const string charaPrefix = "chara:";
-            if (description?.StartsWith(charaPrefix) ?? false)
+            string base64Data = Convert.ToBase64String(buffer);
+            var newAIdentity = new AIdentity
             {
-               var characterData = System.Text.Encoding.UTF8.GetString(Convert.FromBase64String(description[charaPrefix.Length..]));
+               Name = decodedJson.Name,
+               Description = decodedJson.Description,
+               FirstMessage = decodedJson.First_Mes,
+               Personality = decodedJson.Personality,
+               Background = decodedJson.Scenario,
+               Image = $"data:{aIdentityFile.ContentType};base64,{base64Data}",
+            };
 
-               var decodedJson = JsonSerializer.Deserialize<BooruMetadata>(characterData);
-            }
             return newAIdentity;
          }
          else

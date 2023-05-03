@@ -59,7 +59,7 @@ public partial class ImportAIdentity : ComponentBase
             return;
          }
 
-         MudDialog.Close(DialogResult.Ok(aIdentity));
+         await InvokeAsync(() => MudDialog.Close(DialogResult.Ok(aIdentity))).ConfigureAwait(false);
       }
       catch (Exception ex)
       {
