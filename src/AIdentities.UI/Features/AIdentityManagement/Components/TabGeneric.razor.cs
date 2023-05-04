@@ -14,7 +14,7 @@ public partial class TabGeneric
 It's used to give a brief description of the AIdentity.";
 
    const string HELP_PERSONALITY = @"The AIdentity's personality.
-The usage depensd on the feature using the AIdentity.
+The usage depends on the feature using the AIdentity.
 ";
 
    [Inject] protected INotificationService NotificationService { get; set; } = default!;

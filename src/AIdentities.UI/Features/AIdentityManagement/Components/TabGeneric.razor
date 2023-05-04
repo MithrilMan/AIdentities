@@ -34,14 +34,14 @@
                                 Variant="Variant.Filled" Immediate="true"
                                 Placeholder="@HELP_NAME" />
                </MudItem>
-               <MudItem xs="6">
+               <MudItem xs="12">
                   <MudTextField @bind-Value="@_state.Description" For="() => _state.Description"
-                                Label="Description" Variant="Variant.Filled" Immediate="true" Lines="10"
+                                Label="Description" Variant="Variant.Filled" Immediate="true" Lines="5"
                                 Placeholder="@HELP_DESCRIPTION" />
                </MudItem>
-               <MudItem xs="6">
-                  <MudTextField @bind-Value="@_state.FirstMessage" Immediate="true" Lines="10" For="() => _state.FirstMessage"
-                                Label="First Message" Variant="Variant.Filled"
+               <MudItem xs="12">
+                  <MudTextField @bind-Value="@_state.Personality" Immediate="true" Lines="12" For="() => _state.Personality"
+                                Label="Personality" Variant="Variant.Filled"
                                 Placeholder="@HELP_PERSONALITY" />
                </MudItem>
             </MudGrid>
@@ -52,7 +52,6 @@
             <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" IconSize="Size.Large" EndIcon="@Icons.Material.Filled.Save" OnClick="@OnSave" Size="Size.Large">Save</MudButton>
             <MudSpacer />
          </MudToolBar>
-         <MudSpacer />
       </MudItem>
    </MudForm>
 </MudTabPanel>

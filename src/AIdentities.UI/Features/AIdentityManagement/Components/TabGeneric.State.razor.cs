@@ -9,13 +9,8 @@ public partial class TabGeneric
 
       public string? Name { get; set; }
       public string? Image { get; set; }
-      public string? Background { get; set; }
       public string? Description { get; set; }
-      public string? FullPrompt { get; set; }
       public string? Personality { get; set; }
-      public string? FirstMessage { get; set; }
-
-      public bool UseFullPrompt { get; set; } = false;
 
       internal void SetFormFields(AIdentity? aIdentity)
       {

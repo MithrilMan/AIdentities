@@ -26,7 +26,6 @@
    
    <ItemGroup>
       <ProjectReference Include="..\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
-      <ProjectReference Include="..\AIdentities.Chat\AIdentities.Chat.csproj" />
    </ItemGroup>
 
    <Target Name="Restore Local Tools" BeforeTargets="Compile">
