@@ -20,7 +20,7 @@ public class AppOptionsValidator :IValidateOptions<AppOptions>
 
 
       //check if it's a valid relative path
-      if (!PathUtils.IsValidPath(options.PackageFolder))
+      if (!PathUtils.IsValidFolder(options.PackageFolder))
       {
          return ValidateOptionsResult.Fail(INVALID_CHARACTERS_IN_PACKAGEFOLDER);
       }

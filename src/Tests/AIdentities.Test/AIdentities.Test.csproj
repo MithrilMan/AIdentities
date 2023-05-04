@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AIdentities.UI\AIdentities.UI.csproj" />
+    <ProjectReference Include="..\..\AIdentities.UI\AIdentities.UI.csproj" />
   </ItemGroup>
 
 </Project>
