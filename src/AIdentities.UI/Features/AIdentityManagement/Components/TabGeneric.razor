@@ -42,36 +42,8 @@
                <MudItem xs="6">
                   <MudTextField @bind-Value="@_state.FirstMessage" Immediate="true" Lines="10" For="() => _state.FirstMessage"
                                 Label="First Message" Variant="Variant.Filled"
-                                Placeholder="@HELP_FIRST_MESSAGE" />
+                                Placeholder="@HELP_PERSONALITY" />
                </MudItem>
-               <MudItem xs="12">
-                  <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center">
-                     <MudText Typo="Typo.body1" Class="mr-2">Wizard</MudText>
-                     <MudSwitch @bind-Checked="@_state.UseFullPrompt" Color="Color.Primary" />
-                     <MudText Typo="Typo.body1" Class="ml-2">Full Prompt</MudText>
-                  </MudStack>
-               </MudItem>
-               @if (_state.UseFullPrompt)
-               {
-                  <MudItem xs="12">
-                     <MudTextField @bind-Value="@_state.FullPrompt" Immediate="true" Lines="8" For="() => _state.FullPrompt"
-                                Label="Full Prompt" Variant="Variant.Filled"
-                                Placeholder="@HELP_FULL_PROMPT" Disabled="!_state.UseFullPrompt" />
-                  </MudItem>
-               }
-               else
-               {
-                  <MudItem xs="6">
-                     <MudTextField @bind-Value="@_state.Background" For="() => _state.Background"
-                                Label="Background" Variant="Variant.Filled" Immediate="true" Lines="5"
-                                Placeholder="@HELP_BACKGROUND" Disabled="_state.UseFullPrompt" />
-                  </MudItem>
-                  <MudItem xs="6">
-                     <MudTextField @bind-Value="@_state.Personality" Immediate="true" Lines="5" For="() => _state.Personality"
-                                Label="Personality" Variant="Variant.Filled"
-                                Placeholder="@HELP_FULL_PERSONALITY" Disabled="_state.UseFullPrompt" />
-                  </MudItem>
-               }
             </MudGrid>
          </MudPaper>
          <MudToolBar Dense="true" DisableGutters="true" Class="ma-2 gap-2">

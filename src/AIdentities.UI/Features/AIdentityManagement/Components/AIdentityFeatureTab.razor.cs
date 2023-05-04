@@ -1,13 +1,12 @@
-﻿using AIdentities.Shared.Features.AIdentities.Abstracts;
-using Microsoft.AspNetCore.Components;
+﻿using Microsoft.AspNetCore.Components;
 
 namespace AIdentities.UI.Features.AIdentityManagement.Components;
 
-public partial class AIdentityFeatureTab<TFeature>
+public partial class AIdentityFeatureTab
+//where TFeature : IAIdentityFeature
 {
-   [Parameter] public string Title { get; set; } = typeof(TFeature).Name;
-   [Parameter] public TFeature? Feature { get; set; }
-   [Parameter] public IAIdentityFeatureTab<TFeature>? FeatureTab { get; set; }
+   [Parameter] public AIdentityFeatureRegistration FeatureRegistration { get; set; } = default!;
+   [Parameter] public AIdentity AIdentity { get; set; } = default!;
 
    private readonly Dictionary<string, object?> _parameters = new();
 
@@ -18,6 +17,9 @@ public partial class AIdentityFeatureTab<TFeature>
       base.OnParametersSet();
 
       _parameters.Clear();
-      _parameters["Feature"] = Feature;
+      _parameters["Feature"] = AIdentity?.Features[FeatureRegistration.FeatureType];
    }
+
+
+   //TODO: move here the save/undo logic and call _featureTab.Instance.SaveAsync() and _featureTab.Instance.UndoChangesAsync()
 }

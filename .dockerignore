@@ -26,3 +26,5 @@ README.md
 
 # Directories potentially created on local machine containing test data.
 **/packages
+
+**/.filenesting.json

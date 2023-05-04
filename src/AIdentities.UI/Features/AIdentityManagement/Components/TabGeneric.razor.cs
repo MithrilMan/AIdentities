@@ -10,20 +10,12 @@ public partial class TabGeneric
 
    const string HELP_NAME = @"The name of the AIdentity.";
 
-   const string HELP_BACKGROUND = @"AIdentity's background.
-You can for example specify where the AIdentity is from, or what it does for a living.";
-
    const string HELP_DESCRIPTION = @"The description of the AIdentity.
-It has no impact on how it responds, it's used only to give a brief description of the AIdentity.";
+It's used to give a brief description of the AIdentity.";
 
-   const string HELP_FULL_PROMPT = @"The full prompt passed to the LLM to start the conversation.
-When specified, the LLM will use this prompt to start the conversation.
+   const string HELP_PERSONALITY = @"The AIdentity's personality.
+The usage depensd on the feature using the AIdentity.
 ";
-   const string HELP_FULL_PERSONALITY = @"The AIdentity's personality.
-This is injected in the LLM prompt to make the AIdentity behave following a specific personality.
-";
-   const string HELP_FIRST_MESSAGE = @"The first message sent by the AIdentity when a new conversation starts.
-It has no impact on how it responds, It's purely cosmetic.";
 
    [Inject] protected INotificationService NotificationService { get; set; } = default!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
@@ -102,14 +94,8 @@ It has no impact on how it responds, It's purely cosmetic.";
          Name = _state.Name!,
          Description = _state.Description!,
          Image = _state.Image!,
-         Background = _state.Background,
-         FullPrompt = _state.FullPrompt!,
          Personality = _state.Personality,
-         FirstMessage = _state.FirstMessage,
-         UseFullPrompt = _state.UseFullPrompt
       };
-
-      modifiedAIdentity.Features.Set("PROVA");
 
       AIdentityProvider.Update(modifiedAIdentity);
       NotificationService.ShowSuccess("AIdentity updated successfully!");

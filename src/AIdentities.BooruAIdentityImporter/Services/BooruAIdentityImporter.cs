@@ -68,14 +68,15 @@ public class BooruAIdentityImporter : IAIdentityImporter
                return null;
             }
 
+            //TODO: the importer should interact with the chat AIdentity feature to set the other fields, or should write in its own feature
             string base64Data = Convert.ToBase64String(buffer);
             var newAIdentity = new AIdentity
             {
                Name = decodedJson.Name,
                Description = decodedJson.Description,
-               FirstMessage = decodedJson.First_Mes,
+               //FirstMessage = decodedJson.First_Mes,
                Personality = decodedJson.Personality,
-               Background = decodedJson.Scenario,
+               //Background = decodedJson.Scenario,
                Image = $"data:{aIdentityFile.ContentType};base64,{base64Data}",
             };
 

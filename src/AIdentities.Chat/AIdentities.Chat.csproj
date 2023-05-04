@@ -22,11 +22,6 @@
    -->
 
    <ItemGroup>
-      <Content Remove=".filenesting.json" />
-      <None Include=".filenesting.json" />
-   </ItemGroup>
-
-   <ItemGroup>
       <SupportedPlatform Include="browser" />
    </ItemGroup>
 

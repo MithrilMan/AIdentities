@@ -10,6 +10,10 @@ namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 [PageDefinition("AIdentities", Icons.Material.Filled.Person, "aidentities", Description = "Create and manage your set of AIdentities.")]
 public partial class AIdentities : AppPage<AIdentities>
 {
+   /// <summary>
+   /// The list of all the AIdentity feature registrations registered by plugins.
+   /// </summary>
+   [Inject] IEnumerable<AIdentityFeatureRegistration> AIdentityFeatureRegistrations { get; set; } = null!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
    [Inject] IDialogService DialogService { get; set; } = null!;
 

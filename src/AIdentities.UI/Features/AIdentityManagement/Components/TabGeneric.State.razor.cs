@@ -22,11 +22,7 @@ public partial class TabGeneric
          Name = aIdentity?.Name;
          Description = aIdentity?.Description;
          Image = aIdentity?.Image;
-         Background = aIdentity?.Background;
-         FullPrompt = aIdentity?.FullPrompt;
          Personality = aIdentity?.Personality;
-         FirstMessage = aIdentity?.FirstMessage;
-         UseFullPrompt = aIdentity?.UseFullPrompt ?? false;
       }
    }
 
