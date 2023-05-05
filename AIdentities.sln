@@ -19,20 +19,26 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{3B5F4E8B-3A44-41A2-9B78-4C5385555837}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{396E75FB-E2A2-428F-8DD1-CF3642A7C8EB}"
+	ProjectSection(SolutionItems) = preProject
+		src\Plugins\Directory.Build.targets = src\Plugins\Directory.Build.targets
+		src\Plugins\Directory.Build.props = src\Plugins\Directory.Build.props
+	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.Chat", "src\AIdentities.Chat\AIdentities.Chat.csproj", "{7D8629E8-B28E-4F67-8363-5EE5C3DCA1AE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.Chat", "src\Plugins\AIdentities.Chat\AIdentities.Chat.csproj", "{7D8629E8-B28E-4F67-8363-5EE5C3DCA1AE}"
 EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{943093B5-4BA6-4AAE-997D-4D3A42B96C21}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.BooruAIdentityImporter", "src\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj", "{6D0CD8AB-3971-49DD-BB89-D85ABBC429F8}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.BooruAIdentityImporter", "src\Plugins\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj", "{6D0CD8AB-3971-49DD-BB89-D85ABBC429F8}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Chat", "Chat", "{8568F82D-1C21-4549-A4E9-E90525FC069F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.Chat.PygmalionAI", "src\AIdentities.Chat.PygmalionAI\AIdentities.Chat.PygmalionAI.csproj", "{738B154D-FFEF-4C37-A763-F5B6EA5D53E2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.Chat.PygmalionAI", "src\Plugins\AIdentities.Chat.PygmalionAI\AIdentities.Chat.PygmalionAI.csproj", "{738B154D-FFEF-4C37-A763-F5B6EA5D53E2}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.Test", "src\Tests\AIdentities.Test\AIdentities.Test.csproj", "{90BDAC9D-6923-4AC4-B335-51A8CED94AD9}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.SharedTests", "src\Tests\AIdentities.SharedTests\AIdentities.SharedTests.csproj", "{819B04A8-C1AF-4640-B7F2-29B192F1E1FB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.PluginBuilder", "src\AIdentities.PluginBuilder\AIdentities.PluginBuilder.csproj", "{0B32E3CA-2CA0-499B-9D3D-3B02A086105D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,6 +78,10 @@ Global
 		{819B04A8-C1AF-4640-B7F2-29B192F1E1FB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{819B04A8-C1AF-4640-B7F2-29B192F1E1FB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{819B04A8-C1AF-4640-B7F2-29B192F1E1FB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0B32E3CA-2CA0-499B-9D3D-3B02A086105D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0B32E3CA-2CA0-499B-9D3D-3B02A086105D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0B32E3CA-2CA0-499B-9D3D-3B02A086105D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0B32E3CA-2CA0-499B-9D3D-3B02A086105D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -83,6 +93,7 @@ Global
 		{738B154D-FFEF-4C37-A763-F5B6EA5D53E2} = {8568F82D-1C21-4549-A4E9-E90525FC069F}
 		{90BDAC9D-6923-4AC4-B335-51A8CED94AD9} = {3B5F4E8B-3A44-41A2-9B78-4C5385555837}
 		{819B04A8-C1AF-4640-B7F2-29B192F1E1FB} = {3B5F4E8B-3A44-41A2-9B78-4C5385555837}
+		{0B32E3CA-2CA0-499B-9D3D-3B02A086105D} = {396E75FB-E2A2-428F-8DD1-CF3642A7C8EB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5D13AC76-EB81-47F7-ADBA-CEA6CB4D97FF}

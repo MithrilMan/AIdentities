@@ -6,20 +6,7 @@
       <ImplicitUsings>enable</ImplicitUsings>
 
       <Version>1.0.0-alpha</Version>
-
-      <BaseOutputPath>bin\</BaseOutputPath>
    </PropertyGroup>
-
-   <!--
-   <PropertyGroup>
-      <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
-   </PropertyGroup>
-   <Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
-      <ItemGroup>
-         <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
-      </ItemGroup>
-   </Target>
-   -->
 
    <ItemGroup>
       <SupportedPlatform Include="browser" />
@@ -31,7 +18,7 @@
    </ItemGroup>
 
    <ItemGroup>
-      <ProjectReference Include="..\AIdentities.Shared\AIdentities.Shared.csproj" />
+      <ProjectReference Include="..\..\AIdentities.Shared\AIdentities.Shared.csproj" />
    </ItemGroup>
 
    <ItemGroup>

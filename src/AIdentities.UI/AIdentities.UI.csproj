@@ -25,7 +25,7 @@
    </ItemGroup>
    
    <ItemGroup>
-      <ProjectReference Include="..\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
+      <ProjectReference Include="..\Plugins\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
    </ItemGroup>
 
    <Target Name="Restore Local Tools" BeforeTargets="Compile">

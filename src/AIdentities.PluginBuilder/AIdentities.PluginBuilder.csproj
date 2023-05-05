@@ -1,0 +1,74 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+   <PropertyGroup>
+      <TargetFramework>netstandard2.0</TargetFramework>
+      <LangVersion>10</LangVersion>
+   </PropertyGroup>
+
+   <PropertyGroup>
+      <!--<IncludeBuildOutput>false</IncludeBuildOutput>
+      <DevelopmentDependency>true</DevelopmentDependency>
+      <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>-->
+
+      <DevelopmentDependency>true</DevelopmentDependency>
+
+      <!-- we need the assemblies bundled, so set this so we don't expose any dependencies to the outside world -->
+      <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+      <DebugType>embedded</DebugType>
+      <IsPackable>true</IsPackable>
+      <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+   </PropertyGroup>
+
+   <PropertyGroup>
+      <PackageId>AIdentities.PluginBuilder</PackageId>
+      <PackageVersion>1.0.1</PackageVersion>
+      <Title>AIdentities.PluginBuilder</Title>
+      <Description>Auto build task to create a deployable AIdentities Plugin</Description>
+      <Authors>Mithril Man</Authors>
+      <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+      <PackageTags>AIdentities Build Plugin</PackageTags>
+      <PackageProjectUrl>https://github.com/MithrilMan/AIdentities</PackageProjectUrl>
+      <RepositoryUrl>https://github.com/MithrilMan/AIdentities.git</RepositoryUrl>
+      <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+      <BuildOutputTargetFolder>tasks</BuildOutputTargetFolder>
+   </PropertyGroup>
+
+   <ItemGroup>
+      <PackageReference Include="Microsoft.Build.Framework" Version="17.5.0" PrivateAssets="all" />
+      <PackageReference Include="Microsoft.Build.Utilities.Core" Version="17.5.0" PrivateAssets="all" />
+   </ItemGroup>
+
+   <ItemGroup>
+      <!-- By convention, the .NET SDK will look for build\<Package Id>.props and build\<Package Id>.targets
+         for automatic inclusion in the build. -->
+      <None Update="build\AIdentities.PluginBuilder.props">
+         <PackagePath>build</PackagePath>
+         <Pack>true</Pack>
+      </None>
+      <None Update="build\AIdentities.PluginBuilder.targets">
+         <PackagePath>build</PackagePath>
+         <Pack>true</Pack>
+      </None>
+      <None Update="tools\AIdentities.PluginBuilder.props" Pack="true" PackagePath="build" />
+      <None Update="tools\AIdentities.PluginBuilder.targets" Pack="true" PackagePath="build" />
+   </ItemGroup>
+
+   <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">
+      <ItemGroup>
+         <!-- The dependencies of your MSBuild task must be packaged inside the package, they cannot be expressed as normal PackageReferences -->
+         <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths)" TargetPath="%(ReferenceCopyLocalPaths.DestinationSubPath)" />
+
+         <!--<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths)" TargetPath="%(ReferenceCopyLocalPaths.DestinationSubPath)" />-->
+         <!--<BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />-->
+      </ItemGroup>
+   </Target>
+
+   <!-- This target adds the generated deps.json file to our package output -->
+   <Target Name="AddBuildDependencyFileToBuiltProjectOutputGroupOutput" BeforeTargets="BuiltProjectOutputGroup" Condition=" '$(GenerateDependencyFile)' == 'true'">
+
+      <ItemGroup>
+         <BuiltProjectOutputGroupOutput Include="$(ProjectDepsFilePath)" TargetPath="$(ProjectDepsFileName)" FinalOutputPath="$(ProjectDepsFilePath)" />
+      </ItemGroup>
+   </Target>
+
+</Project>

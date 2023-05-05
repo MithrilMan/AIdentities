@@ -25,8 +25,10 @@ catch (OptionsValidationException)
 
 if (builder.Environment.IsDevelopment())
 {
-   builder.WebHost.UseWebRoot("wwwroot").UseStaticWebAssets();
+   builder.WebHost.UseWebRoot("wwwroot");
 }
+
+builder.WebHost.UseStaticWebAssets();
 
 var app = builder.Build();
 

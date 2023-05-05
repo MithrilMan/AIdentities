@@ -1,0 +1,42 @@
+<Project>
+   <!--<UsingTask TaskName="AIdentities.PluginBuilder.PluginBuilderTask" TaskFactory="TaskHostFactory"
+              AssemblyFile="$(PluginBuilderPath)" />
+   <UsingTask TaskName="AIdentities.PluginBuilder.LogReferencePathsTask" TaskFactory="TaskHostFactory"
+                 AssemblyFile="$(PluginBuilderPath)" />
+
+   <ItemGroup>
+      <ProjectReference Include="..\..\AIdentities.PluginBuilder\AIdentities.PluginBuilder.csproj" PrivateAssets="all" ExcludeAssets="Runtime" />
+   </ItemGroup>
+
+   <Target Name="RunPluginBuilderTask" AfterTargets="Build">
+      <PluginBuilderTask
+         AssemblyName="$(AssemblyName)"
+         ProjectFile="$(MSBuildProjectFullPath)"
+         IntermediateOutputPath="$(IntermediateOutputPath)"
+         />
+   </Target>-->
+
+   <!--<Target Name="BundleBlazorAssets" AfterTargets="Build">
+      <BundleBlazorAssets AssemblyName="$(AssemblyName)" TargetFolder="$(OutputPath)" />
+   </Target>-->
+
+   <!--<Target Name="GetTasksOutputDlls" BeforeTargets="CoreCompile">
+      <MSBuild Projects="..\Microsoft.AspNetCore.Components.WebAssembly.MultipartBundle.Tasks\Microsoft.AspNetCore.Components.WebAssembly.MultipartBundle.Tasks.csproj" Targets="Publish;PublishItemsOutputGroup" Properties="Configuration=Release">
+         <Output TaskParameter="TargetOutputs" ItemName="_TasksProjectOutputs" />
+      </MSBuild>
+      <ItemGroup>
+         <Content Include="@(_TasksProjectOutputs)" Condition="'%(_TasksProjectOutputs.Extension)' == '.dll'" Pack="true" PackagePath="tasks\%(_TasksProjectOutputs.TargetPath)" KeepMetadata="Pack;PackagePath" />
+      </ItemGroup>
+   </Target>-->
+
+   <!--We ensure we have a proper plugin builder package in our local NuGet package source set in the Directory.Build.props file-->
+   <Target Name="CheckFullPluginBuilderPackagePath" BeforeTargets="Build">
+      <Error Condition="!Exists('$(FullPluginBuilderPackagePath)')" Text="The plugin builder package '$(FullPluginBuilderPackagePath)' does not exist. Please build the AIdentities.PluginBuilder project first." />
+   </Target>
+   
+   <Target Name="CheckFullPluginBuilderPackagePath" BeforeTargets="Build">
+      <Message Importance="High" Text="The plugin builder package '$(FullPluginBuilderPackagePath)' does not exist. Trying to compile the AIdentities.PluginBuilder..." />
+      <Exec Condition="!Exists('$(FullPluginBuilderPackagePath)')"
+            Command="dotnet build &quot;$(MSBuildThisFileDirectory)/../AIdentities.PluginBuilder/AIdentities.PluginBuilder.csproj&quot;" />
+   </Target>
+</Project>
