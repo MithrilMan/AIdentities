@@ -1,10 +1,14 @@
-﻿namespace AIdentities.Shared.Utils;
+﻿using Microsoft.Extensions.Primitives;
+
+namespace AIdentities.Shared.Utils;
 public static partial class PathUtils
 {
    /// <summary>
    /// Maximum filename length for most file systems.
    /// </summary>
    const int MAX_FILE_NAME_LENGTH = 255;
+
+   public static readonly char[] pathSeparators = new[] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
 
    /// <summary>
    /// Returns true if the given path is a valid folder path.
@@ -100,5 +104,52 @@ public static partial class PathUtils
       var absolutePath = isPathRooted ? path : Path.Combine(defaultRootPath, path);
 
       return absolutePath;
+   }
+
+
+   public static bool PathNavigatesAboveRoot(string path)
+   {
+      var tokenizer = new StringTokenizer(path, pathSeparators);
+      int depth = 0;
+
+      foreach (StringSegment segment in tokenizer)
+      {
+         if (segment.Equals(".") || segment.Equals(""))
+         {
+            continue;
+         }
+         else if (segment.Equals(".."))
+         {
+            depth--;
+
+            if (depth == -1)
+            {
+               return true;
+            }
+         }
+         else
+         {
+            depth++;
+         }
+      }
+
+      return false;
+   }
+
+   /// <summary>
+   /// Ensures that the given path ends with a trailing slash.
+   /// </summary>
+   /// <param name="path">The path to ensure a trailing slash for.</param>
+   /// <returns>The path with a trailing slash.</returns>
+   public static string EnsureTrailingSlash(string path)
+   {
+      bool hasNotTrailingSlash = !string.IsNullOrEmpty(path) && path[^1] != Path.DirectorySeparatorChar;
+
+      if (hasNotTrailingSlash)
+      {
+         return path + Path.DirectorySeparatorChar;
+      }
+
+      return path;
    }
 }

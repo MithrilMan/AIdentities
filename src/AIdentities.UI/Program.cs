@@ -1,4 +1,5 @@
 using AIdentities.UI;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using Serilog;
 
@@ -14,21 +15,22 @@ builder.Host.UseSerilog((context, configuration) =>
 
 Microsoft.Extensions.Logging.ILogger startupLogger;
 
+if (builder.Environment.IsDevelopment())
+{
+   builder.WebHost.UseWebRoot("wwwroot").UseStaticWebAssets();
+}
+
 try
 {
-   builder.Services.AddAIdentitiesServices(builder.Environment, out startupLogger);
+   builder.Services.AddAIdentitiesServices(builder.Environment, out startupLogger, out IFileProvider pluginStaticWebProvider);
+
+   // Register plugins static asset resolver
+   builder.WebHost.UseWebRoot("wwwroot").UseStaticPluginWebAssets(pluginStaticWebProvider);
 }
 catch (OptionsValidationException)
 {
    return;
 }
-
-if (builder.Environment.IsDevelopment())
-{
-   builder.WebHost.UseWebRoot("wwwroot");
-}
-
-builder.WebHost.UseStaticWebAssets();
 
 var app = builder.Build();
 

@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using AIdentities.UI.Features.Core.Services.Plugins;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace AIdentities.UI.Features.Settings.Components;
+namespace AIdentities.UI.Features.Core.Components;
 
 public partial class Plugins : ComponentBase
 {
@@ -134,9 +135,7 @@ public partial class Plugins : ComponentBase
       try
       {
          if (await PluginManager.RemovePackageAsync(pluginStatus.Manifest).ConfigureAwait(false))
-         {
             _state.InstalledPackages.Remove(pluginStatus);
-         }
       }
       catch (Exception ex)
       {

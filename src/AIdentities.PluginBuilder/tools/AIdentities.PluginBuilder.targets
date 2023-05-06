@@ -5,4 +5,16 @@
    <Target Name="RunPluginBuilderTask" AfterTargets="Build">
       <PluginBuilderTask />
    </Target>
+
+   <UsingTask TaskName="GeneratePackage" AssemblyFile="$(PluginBuilderPath)"/>
+
+   <Target Name="GeneratePackage" AfterTargets="Build">
+      <GenerateBlazorServerLibraryPackage
+        TargetFramework="$(TargetFramework)"
+        Configuration="$(Configuration)"
+        PackageOutputPath="$(PackageOutputPath)"
+        ProjectDirectory="$(MSBuildProjectDirectory)"
+    />
+   </Target>
+   
 </Project>

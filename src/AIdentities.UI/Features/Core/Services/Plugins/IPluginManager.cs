@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Microsoft.AspNetCore.Components.Forms;
 
-namespace AIdentities.UI.Features.Settings.Services;
+namespace AIdentities.UI.Features.Core.Services.Plugins;
 
 public interface IPluginManager
 {

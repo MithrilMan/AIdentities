@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.Loader;
 
-namespace AIdentities.UI.Features.Settings.Services;
+namespace AIdentities.UI.Features.Core.Services.Plugins;
 
 class PluginLoadContext : AssemblyLoadContext
 {

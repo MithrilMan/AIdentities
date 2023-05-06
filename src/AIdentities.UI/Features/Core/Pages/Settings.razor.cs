@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Components;
 
-namespace AIdentities.UI.Features.Settings.Pages;
+namespace AIdentities.UI.Features.Core.Pages;
 
 public partial class Settings : ComponentBase
 {

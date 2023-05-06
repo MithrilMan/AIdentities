@@ -21,7 +21,7 @@
 
    <PropertyGroup>
       <PackageId>AIdentities.PluginBuilder</PackageId>
-      <PackageVersion>1.0.1</PackageVersion>
+      <PackageVersion>1.0.0</PackageVersion>
       <Title>AIdentities.PluginBuilder</Title>
       <Description>Auto build task to create a deployable AIdentities Plugin</Description>
       <Authors>Mithril Man</Authors>
@@ -30,7 +30,10 @@
       <PackageProjectUrl>https://github.com/MithrilMan/AIdentities</PackageProjectUrl>
       <RepositoryUrl>https://github.com/MithrilMan/AIdentities.git</RepositoryUrl>
       <PackageLicenseExpression>AGPL-3.0-or-later</PackageLicenseExpression>
+      
       <BuildOutputTargetFolder>tasks</BuildOutputTargetFolder>
+      <!-- NuGet does validation that libraries in a package are exposed as dependencies, but we _explicitly_ do not want that behavior for MSBuild tasks. They are isolated by design. Therefore we ignore this specific warning. -->
+      <NoWarn>NU5100;NU5128</NoWarn>
    </PropertyGroup>
 
    <ItemGroup>
@@ -41,16 +44,10 @@
    <ItemGroup>
       <!-- By convention, the .NET SDK will look for build\<Package Id>.props and build\<Package Id>.targets
          for automatic inclusion in the build. -->
-      <None Update="build\AIdentities.PluginBuilder.props">
-         <PackagePath>build</PackagePath>
-         <Pack>true</Pack>
-      </None>
-      <None Update="build\AIdentities.PluginBuilder.targets">
-         <PackagePath>build</PackagePath>
-         <Pack>true</Pack>
-      </None>
-      <None Update="tools\AIdentities.PluginBuilder.props" Pack="true" PackagePath="build" />
-      <None Update="tools\AIdentities.PluginBuilder.targets" Pack="true" PackagePath="build" />
+      <None Update="build\AIdentities.PluginBuilder.props" Pack="true" PackagePath="." />
+      <None Update="build\AIdentities.PluginBuilder.targets" Pack="true" PackagePath="." />
+      <None Update="tools\AIdentities.PluginBuilder.props" Pack="true" PackagePath="." />
+      <None Update="tools\AIdentities.PluginBuilder.targets" Pack="true" PackagePath="." />
    </ItemGroup>
 
    <Target Name="CopyProjectReferencesToPackage" DependsOnTargets="ResolveReferences">

@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace AIdentities.UI.Features.Settings.Services;
+namespace AIdentities.UI.Features.Core.Services.Plugins;
 public interface IPackageInspector
 {
    /// <summary>

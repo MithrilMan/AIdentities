@@ -9,11 +9,15 @@
 
    <!-- This is the way I found to include easily a local package source -->
    <PropertyGroup>
-      <RestoreSources>$(RestoreSources);$(PluginBuilderPackagePath);</RestoreSources>
+      <RestoreSources>$(RestoreSources);$(PluginBuilderPackagePath);https://api.nuget.org/v3/index.json;</RestoreSources>
    </PropertyGroup>
 
-   <!-- Automatically add the reference to the plugin builder to every plugin project. Just ensure to update the correct version. -->
-   <ItemGroup>
-      <PackageReference Include="$(PluginAssemblyName)" Version="$(PluginVersion)" />
-   </ItemGroup>
+   <!-- 
+   Automatically add the reference to the plugin builder to every plugin project. Just ensure to update the correct version. 
+   Also I disabled cache to ensure the plugin builder is always updated if I change something in the plugin builder project and don't
+   want to update the version (e.g. for development and testing purposes)
+   -->
+   <!--<ItemGroup>
+      <PackageReference Include="$(PluginAssemblyName)" Version="$(PluginVersion)" NoCache="true"  />
+   </ItemGroup>-->
 </Project>

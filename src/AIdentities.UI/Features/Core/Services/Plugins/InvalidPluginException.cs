@@ -1,4 +1,4 @@
-﻿namespace AIdentities.UI.Features.Settings.Services;
+﻿namespace AIdentities.UI.Features.Core.Services.Plugins;
 
 //create a new exception type
 public class InvalidPluginException : Exception

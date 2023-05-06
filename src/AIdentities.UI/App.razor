@@ -1,4 +1,9 @@
-﻿<Router AppAssembly="@typeof(App).Assembly"
+﻿@using AIdentities.UI.Features.Core.Services.PageManager;
+@using AIdentities.UI.Features.Core.Services.PluginStaticResources
+@using AIdentities.UI.Features.Core.Services.Plugins;
+@using Microsoft.Extensions.FileProviders;
+
+<Router AppAssembly="@typeof(App).Assembly"
         AdditionalAssemblies="@GetAdditionalAssemblies()">
    <Found Context="routeData">
       <RouteView RouteData="@routeData" DefaultLayout="@typeof(Features.Core.Pages.MainLayout)" />
@@ -15,9 +20,17 @@
 @code {
    [Inject] IPluginManager PluginManager { get; set; } = default!;
    [Inject] IDebuggablePagesManager DebuggablePagesManager { get; set; } = default!;
+   //[Inject] IPluginStaticResourceProvider PluginStaticResourceProvider { get; set; } = default!;
+   //[Inject] IWebHostEnvironment WebHostEnvironment { get; set; } = default!;
 
    IEnumerable<System.Reflection.Assembly> GetAdditionalAssemblies()
    {
       return PluginManager.PagePluginAssemblies.Concat(DebuggablePagesManager.DebuggableModuleAssemblies);
+   }
+
+   protected override void OnInitialized()
+   {
+      base.OnInitialized();
+      //WebHostEnvironment.WebRootFileProvider = new CompositeFileProvider(new[] { PluginStaticResourceProvider, WebHostEnvironment.WebRootFileProvider });
    }
 }

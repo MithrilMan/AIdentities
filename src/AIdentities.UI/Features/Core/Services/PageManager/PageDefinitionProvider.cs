@@ -1,4 +1,6 @@
-﻿namespace AIdentities.UI.Features.Core.Services.PageManager;
+﻿using AIdentities.UI.Features.Core.Services.Plugins;
+
+namespace AIdentities.UI.Features.Core.Services.PageManager;
 
 public class PageDefinitionProvider : IPageDefinitionProvider, IDisposable
 {

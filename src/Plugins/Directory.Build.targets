@@ -1,14 +1,5 @@
 <Project>
-   <!--<UsingTask TaskName="AIdentities.PluginBuilder.PluginBuilderTask" TaskFactory="TaskHostFactory"
-              AssemblyFile="$(PluginBuilderPath)" />
-   <UsingTask TaskName="AIdentities.PluginBuilder.LogReferencePathsTask" TaskFactory="TaskHostFactory"
-                 AssemblyFile="$(PluginBuilderPath)" />
-
-   <ItemGroup>
-      <ProjectReference Include="..\..\AIdentities.PluginBuilder\AIdentities.PluginBuilder.csproj" PrivateAssets="all" ExcludeAssets="Runtime" />
-   </ItemGroup>
-
-   <Target Name="RunPluginBuilderTask" AfterTargets="Build">
+   <!--<Target Name="RunPluginBuilderTask" AfterTargets="Build">
       <PluginBuilderTask
          AssemblyName="$(AssemblyName)"
          ProjectFile="$(MSBuildProjectFullPath)"
@@ -30,12 +21,10 @@
    </Target>-->
 
    <!--We ensure we have a proper plugin builder package in our local NuGet package source set in the Directory.Build.props file-->
-   <Target Name="CheckFullPluginBuilderPackagePath" BeforeTargets="Build">
-      <Error Condition="!Exists('$(FullPluginBuilderPackagePath)')" Text="The plugin builder package '$(FullPluginBuilderPackagePath)' does not exist. Please build the AIdentities.PluginBuilder project first." />
-   </Target>
-   
-   <Target Name="CheckFullPluginBuilderPackagePath" BeforeTargets="Build">
-      <Message Importance="High" Text="The plugin builder package '$(FullPluginBuilderPackagePath)' does not exist. Trying to compile the AIdentities.PluginBuilder..." />
+   <Target Name="CheckFullPluginBuilderPackagePath" BeforeTargets="PrepareForBuild">
+      <Message Condition="!Exists('$(FullPluginBuilderPackagePath)')"
+               Importance="High"
+               Text="The plugin builder package '$(FullPluginBuilderPackagePath)' does not exist. Trying to compile the AIdentities.PluginBuilder..." />
       <Exec Condition="!Exists('$(FullPluginBuilderPackagePath)')"
             Command="dotnet build &quot;$(MSBuildThisFileDirectory)/../AIdentities.PluginBuilder/AIdentities.PluginBuilder.csproj&quot;" />
    </Target>

@@ -7,16 +7,15 @@ using McMaster.NETCore.Plugins;
 using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.Extensions.Options;
 
-namespace AIdentities.UI.Features.Settings.Services;
+namespace AIdentities.UI.Features.Core.Services.Plugins;
 
 public class PluginManager : IPluginManager
 {
    const string MANIFEST_FILE_NAME = "content/aid-manifest.json";
-   const string ENABLED_PLUGINS_FILE_NAME = "enabled-plugins.json";
 
    ILogger<PluginManager> _logger;
+   IPluginFoldersProvider _pluginFoldersProvider;
    AppOptions _options;
-   readonly IWebHostEnvironment _webHostEnvironment;
    IPluginStorageFactory _pluginStorageFactory;
    IPackageInspector _packageInspector;
    readonly string[] _whitelistedResourceFiles = new string[] {
@@ -42,17 +41,15 @@ public class PluginManager : IPluginManager
 
    public PluginManager(ILogger<PluginManager> logger,
                         IOptions<AppOptions> options,
-                        IWebHostEnvironment webHostEnvironment,
+                        IPluginFoldersProvider pluginFoldersProvider,
                         IPluginStorageFactory pluginStorageFactory,
                         IPackageInspector packageInspector)
    {
       _logger = logger;
+      _pluginFoldersProvider = pluginFoldersProvider;
       _options = options.Value;
-      _webHostEnvironment = webHostEnvironment;
       _pluginStorageFactory = pluginStorageFactory;
       _packageInspector = packageInspector;
-
-      GetPluginPackagePath();
    }
 
    /// <summary>
@@ -65,15 +62,18 @@ public class PluginManager : IPluginManager
    /// </summary>
    /// <param name="logger">The logger.</param>
    /// <param name="options">The app options.</param>
-   internal void SwapDependencies(ILogger<PluginManager> logger, IOptions<AppOptions> options, IPluginStorageFactory pluginStorageFactory, IPackageInspector packageInspector)
+   internal void SwapDependencies(ILogger<PluginManager> logger,
+                                  IOptions<AppOptions> options,
+                                  IPluginFoldersProvider pluginFoldersProvider,
+                                  IPluginStorageFactory pluginStorageFactory,
+                                  IPackageInspector packageInspector)
    {
       _logger = logger;
       _options = options.Value;
+      _pluginFoldersProvider = pluginFoldersProvider;
       _pluginStorageFactory = pluginStorageFactory;
       _packageInspector = packageInspector;
    }
-
-   private string GetPluginPackagePath() => PathUtils.GetAbsolutePath(_options.PackageFolder, _webHostEnvironment.ContentRootPath);
 
    public async ValueTask<PluginStatus> StorePackageAsync(IBrowserFile packageFile)
    {
@@ -88,8 +88,7 @@ public class PluginManager : IPluginManager
       if (_storedPlugins.Any(p => p.Manifest.Signature == manifest.Signature))
          throw new InvalidPluginException($"Plugin {manifest.Signature.GetFullName()} is already installed.");
 
-      var folderName = manifest.Signature.GetFullName();
-      string packageRootFolder = Path.Combine(GetPluginPackagePath(), folderName);
+      string packageRootFolder = _pluginFoldersProvider.GetPluginInstallationRoot(manifest);
       Directory.CreateDirectory(packageRootFolder);
 
       bool hasResourceExtensionsFilter = _options.AllowedPluginResourceExtensions.Any();
@@ -179,12 +178,12 @@ public class PluginManager : IPluginManager
 
       var json = JsonSerializer.Serialize(enabledPlugins, new JsonSerializerOptions { WriteIndented = true });
 
-      var packageRootFolder = GetPluginPackagePath();
+      var packageRootFolder = _pluginFoldersProvider.GetPluginAssetsPath();
 
       if (!Directory.Exists(packageRootFolder))
          Directory.CreateDirectory(packageRootFolder);
 
-      File.WriteAllText(Path.Combine(GetPluginPackagePath(), ENABLED_PLUGINS_FILE_NAME), json);
+      File.WriteAllText(_pluginFoldersProvider.GetPluginEnabledFilePath(), json);
    }
 
    public ValueTask<bool> RemovePackageAsync(PluginManifest manifest) => RemovePackageAsync(manifest.Signature.GetFullName());
@@ -194,7 +193,7 @@ public class PluginManager : IPluginManager
       if (_storedPlugins.Any(p => p.Manifest.Signature.GetFullName() == packageName && p.Status is PluginStatus.PackageStatus.Activated))
          throw new InvalidOperationException("Cannot remove an active package.");
 
-      var packageFolder = Path.Combine(GetPluginPackagePath(), packageName);
+      var packageFolder = _pluginFoldersProvider.GetPluginInstallationRoot(packageName);
       if (!Directory.Exists(packageFolder))
       {
          if (_storedPlugins.FirstOrDefault(p => p.Manifest.Signature.GetFullName() == packageName) is PluginStatus pluginStatus)
@@ -236,16 +235,14 @@ public class PluginManager : IPluginManager
 
       try
       {
-
          //implements a slimsemaphore to lock an async method
          await _lock.WaitAsync().ConfigureAwait(false);
 
          if (_storeLoaded) return;
 
-         HashSet<string>? enabledPlugins = null;
-
          //read the enabled-plugin.json file
-         var enabledPluginFilePath = Path.Combine(GetPluginPackagePath(), ENABLED_PLUGINS_FILE_NAME);
+         HashSet<string>? enabledPlugins = null;
+         var enabledPluginFilePath = _pluginFoldersProvider.GetPluginEnabledFilePath();
          if (File.Exists(enabledPluginFilePath))
          {
             var content = await File.ReadAllTextAsync(enabledPluginFilePath).ConfigureAwait(false);
@@ -255,16 +252,17 @@ public class PluginManager : IPluginManager
          }
          else
          {
-            _logger.LogWarning("No enabled-plugins.json file found in {PluginPackagePath}", GetPluginPackagePath());
+            _logger.LogWarning("Enabled plugins file not found: {EnabledPluginFilePath}", enabledPluginFilePath);
          }
 
-         if (!Directory.Exists(GetPluginPackagePath()))
+         var pluginAssetsPath = _pluginFoldersProvider.GetPluginAssetsPath();
+         if (!Directory.Exists(pluginAssetsPath))
          {
-            _logger.LogWarning("No plugin package path found: {PluginPackagePath}", GetPluginPackagePath());
+            _logger.LogWarning("No plugin package path found: {PluginPackagePath}", pluginAssetsPath);
             return;
          }
 
-         foreach (string pluginFolder in Directory.GetDirectories(GetPluginPackagePath()))
+         foreach (string pluginFolder in Directory.GetDirectories(pluginAssetsPath))
          {
             // skip the special folder that contains the storage
             if (pluginFolder.EndsWith(AppConstants.SpecialFolders.STORAGE)) continue;
@@ -338,7 +336,7 @@ public class PluginManager : IPluginManager
             return ValueTask.FromResult(false);
          }
 
-         var packageRoot = Path.Combine(GetPluginPackagePath(), manifest.Signature.GetFullName());
+         var packageRoot = _pluginFoldersProvider.GetPluginInstallationRoot(manifest);
 
          if (!Directory.Exists(packageRoot))
          {
@@ -353,6 +351,7 @@ public class PluginManager : IPluginManager
             throw new InvalidPluginException($"Plugin package entry point not found: {packageRoot}");
          }
 
+         // check if the entry point exists (the plugin main dll)
          var entryPointPath = Path.Combine(packageRoot, entryPoint);
          if (!File.Exists(entryPointPath))
          {
@@ -360,8 +359,7 @@ public class PluginManager : IPluginManager
             throw new InvalidPluginException($"Plugin package entry point not found: {entryPointPath}");
          }
 
-         using var loader = PluginLoader.CreateFromAssemblyFile(
-             assemblyFile: entryPointPath, null, c => c.PreferSharedTypes = true);
+         using var loader = PluginLoader.CreateFromAssemblyFile(entryPointPath, null, c => c.PreferSharedTypes = true);
 
          var pluginAssembly = loader.LoadDefaultAssembly();
 

@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
+using AIdentities.UI.Features.Core.Services.Plugins;
 
-namespace AIdentities.UI.Features.Settings.Services;
+namespace AIdentities.UI.Features.Core.Services.PageManager;
 
 public class DebuggablePagesManager : IDebuggablePagesManager
 {

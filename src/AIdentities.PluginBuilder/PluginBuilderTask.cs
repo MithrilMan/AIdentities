@@ -1,15 +1,11 @@
-﻿using System;
+﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Net.Http;
-using Microsoft.Build.Evaluation;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace AIdentities.PluginBuilder;
 
-public class PluginBuilderTask : Task
+public class PluginBuilderTask2 : Task
 {
    [Required]
    public string AssemblyName { get; set; }
@@ -19,6 +15,15 @@ public class PluginBuilderTask : Task
 
    [Required]
    public string IntermediateOutputPath { get; set; }
+
+   [Required]
+   public ITaskItem[] PublishBlazorBootStaticWebAsset { get; set; }
+
+   [Required]
+   public string BundlePath { get; set; }
+
+   [Output]
+   public ITaskItem[] Extension { get; set; }
 
    public override bool Execute()
    {
@@ -33,69 +38,99 @@ public class PluginBuilderTask : Task
 
       return true;
    }
-} 
-
-public class BundleBlazorAssets : Task
-{
-   [Required]
-   public ITaskItem[] PublishBlazorBootStaticWebAsset { get; set; }
-
-   [Required]
-   public string BundlePath { get; set; }
-
-   [Output]
-   public ITaskItem[] Extension { get; set; }
-
-   public override bool Execute()
-   {
-      var bundle = new MultipartFormDataContent("--0a7e8441d64b4bf89086b85e59523b7d");
-      foreach (var asset in PublishBlazorBootStaticWebAsset)
-      {
-         var name = Path.GetFileName(asset.GetMetadata("RelativePath"));
-         var fileContents = File.OpenRead(asset.ItemSpec);
-         var content = new StreamContent(fileContents);
-         var disposition = new ContentDispositionHeaderValue("form-data")
-         {
-            Name = name,
-            FileName = name
-         };
-         content.Headers.ContentDisposition = disposition;
-         var contentType = Path.GetExtension(name) switch
-         {
-            ".js" => "text/javascript",
-            ".wasm" => "application/wasm",
-            _ => "application/octet-stream"
-         };
-         content.Headers.ContentType = MediaTypeHeaderValue.Parse(contentType);
-         bundle.Add(content);
-      }
-
-      using (var output = File.Open(BundlePath, FileMode.OpenOrCreate))
-      {
-         output.SetLength(0);
-         bundle.CopyToAsync(output).ConfigureAwait(false).GetAwaiter().GetResult();
-         output.Flush(true);
-      }
-
-      var bundleItem = new TaskItem(BundlePath);
-      bundleItem.SetMetadata("RelativePath", "app.bundle");
-      bundleItem.SetMetadata("ExtensionName", "multipart");
-
-      Extension = new ITaskItem[] { bundleItem };
-
-      return true;
-   }
 }
+
+
 
 /// <summary>
 /// automatically generates the Plugin aid-manifest.json file
 /// </summary>
 public class ManifestGenerator : ToolTask
 {
+   /// <summary>
+   /// 
+   /// </summary>
+   [Required] public string PackageOutputPath { get; set; }
+
    protected override string ToolName => throw new System.NotImplementedException();
 
    protected override string GenerateFullPathToTool()
    {
       throw new System.NotImplementedException();
    }
+}
+
+public class GenerateBlazorServerLibraryPackage : Task
+{
+   /// <summary>
+   /// Specify the target framework for the package
+   /// MSBuild property for that is $(TargetFramework)
+   /// </summary>
+   [Required] public string TargetFramework { get; set; }
+
+   /// <summary>
+   /// Specify the project directory, used to fetch wwwroot content.
+   /// MSBuild property for that is $(ProjectDir)
+   /// </summary>
+   [Required] public string ProjectDirectory { get; set; }
+
+   /// <summary>
+   /// Specify the configuration for the package.
+   /// MSBuild property for that is $(Configuration)
+   /// </summary>
+   [Required] public string Configuration { get; set; }
+
+   /// <summary>
+   /// Specify where the package should be created
+   /// MSBuild property for that is $(OutputPath)
+   /// </summary>
+   [Required] public string OutputPath { get; set; }
+
+   /// <summary>
+   /// Specify the name of the assembly.
+   /// This is the same as the project name.
+   /// MSBuild property for that is $(AssemblyName)
+   /// </summary>
+   [Required] public string AssemblyName { get; set; }
+
+   /// <summary>
+   /// Specify the path to the intermediate output folder.
+   /// This is the obj folder in the project root.
+   /// MSBuild property for that is $(IntermediateOutputPath)
+   /// </summary>
+   [Required] public string IntermediateOutputPath { get; set; }
+
+   /// <summary>
+   /// The path to the folder where the package should be created, within OutputPath.
+   /// By default it's set to `package`.
+   /// </summary>
+   public string PackageSubfolder { get; set; } = "package";
+
+   public override bool Execute()
+   {
+      // Implement the required logic here
+      // 1. Create the custom folder structure
+      // 2. Move scoped CSS and JS files to their respective folders
+      // 3. Keep the original wwwroot content in the same path
+      // 4. Include referenced assemblies in the package
+      // 5. Create an aid-manifest.json file with a list of all included resources
+      // 6. Move aid-manifest.json to the root folder of the folder structure
+      // 7. Create a nupkg
+
+
+      // 1. Create the custom folder structure
+      string packageRoot = Path.Combine(OutputPath, PackageSubfolder);
+      Directory.CreateDirectory(packageRoot);
+
+
+
+      return true;
+   }
+
+   /// <summary>
+   /// Gets the path to the scoped CSS file.
+   /// </summary>
+   /// <returns></returns>
+   public string GetScopedCssPath()
+      => Path.Combine(IntermediateOutputPath, "scopedcss", "projectbundle", $"{AssemblyName}.bundle.scp.css");
 }

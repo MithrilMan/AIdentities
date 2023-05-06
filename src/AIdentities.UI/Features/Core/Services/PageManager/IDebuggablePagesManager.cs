@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
 
-namespace AIdentities.UI.Features.Settings.Services;
+namespace AIdentities.UI.Features.Core.Services.PageManager;
 
 /// <summary>
 /// Exposes a list of assemblies that contain components that can be used in the UI.
