@@ -13,6 +13,12 @@ public partial class ImportAIdentity : ComponentBase
 
    MudForm? _form = default!;
 
+   protected override void OnInitialized()
+   {
+      base.OnInitialized();
+      _state.SelectedImporter = AIdentityImporters.FirstOrDefault();
+   }
+
    private Task<IEnumerable<IAIdentityImporter>> SearchImporter(string value)
    {
       var allItems = AIdentityImporters;

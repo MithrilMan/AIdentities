@@ -1,6 +1,7 @@
 ﻿using System.Buffers;
 using System.Text.Json;
 using AIdentities.BooruAIdentityImporter.Models;
+using AIdentities.BooruAIdentityImporter.Services.FormatDetector;
 
 namespace AIdentities.BooruAIdentityImporter.Services;
 
@@ -12,10 +13,12 @@ public class BooruAIdentityImporter : IAIdentityImporter
 
    private static readonly string[] _allowedFileExtensions = new[] { ".png", ".webp" };
    readonly ILogger<BooruAIdentityImporter> _logger;
+   readonly IFormatDetector _formatDetector;
 
-   public BooruAIdentityImporter(ILogger<BooruAIdentityImporter> logger)
+   public BooruAIdentityImporter(ILogger<BooruAIdentityImporter> logger, IFormatDetector formatDetector)
    {
       _logger = logger;
+      _formatDetector = formatDetector;
    }
 
    public string Name => "Booru Importer";
@@ -60,6 +63,10 @@ public class BooruAIdentityImporter : IAIdentityImporter
             }
 
             var jsonBytes = Convert.FromBase64String(description[BOORU_METADATA_PREFIX.Length..]);
+            var decodeAsDictionary = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
+
+            var characterFormats = _formatDetector.DetectFormat(decodeAsDictionary);
+            _logger.LogInformation("Detected formats: {detectedFormats}", string.Join(", ", characterFormats));
 
             var decodedJson = JsonSerializer.Deserialize<BooruMetadata>(jsonBytes);
             if (decodedJson == null)
@@ -92,6 +99,5 @@ public class BooruAIdentityImporter : IAIdentityImporter
       {
          ArrayPool<byte>.Shared.Return(buffer);
       }
-
    }
 }

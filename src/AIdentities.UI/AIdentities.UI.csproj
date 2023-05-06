@@ -25,6 +25,7 @@
    </ItemGroup>
    
    <ItemGroup>
+      <ProjectReference Include="..\Plugins\AIdentities.Chat\AIdentities.Chat.csproj" />
       <ProjectReference Include="..\Plugins\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
    </ItemGroup>
 
