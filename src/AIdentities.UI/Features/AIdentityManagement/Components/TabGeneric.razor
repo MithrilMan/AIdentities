@@ -1,0 +1,62 @@
+﻿<MudTabPanel Text="Generic">
+   <MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-h-fix gap-2" Disabled="@(!_state.IsEditing)">
+      <MudItem xs="4" Class="d-flex flex-column mat-elevation-1">
+         <MudPaper Class="flex-1 d-flex flex-column gap-2 overflow-y-auto">
+            <MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="false" Accept="@VALID_FILE_TYPES" MaximumFileCount="1"
+                           Class="flex-shrink-0" InputClass="absolute mud-width-full mud-height-full z-20" InputStyle="opacity:0"
+                           Disabled="!_state.IsEditing" OnFilesChanged="OnImageUpload"
+                           @ondragenter="@StartDragging" @ondragleave="@StopDragging" @ondragend="@StopDragging">
+               <ButtonTemplate>
+                  <MudPaper Outlined="true" Class="@(GetDragClass() + ((_state.IsEditing) ? " cursor-pointer mud-theme-secondary" : " cursor-none mud-theme-default"))">
+                     <MudText Typo="Typo.h4" Align="Align.Center">Drop Here or Click to select the image</MudText>
+                  </MudPaper>
+               </ButtonTemplate>
+            </MudFileUpload>
+            <MudPaper Elevation="3" Class="flex-grow-1 d-flex flex-column align-content-center justify-center overflow-y-auto">
+               @if (_state.Image != null)
+               {
+                  <MudImage Src="@_state.Image" Class="mud-height-full" ObjectFit="ObjectFit.Contain" ObjectPosition="ObjectPosition.Center" />
+               }
+               else
+               {
+                  <MudSkeleton SkeletonType="SkeletonType.Rectangle" Class="flex-1" Animation="Animation.Wave"></MudSkeleton>
+                  <MudText Class="absolute align-self-center" Typo="Typo.h3" Style="opacity:0.5">NO IMAGE</MudText>
+               }
+            </MudPaper>
+         </MudPaper>
+      </MudItem>
+
+      <MudItem xs="8" Class="d-flex flex-column">
+         <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-2">
+            <MudGrid Spacing="1" Class="">
+               <MudItem xs="12">
+                  <MudTextField @bind-Value="@_state.Name" Label="Name" For="() => _state.Name"
+                                Variant="Variant.Filled" Immediate="true"
+                                Placeholder="@HELP_NAME" />
+               </MudItem>
+               <MudItem xs="12">
+                  <MudTextField @bind-Value="@_state.Description" For="() => _state.Description"
+                                Label="Description" Variant="Variant.Filled" Immediate="true" Lines="5"
+                                Placeholder="@HELP_DESCRIPTION" />
+               </MudItem>
+               <MudItem xs="12">
+                  <MudTextField @bind-Value="@_state.Personality" Immediate="true" Lines="12" For="() => _state.Personality"
+                                Label="Personality" Variant="Variant.Filled"
+                                Placeholder="@HELP_PERSONALITY" />
+               </MudItem>
+            </MudGrid>
+         </MudPaper>
+         <MudToolBar Dense="true" DisableGutters="true" Class="ma-2 gap-2">
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" Color="Color.Error" FullWidth="true" IconSize="Size.Large" StartIcon="@Icons.Material.Filled.Undo" OnClick="@OnUndo" Size="Size.Large">Undo Changes</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" IconSize="Size.Large" EndIcon="@Icons.Material.Filled.Save" OnClick="@OnSave" Size="Size.Large">Save</MudButton>
+            <MudSpacer />
+         </MudToolBar>
+      </MudItem>
+   </MudForm>
+</MudTabPanel>
+
+@code {
+   const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-4 mud-width-full mud-height-full z-10";
+   string GetDragClass() => _state.IsDragging ? $"{DEFAULT_DRAG_CLASS} mud-border-primary mud-theme-dark" : DEFAULT_DRAG_CLASS;
+}

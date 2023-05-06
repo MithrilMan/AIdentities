@@ -1,76 +1,29 @@
-﻿using System.Buffers;
-using AIdentities.Chat.Components;
-using AIdentities.Chat.Models;
-using AIdentities.UI.Features.AIdentityManagement.Components;
+﻿using AIdentities.UI.Features.AIdentityManagement.Components;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 
 namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 
 [PageDefinition("AIdentities", Icons.Material.Filled.Person, "aidentities", Description = "Create and manage your set of AIdentities.")]
 public partial class AIdentities : AppPage<AIdentities>
 {
-   const string VALID_FILE_TYPES = ".jpeg,.jpg,.png,.gif";
-
-   const string HELP_NAME = @"The name of the AIdentity.";
-
-   const string HELP_BACKGROUND = @"AIdentity's background.
-You can for example specify where the AIdentity is from, or what it does for a living.";
-
-   const string HELP_DESCRIPTION = @"The description of the AIdentity.
-It has no impact on how it responds, it's used only to give a brief description of the AIdentity.";
-
-   const string HELP_FULL_PROMPT = @"The full prompt passed to the LLM to start the conversation.
-When specified, the LLM will use this prompt to start the conversation.
-";
-   const string HELP_FULL_PERSONALITY = @"The AIdentity's personality.
-This is injected in the LLM prompt to make the AIdentity behave following a specific personality.
-";
-   const string HELP_FIRST_MESSAGE = @"The first message sent by the AIdentity when a new conversation starts.
-It has no impact on how it responds, It's purely cosmetic.";
-
+   /// <summary>
+   /// The list of all the AIdentity feature registrations registered by plugins.
+   /// </summary>
+   [Inject] IEnumerable<AIdentityFeatureRegistration> AIdentityFeatureRegistrations { get; set; } = null!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
    [Inject] IDialogService DialogService { get; set; } = null!;
 
-   MudForm? _form;
+   MudTabs? _tabs = default!;
 
-   void OnUndo()
+   void CreateNewAIdentity() => StartEditing(new());
+
+   void EditAIdentity(AIdentity aIdentity) => StartEditing(aIdentity);
+
+
+   void StartEditing(AIdentity aIdentity)
    {
-      _state.CurrentAIDentity = null;
-      _state.SetFormFields(null);
-   }
-
-   async Task OnSave()
-   {
-      await _form!.Validate().ConfigureAwait(false);
-      if (!_form.IsValid)
-      {
-         NotificationService.ShowWarning("Please fix the errors on the form.");
-         return;
-      }
-
-      var modifiedAIdentity = _state.CurrentAIDentity! with
-      {
-         Name = _state.Name!,
-         Description = _state.Description!,
-         Image = _state.Image!,
-         Background = _state.Background,
-         FullPrompt = _state.FullPrompt!,
-         Personality = _state.Personality,
-         FirstMessage = _state.FirstMessage,
-         UseFullPrompt = _state.UseFullPrompt
-      };
-
-      modifiedAIdentity.Features.Set("PROVA");
-
-      AIdentityProvider.Update(modifiedAIdentity);
-      NotificationService.ShowSuccess("AIdentity updated successfully!");
-   }
-
-   void CreateNewAIdentity()
-   {
-      _state.CurrentAIDentity = new();
-      _state.SetFormFields(_state.CurrentAIDentity);
+      _state.CurrentAIDentity = aIdentity;
+      _state.ActivePanelIndex = 1;
    }
 
    async Task ImportAIdentity()
@@ -89,51 +42,12 @@ It has no impact on how it responds, It's purely cosmetic.";
       EditAIdentity(aIdentity);
    }
 
-   void EditAIdentity(AIdentity aIdentity)
+   void OnIsEditingChanged(bool isEditing)
    {
-      _state.CurrentAIDentity = aIdentity;
-      _state.SetFormFields(aIdentity);
+      if (!isEditing)
+      {
+         _state.CurrentAIDentity = null;
+         _state.ActivePanelIndex = 0;
+      }
    }
-
-   private async void OnImageUpload(InputFileChangeEventArgs e)
-   {
-      StopDragging();
-
-      var file = e.File;
-      var extension = Path.GetExtension(file.Name).ToLower();
-
-      if (!VALID_FILE_TYPES.Split(',').Contains(extension))
-      {
-         NotificationService.ShowWarning($"Invalid file extension: {file.Name} has {extension} extension, skipping file.");
-         return;
-      }
-
-      //file = await file.RequestImageFileAsync(file.ContentType, 512, 512).ConfigureAwait(false);
-
-      byte[] buffer = ArrayPool<byte>.Shared.Rent((int)e.File.Size);
-      try
-      {
-         using var openedStream = file.OpenReadStream(5 * 1000 * 1024); // 5MB max
-         using var memoryStream = new MemoryStream(buffer);
-         await openedStream.CopyToAsync(memoryStream).ConfigureAwait(false);
-         int dataLength = (int)memoryStream.Length;
-         if (dataLength > 0)
-         {
-            string base64Data = Convert.ToBase64String(buffer);
-            _state.Image = $"data:{file.ContentType};base64,{base64Data}";
-         }
-         else
-         {
-            _state.Image = null;
-         }
-      }
-      finally
-      {
-         ArrayPool<byte>.Shared.Return(buffer);
-      }
-      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-   }
-
-   void StopDragging() => _state.IsDragging = false;
-   void StartDragging() => _state.IsDragging = true;
 }

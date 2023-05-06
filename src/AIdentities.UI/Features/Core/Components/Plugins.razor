@@ -1,0 +1,180 @@
+﻿@using AIdentities.UI.Features.Core.Services.Plugins;
+
+<MudStack Row="true" Class="mud-height-full mud-width-full">
+   <MudStack Class="flex-1 overflow-y-auto ma-0">
+      <MudText Typo="Typo.h4" Class="mx-auto">Uploaded Packages</MudText>
+      <MudPaper Class="flex-1">
+         <MudList DisableGutters="true" Dense="true" Class="pa-1" Clickable="true"
+                  SelectedValue="_state.SelectedUploadedPackage" SelectedValueChanged="@(v => OnSelectedUploadedPackage((PluginManifest)v))">
+            @foreach (var status in _state.InstalledPackages.OrderBy(p => p.Manifest.Signature.GetFullName()))
+            {
+               <MudListItem DisableGutters="true" Class="pa-0">
+                  <MudCard Elevation="3">
+                     <MudCardHeader Class="gap-2">
+                        <MudText Typo="Typo.h4">@status.Manifest.Signature.Name</MudText>
+                        <MudText Typo="Typo.h6">@status.Manifest.Signature.Version</MudText>
+                        <MudSpacer />
+
+                        @switch (status.Status)
+                        {
+                           case PluginStatus.PackageStatus.Available:
+                           case PluginStatus.PackageStatus.Activated:
+                              <MudChip Color="Color.Success">@status.Status</MudChip>
+                              break;
+                           case PluginStatus.PackageStatus.Invalid:
+                           case PluginStatus.PackageStatus.Conflicts:
+                              <MudChip Color="Color.Error">@status.Status</MudChip>
+                              break;
+                           case PluginStatus.PackageStatus.PendingActivated:
+                              <MudChip Color="Color.Warning">Restart to ACTIVATE the plugin.</MudChip>
+                              break;
+                           case PluginStatus.PackageStatus.PendingDisabled:
+                              <MudChip Color="Color.Warning">Restart to DISABLE the plugin.</MudChip>
+                              break;
+                        }
+                     </MudCardHeader>
+                     <MudCardContent Class="pt-0">
+                        <MudText Typo="Typo.body2">@status.Manifest.Description</MudText>
+                        @if (!string.IsNullOrWhiteSpace(status.Problems))
+                        {
+                           <MudPaper Class="mud-theme-error pa-1 ma-1" Elevation="3">
+                              <MudText Typo="Typo.h5">Problems</MudText>
+                              <MudText Typo="Typo.body2">@status.Problems</MudText>
+                           </MudPaper>
+                        }
+                     </MudCardContent>
+                     <MudCardActions>
+                        @if (status.Status is PluginStatus.PackageStatus.Available)
+                        {
+                           <MudButton Color="Color.Success" Variant="Variant.Filled"
+                                Disabled="@_state.IsActivatingPackage"
+                                OnClick="@(async () => await ActivatePackage(status))">
+                              @if (_state.IsActivatingPackage)
+                              {
+                                 <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" Class="mr-2" />
+                                 <span>Activating</span>
+                              }
+                              else
+                              {
+                                 <span>Activate</span>
+                              }
+                           </MudButton>
+                        }
+                        <MudSpacer />
+
+                        <MudStack Row Spacing="2">
+                        @if (status.Status == PluginStatus.PackageStatus.Activated)
+                           {
+                              <MudButton Color="Color.Error" Variant="Variant.Filled"
+                                   Disabled="@_state.IsDisablingPackage"
+                                   OnClick="@(async () => await DisablePackage(status))">
+                                 @if (_state.IsDisablingPackage)
+                                 {
+                                    <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" Class="mr-2" />
+                                    <span>Disable</span>
+                                 }
+                                 else
+                                 {
+                                    <span>Disable</span>
+                                 }
+                              </MudButton>
+                           }
+                           <MudButton Color="Color.Error" Variant="Variant.Filled"
+                                   Disabled="@(_state.IsRemovingPackage || status.Status == PluginStatus.PackageStatus.Activated)"
+                                   OnClick="@(async () => await RemovePackage(status))">
+                              @if (_state.IsRemovingPackage)
+                              {
+                                 <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" Class="mr-2" />
+                                 <span>Removing</span>
+                              }
+                              else
+                              {
+                                 <span>Remove</span>
+                              }
+                           </MudButton>
+                        </MudStack>
+                     </MudCardActions>
+                  </MudCard>
+               </MudListItem>
+            }
+         </MudList>
+      </MudPaper>
+   </MudStack>
+   <MudStack Class="flex-1" Style="">
+      <MudText Typo="Typo.h6">
+         Drag and drop plugins here or click to open the dialog.<br />
+         Valid Plugins files extensions are:
+         @foreach (var extension in _validFileTypes)
+         {
+            <MudChip Text="@extension" />
+         }
+      </MudText>
+
+      <MudStack Row="true">
+         <MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="false" Accept="@VALID_FILE_TYPES"
+                        Class="flex-1" InputClass="absolute mud-width-full mud-height-full overflow-hidden z-20" InputStyle="opacity:0"
+                        OnFilesChanged="OnInputFileChanged" Files="_state.Files"
+                        @ondragenter="@OnDragEnter" @ondragleave="@OnDragLeave" @ondragend="@OnDragEnd">
+            <ButtonTemplate>
+               <MudPaper Height="200px" Outlined="true" Class="@GetDragClass()">
+                  <MudText Typo="Typo.h3" Class="mx-auto">Drop Here</MudText>
+               </MudPaper>
+            </ButtonTemplate>
+         </MudFileUpload>
+         <MudPaper Class="flex-1">
+            @foreach (var file in _state.Files)
+            {
+               <div @onclick:stopPropagation>
+                  <MudChip Color="Color.Dark" Text="@GetChipText(file)" OnClose="RemoveFile" Tag="file" />
+               </div>
+            }
+         </MudPaper>
+      </MudStack>
+      <MudToolBar DisableGutters="true" Dense="true" Class="gap-4 mx-auto">
+         <MudButton OnClick="Install" Disabled="@(!HasValidFiles())" Color="Color.Primary" Variant="Variant.Filled">Upload Plugins</MudButton>
+         <MudButton OnClick="Clear" Disabled="@(!HasValidFiles())" Color="Color.Error" Variant="Variant.Filled">Clear</MudButton>
+      </MudToolBar>
+      <MudPaper Class="d-flex flex-1 mt-4">
+         <MudText Typo="Typo.h4" Class="mx-auto" Color="Color.Error">Invalid Packages</MudText>
+         <MudList DisableGutters="true" Dense="true" Class="pa-1">
+            @foreach (var package in _state.InvalidPackages)
+            {
+               <MudListItem DisableGutters="true" Class="pa-0">
+                  <MudCard Elevation="3">
+                     <MudCardHeader>
+                        <MudText Typo="Typo.h6">@package.Key</MudText>
+                     </MudCardHeader>
+                     <MudCardContent>
+                        <MudText Typo="Typo.body2">@package.Value</MudText>
+                     </MudCardContent>
+                     <MudCardActions>
+                        <MudSpacer />
+                        <MudButton Color="Color.Error" Variant="Variant.Filled"
+                                Disabled="@_state.IsActivatingPackage"
+                                OnClick="@(async () => await RemoveInvalidPackage(package.Key))">
+                           @if (_state.IsActivatingPackage)
+                           {
+                              <MudProgressCircular Size="Size.Small" Color="Color.Primary" Indeterminate="true" />
+                           }
+                           else
+                           {
+                              <span>Remove</span>
+                           }
+                        </MudButton>
+                        <MudSpacer />
+                     </MudCardActions>
+                  </MudCard>
+               </MudListItem>
+            }
+         </MudList>
+      </MudPaper>
+   </MudStack>
+</MudStack>
+
+@code {
+   const string DEFAULT_DRAG_CLASS = "relative rounded-lg border-2 border-dashed pa-4 mud-width-full mud-height-full z-10 d-flex align-center";
+
+   string GetDragClass() => _state.IsDragging ? $"{DEFAULT_DRAG_CLASS} mud-border-primary mud-theme-dark" : DEFAULT_DRAG_CLASS;
+
+   string GetChipText(IBrowserFile file) => $"{file.Name} ({Formatter.FormatFileSize(file.Size)}";
+}

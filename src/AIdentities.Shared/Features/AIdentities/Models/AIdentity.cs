@@ -35,42 +35,16 @@ public record AIdentity : Entity
    public string? Image { get; set; } = default!;
 
    /// <summary>
-   /// AIdentity's background.
-   /// This is injected in the LLM prompt to make the AIdentity adhere to the background.
-   /// You can for example specify where the AIdentity is from, or what it does for a living.
-   /// </summary>
-   public string? Background { get; set; }
-
-   /// <summary>
    /// The description of the AIdentity.
    /// It's not used by the LLM, but it's useful for the user to know what the AIdentity is about.
    /// </summary>
    public string? Description { get; set; }
 
    /// <summary>
-   /// The full prompt passed to the LLM to start the conversation.
-   /// This is optional and can be left empty.
-   /// When specified, the LLM will use this prompt to start the conversation and will ignore the other fields.
-   /// </summary>
-   public string? FullPrompt { get; set; }
-
-   /// <summary>
    /// The AIdentity's personality.
-   /// This is injected in the LLM prompt to make the AIdentity behave following a specific personality.
-   /// Ignored if FullPrompt is specified.
+   /// The usage depends on the feature using the AIdentity.
    /// </summary>
    public string? Personality { get; set; }
-
-   /// <summary>
-   /// The first message sent by the AIdentity when a new conversation starts.
-   /// </summary>
-   public string? FirstMessage { get; set; }
-
-   /// <summary>
-   /// Whether the AIdentity should use the full prompt or not.
-   /// When using the full prompt, the LLM will ignore the other fields and use the FullPrompt to start the conversation.
-   /// </summary>
-   public bool UseFullPrompt { get; set; }
 
    /// <summary>
    /// The features of the AIdentity.

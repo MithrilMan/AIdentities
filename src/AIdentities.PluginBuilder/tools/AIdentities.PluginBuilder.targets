@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+   <UsingTask TaskName="PluginBuilderTask" AssemblyFile="$(PluginBuilderPath)"/>
+   
+   <Target Name="RunPluginBuilderTask" AfterTargets="Build">
+      <PluginBuilderTask />
+   </Target>
+
+   <UsingTask TaskName="GeneratePackage" AssemblyFile="$(PluginBuilderPath)"/>
+
+   <Target Name="GeneratePackage" AfterTargets="Build">
+      <GenerateBlazorServerLibraryPackage
+        TargetFramework="$(TargetFramework)"
+        Configuration="$(Configuration)"
+        PackageOutputPath="$(PackageOutputPath)"
+        ProjectDirectory="$(MSBuildProjectDirectory)"
+    />
+   </Target>
+   
+</Project>

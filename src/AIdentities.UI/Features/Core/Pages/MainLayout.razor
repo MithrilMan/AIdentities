@@ -27,11 +27,7 @@
       </MudNavMenu>
    </MudDrawer>
 
-   <MudMainContent Class="d-flex flex-grow-1" Style="padding-bottom: 48px; height: 100vh;">
-      <MudContainer MaxWidth="MaxWidth.False" Class="d-flex flex-grow-1 pa-1 overflow-hidden">
-         @Body
-      </MudContainer>
-   </MudMainContent>
+   <MudMainContent Class="d-flex flex-grow-1 overflow-hidden" Style="padding-bottom: 48px; height: 100vh;">@Body</MudMainContent>
 
    <MudAppBar Bottom="true" DisableGutters="true" Elevation="3" Dense="true" Color="Color.Primary" Style="top: auto; bottom: 0">
       <MudText Typo="Typo.body2" Class="ml-3">&copy; Mithril Man 2023</MudText>

@@ -1,16 +1,30 @@
 ﻿using AIdentities.Shared.Plugins.Storage;
 using AIdentities.UI.Features.AIdentityManagement.Services;
 using AIdentities.UI.Features.Core.Services.PageManager;
+using AIdentities.UI.Features.Core.Services.Plugins;
+using AIdentities.UI.Features.Core.Services.PluginStaticResources;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 
 namespace AIdentities.UI;
 
 public static class DependencyInjection
 {
+   public static IWebHostBuilder UseStaticPluginWebAssets(this IWebHostBuilder builder, IFileProvider provider)
+   {
+      builder.ConfigureAppConfiguration((context, configBuilder) =>
+      {
+         context.HostingEnvironment.WebRootFileProvider = new CompositeFileProvider(new[] { provider, context.HostingEnvironment.WebRootFileProvider });
+      });
+      return builder;
+   }
+
+
    public static IServiceCollection AddAIdentitiesServices(
       this IServiceCollection services,
       IWebHostEnvironment webHostEnvironment,
-      out ILogger startupLogger)
+      out ILogger startupLogger,
+      out IFileProvider pluginStaticWebProvider)
    {
       services.AddCors(options =>
       {
@@ -38,7 +52,7 @@ public static class DependencyInjection
       services.AddScoped<IPageDefinitionProvider, PageDefinitionProvider>();
       services.AddScoped<INotificationService, NotificationService>();
       services.AddScoped<IAppComponentSettingsManager, AppComponentSettingsManager>();
-      
+
       services
          .AddScoped<EventAggregator.Blazor.IEventAggregator, EventAggregator.Blazor.EventAggregator>()
          .AddScoped<IEventBus, EventBus>();
@@ -47,16 +61,19 @@ public static class DependencyInjection
          .AddSingleton<IAIdentityProvider, AIdentityProvider>()
          .AddSingleton<AIdentityProviderSerializationSettings>();
 
+      //services.AddSingleton<>
+
       services.AddScoped<IScrollService, ScrollService>();
 
-      startupLogger = RegisterPlugins(services, webHostEnvironment);
+      startupLogger = RegisterPlugins(services, webHostEnvironment, out pluginStaticWebProvider);
 
       return services;
    }
 
-   private static ILogger RegisterPlugins(IServiceCollection services, IWebHostEnvironment webHostEnvironment)
+   private static ILogger RegisterPlugins(IServiceCollection services, IWebHostEnvironment webHostEnvironment, out IFileProvider pluginStaticWebProvider)
    {
       services.AddSingleton<IPluginStorageFactory, PluginStorageFactory>();
+      services.AddSingleton<IPluginFoldersProvider, PluginFoldersProvider>();
       services.AddSingleton<IPackageInspector, PackageInspector>();
 
       // this is used by debuggable modules to register their services.
@@ -74,7 +91,10 @@ public static class DependencyInjection
          temporaryServices.Add(service);
       }
 
+      // we add the PluginManager to the temporary service collection so we can load plugins.
       temporaryServices.AddSingleton<PluginManager>();
+      // we add the PluginStaticResourceProvider to the temporary service collection so we can load plugins.
+      temporaryServices.AddSingleton<PluginStaticResourceProvider>();
       // we add the AppOptionsValidator to the temporary service collection so we can validate the AppOptions explicitly before registering plugins.
       temporaryServices.AddSingleton<AppOptionsValidator>();
       // Register debuggable module services.
@@ -89,14 +109,6 @@ public static class DependencyInjection
       // we are causing validation to happen during DI resolution and we won't have control on the output
       ValidateAppOptionsExplicitly(startupLogger, temporaryServiceProvider);
 
-      //var pluginManager = new PluginManager(
-      //   logger: temporaryServiceProvider.GetRequiredService<ILogger<PluginManager>>(),
-      //   options: temporaryServiceProvider.GetRequiredService<IOptions<AppOptions>>(),
-      //   webHostEnvironment: webHostEnvironment,
-      //   pluginStorageFactory: temporaryServiceProvider.GetRequiredService<IPluginStorageFactory>(),
-      //   packageInspector: temporaryServiceProvider.GetRequiredService<IPackageInspector>()
-      //   );
-
       PluginManager pluginManager = temporaryServiceProvider.GetRequiredService<PluginManager>();
       pluginManager.LoadStoredPackagesAsync(services).GetAwaiter().GetResult();
 
@@ -109,6 +121,7 @@ public static class DependencyInjection
             pluginManager.SwapDependencies(
                logger: sp.GetRequiredService<ILogger<PluginManager>>(),
                options: sp.GetRequiredService<IOptions<AppOptions>>(),
+               pluginFoldersProvider: sp.GetRequiredService<IPluginFoldersProvider>(),
                pluginStorageFactory: sp.GetRequiredService<IPluginStorageFactory>(),
                packageInspector: sp.GetRequiredService<IPackageInspector>()
                );
@@ -116,12 +129,31 @@ public static class DependencyInjection
             return pluginManager;
          });
 
+      //same for the static resource provider
+      PluginStaticResourceProvider pluginStaticResourceProvider = temporaryServiceProvider.GetRequiredService<PluginStaticResourceProvider>();
+      pluginStaticResourceProvider.Initialize(pluginManager.LoadedPackages);
+      services
+         .AddSingleton<IPluginStaticResourceProvider, PluginStaticResourceProvider>(sp =>
+         {
+            pluginStaticResourceProvider.InjectDependencies(
+               logger: sp.GetRequiredService<ILogger<IPluginStaticResourceProvider>>(),
+               pluginFoldersProvider: sp.GetRequiredService<IPluginFoldersProvider>()
+               );
+
+            return pluginStaticResourceProvider;
+         });
+
+
       // We are using an instance of IDebuggablePagesManager by using the temporary service provider we created for plugin loading.
       // The implementation instantiate the the registered IDebuggableModule implementations registered so far (plugin developers
       // should have done so in RegisterDebuggableModules method) and then invoke the method RegisterServices on resolved found modules
       // passesing the original services collection and the web host environment.
       IDebuggablePagesManager debuggablePagesManager = temporaryServiceProvider.GetRequiredService<IDebuggablePagesManager>();
       debuggablePagesManager.RegisterServices(services, webHostEnvironment);
+
+
+      // we return the pluginStaticResourceProvider so we can use it to register static resources.
+      pluginStaticWebProvider = pluginStaticResourceProvider;
 
       return startupLogger;
    }
@@ -164,7 +196,6 @@ public static class DependencyInjection
    /// <param name="services">The service collection where to register plugin services.</param>
    private static void RegisterDebuggableModules(IServiceCollection services)
    {
-      services.AddSingleton<IDebuggableModule, Chat.DebuggableModule>();
       services.AddSingleton<IDebuggableModule, BooruAIdentityImporter.DebuggableModule>();
    }
 }

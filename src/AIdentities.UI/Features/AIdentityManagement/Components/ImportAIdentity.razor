@@ -16,7 +16,7 @@ else
                   <MudAutocomplete T="IAIdentityImporter" AutoFocus="true" Immediate="true" Variant="Variant.Filled"
                                 @bind-Value="_state.SelectedImporter" For="@(() => _state.SelectedImporter)"
                                 SearchFunc="@SearchImporter" ToStringFunc="(importer => importer?.Name)"
-                                Placeholder="Select the AIdentity you want to talk with">
+                                Placeholder="Select the AIdentity Importer">
                   </MudAutocomplete>
                   <MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="false" Accept="@GetAllowedFileExtensions()" MaximumFileCount="1"
                               Class="flex-shrink-0" InputClass="absolute mud-width-full mud-height-full z-20" InputStyle="opacity:0"

@@ -1,5 +1,9 @@
-﻿@page "/"
+﻿@page "/settings"
+@using AIdentities.UI.Features.Core.Components
 
-<MudPaper Class="my-8 mx-auto d-flex " Elevation="10">
-   <MudImage Src="/images/splash.jpeg" ObjectPosition="ObjectPosition.Center" Class="mud-height-full"/>
-</MudPaper>
+<MudTabs Outlined="true" Position="Position.Start" Rounded="true" Border="true"
+         ApplyEffectsToContainer="true" Class="flex-grow-1" PanelClass="pa-3">
+   <MudTabPanel Text="Plugins">
+      <Plugins />
+   </MudTabPanel>
+</MudTabs>

@@ -11,11 +11,6 @@
    </PropertyGroup>
 
    <ItemGroup>
-      <Content Remove=".filenesting.json" />
-      <None Include=".filenesting.json" />
-   </ItemGroup>
-
-   <ItemGroup>
       <PackageReference Include="McMaster.NETCore.Plugins" Version="1.4.0" />
       <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
       <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.5" />
@@ -30,8 +25,7 @@
    </ItemGroup>
    
    <ItemGroup>
-      <ProjectReference Include="..\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
-      <ProjectReference Include="..\AIdentities.Chat\AIdentities.Chat.csproj" />
+      <ProjectReference Include="..\Plugins\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
    </ItemGroup>
 
    <Target Name="Restore Local Tools" BeforeTargets="Compile">

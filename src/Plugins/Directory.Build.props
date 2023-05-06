@@ -1,0 +1,23 @@
+<Project>
+   <PropertyGroup>
+      <PluginAssemblyName>AIdentities.PluginBuilder</PluginAssemblyName>
+      <!--Ensure to keep the version updated-->
+      <PluginVersion>1.0.0</PluginVersion>
+      <PluginBuilderPackagePath>$(MSBuildThisFileDirectory)/../AIdentities.PluginBuilder/bin/Debug</PluginBuilderPackagePath>
+      <FullPluginBuilderPackagePath>$(PluginBuilderPackagePath)/$(PluginAssemblyName).$(PluginVersion).nupkg</FullPluginBuilderPackagePath>
+   </PropertyGroup>
+
+   <!-- This is the way I found to include easily a local package source -->
+   <PropertyGroup>
+      <RestoreSources>$(RestoreSources);$(PluginBuilderPackagePath);https://api.nuget.org/v3/index.json;</RestoreSources>
+   </PropertyGroup>
+
+   <!-- 
+   Automatically add the reference to the plugin builder to every plugin project. Just ensure to update the correct version. 
+   Also I disabled cache to ensure the plugin builder is always updated if I change something in the plugin builder project and don't
+   want to update the version (e.g. for development and testing purposes)
+   -->
+   <!--<ItemGroup>
+      <PackageReference Include="$(PluginAssemblyName)" Version="$(PluginVersion)" NoCache="true"  />
+   </ItemGroup>-->
+</Project>
