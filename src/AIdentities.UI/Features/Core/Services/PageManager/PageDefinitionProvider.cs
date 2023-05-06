@@ -25,18 +25,19 @@ public class PageDefinitionProvider : IPageDefinitionProvider, IDisposable
       _eventBus.Subscribe(this);
       _pluginManager.PackageLoaded += async (sender, package) => await OnPackageLoaded(sender, package).ConfigureAwait(false);
 
-      foreach (var pageDefinition in _pluginManager.LoadedPackages.SelectMany(p => p.Pages ?? Enumerable.Empty<PageDefinition>()))
-      {
-         _pages.Add(pageDefinition);
-      }
-
-      // load internal pages
+      // load pages from this assembly
       foreach (var internalPage in _packageInspector.FindPageDefinitions(GetType().Assembly))
       {
          _pages.Add(internalPage);
       }
 
-      // loads pages from debuggable modules
+      // then from plugins
+      foreach (var pageDefinition in _pluginManager.LoadedPackages.SelectMany(p => p.Pages ?? Enumerable.Empty<PageDefinition>()))
+      {
+         _pages.Add(pageDefinition);
+      }
+
+      // then from debuggable modules
       foreach (var pageDefinition in debuggablePagesManager.FindPageDefinitions())
       {
          _pages.Add(pageDefinition);

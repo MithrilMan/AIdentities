@@ -1,4 +1,7 @@
 ﻿namespace AIdentities.Chat.Models;
+/// <summary>
+/// An AIdentity feature that allows the AIdentity to chat with the player in an Role Play style.
+/// </summary>
 public record AIdentityChatFeature: IAIdentityFeature
 {
    /// <summary>
