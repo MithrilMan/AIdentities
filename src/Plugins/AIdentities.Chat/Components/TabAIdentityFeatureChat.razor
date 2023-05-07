@@ -3,7 +3,7 @@
       <MudGrid Spacing="1" Class="">
          <MudItem xs="12">
             <MudTextField @bind-Value="@_state.FirstMessage" Immediate="true" For="() => _state.FirstMessage"
-                          Label="First Message" Variant="Variant.Filled"
+                          Label="First Message" Variant="Variant.Filled" Lines="3"
                           Placeholder="@HELP_FIRST_MESSAGE" />
          </MudItem>
          <MudItem xs="12">
@@ -16,16 +16,16 @@
          @if (_state.UseFullPrompt)
          {
             <MudItem xs="12">
-               <MudTextField @bind-Value="@_state.FullPrompt" Immediate="true" Lines="8" For="() => _state.FullPrompt"
-                          Label="Full Prompt" Variant="Variant.Filled"
+               <MudTextField @bind-Value="@_state.FullPrompt" Immediate="true" For="() => _state.FullPrompt"
+                          Label="Full Prompt" Variant="Variant.Filled" Lines="16"
                           Placeholder="@HELP_FULL_PROMPT" Disabled="!_state.UseFullPrompt" />
             </MudItem>
          }
          else
          {
-            <MudItem xs="6">
-               <MudTextField @bind-Value="@_state.Background" For="() => _state.Background"
-                          Label="Background" Variant="Variant.Filled" Immediate="true" Lines="5"
+            <MudItem xs="12">
+               <MudTextField @bind-Value="@_state.Background" Immediate="true" For="() => _state.Background"
+                          Label="Background" Variant="Variant.Filled" Lines="8"
                           Placeholder="@HELP_BACKGROUND" Disabled="_state.UseFullPrompt" />
             </MudItem>
          }

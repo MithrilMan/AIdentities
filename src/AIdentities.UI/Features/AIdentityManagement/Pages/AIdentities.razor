@@ -4,15 +4,32 @@
 <div class="d-flex flex-column gap-1 flex-grow-1">
    <MudGrid Spacing="0">
       <MudItem xs="4" Class="d-flex flex-column px-4">
-         <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Tertiary">AIdentities</MudText>
-         <MudSpacer />
-         <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.PersonAdd" IconSize="Size.Large" Size="Size.Large"
-                    OnClick="CreateNewAIdentity">Create a new AIdentity</MudButton>
-         <MudSpacer />
-         <MudButton Variant="Variant.Filled" IconSize="Size.Large" Size="Size.Large"
+         @if (_state.IsEditing)
+         {
+            <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Tertiary">Editing</MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+               <MudAvatar Size="Size.Large">
+                  <MudImage Src="@_state.CurrentAIDentity!.Image" />
+               </MudAvatar>
+               <MudText Typo="Typo.h4">@_state.CurrentAIDentity!.Name</MudText>
+            </MudStack>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" IconSize="Size.Large" Size="Size.Large"
                     EndIcon="@("<path d=\"M14,12L10,8V11H2V13H10V16M20,18V6C20,4.89 19.1,4 18,4H6A2,2 0 0,0 4,6V9H6V6H18V18H6V15H4V18A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18Z\" />")"
-                    OnClick="ImportAIdentity">Import AIdentity</MudButton>
-         <MudSpacer />
+                    OnClick="Export">Export AIdentity</MudButton>
+         }
+         else
+         {
+            <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Tertiary">AIdentities</MudText>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" EndIcon="@Icons.Material.Filled.PersonAdd" IconSize="Size.Large" Size="Size.Large"
+                    OnClick="CreateNewAIdentity">Create a new AIdentity</MudButton>
+            <MudSpacer />
+            <MudButton Variant="Variant.Filled" IconSize="Size.Large" Size="Size.Large"
+                    EndIcon="@("<path d=\"M14,12L10,8V11H2V13H10V16M20,18V6C20,4.89 19.1,4 18,4H6A2,2 0 0,0 4,6V9H6V6H18V18H6V15H4V18A2,2 0 0,0 6,20H18A2,2 0 0,0 20,18Z\" />")"
+                    OnClick="Import">Import AIdentity</MudButton>
+            <MudSpacer />
+         }
       </MudItem>
       <MudItem xs="8">
          <MudPaper>
@@ -74,7 +91,7 @@
          </div>
       </MudTabPanel>
 
-      <AIdentities.UI.Features.AIdentityManagement.Components.TabGeneric AIdentity="@_state.CurrentAIDentity"
+      <AIdentities.UI.Features.AIdentityManagement.Components.TabGeneric @bind-AIdentity="@_state.CurrentAIDentity"
                                                                          IsEditing="_state.IsEditing"
                                                                          IsEditingChanged="OnIsEditingChanged" />
       @foreach (var featureRegistration in AIdentityFeatureRegistrations)

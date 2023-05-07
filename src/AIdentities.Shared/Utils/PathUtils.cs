@@ -39,6 +39,24 @@ public static partial class PathUtils
    }
 
    /// <summary>
+   /// Returns true if the given path is a valid file path.
+   /// </summary>
+   /// <param name="fileName">The filename to check.</param>
+   /// <returns>True if the filename is valid, false otherwise.</returns>
+   public static bool IsValidFileName(string fileName)
+   {
+      if (string.IsNullOrEmpty(fileName))
+      {
+         return false;
+      }
+
+      char[] invalidFileNameChars = Path.GetInvalidFileNameChars();
+      if (fileName.Any(ch => invalidFileNameChars.Contains(ch))) return false;
+      return true;
+   }
+
+
+   /// <summary>
    /// Sanitize a filename by replacing invalid characters with an underscore and shortening the filename if it's too long.
    /// </summary>
    /// <param name="fileName">The filename to sanitize.</param>

@@ -4,7 +4,7 @@
 /// An interface for exporting characters from a file.
 /// This could be used from plugin developers to implement custom exporters for AIdentitie's character files.
 /// </summary>
-interface IAIdentityExporter
+public interface IAIdentityExporter
 {
    /// <summary>
    /// The name of the importer.
@@ -20,6 +20,6 @@ interface IAIdentityExporter
    /// Exports a <see cref="AIdentity"/> to a file.
    /// </summary>
    /// <param name="aIdentity">The <see cref="AIdentity"/> to export.</param>
-   /// <param name="exportedFilePath">The file path to export the <see cref="AIdentity"/> to.</param>
-   Task ExportAIdentityAsync(AIdentity aIdentity, string exportedFilePath);
+   /// <param name="fileName">The file name of the exported <see cref="AIdentity"/>.</param>
+   Task ExportAIdentityAsync(AIdentity aIdentity, string fileName);
 }
