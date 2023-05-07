@@ -1,4 +1,5 @@
 ﻿using AIdentities.Chat.Extendability;
+using AIdentities.Chat.Models;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 
@@ -10,6 +11,7 @@ public partial class Chat : AppPage<Chat>
    const string LIST_ID = "message-list-wrapper";
    const string LIST_SELECTOR = $"#{LIST_ID}";
 
+   [Inject] private IDialogService DialogService { get; set; } = null!;
    [Inject] private IChatConnector ChatConnector { get; set; } = null!;
    [Inject] private IChatStorage ChatStorage { get; set; } = null!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
@@ -64,23 +66,25 @@ public partial class Chat : AppPage<Chat>
 
          await ScrollToEndOfMessageList().ConfigureAwait(false);
 
-         await SendMessageToConnector(message).ConfigureAwait(false);
+         ChatPromptGenerator.AppendMessage(message);
+         await SendMessageToConnector().ConfigureAwait(false);
       }
    }
 
-   private async Task SendMessageToConnector(ChatMessage message)
+   private async Task SendMessageToConnector()
    {
       _state.IsWaitingReply = true;
 
       try
       {
-         ChatPromptGenerator.AppendMessage(message);
          var request = await ChatPromptGenerator.GenerateApiRequest().ConfigureAwait(false);
 
          var reply = await ChatConnector.SendMessageAsync(request).ConfigureAwait(false);
 
          if (reply is not null)
          {
+            _state.HasMessageGenerationFailed = false;
+
             var repliedMessage = new ChatMessage()
             {
                Message = reply.GeneratedMessage,
@@ -95,6 +99,7 @@ public partial class Chat : AppPage<Chat>
       catch (Exception ex)
       {
          NotificationService.ShowError($"Failed to send message to connector: {ex.Message}");
+         _state.HasMessageGenerationFailed = true;
          return;
       }
       finally
@@ -124,6 +129,11 @@ public partial class Chat : AppPage<Chat>
       {
          conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation.ConversationId).ConfigureAwait(false);
          ChatPromptGenerator.InitializeConversation(conversation);
+         if (conversation.Messages?.LastOrDefault()?.IsGenerated == false)
+         {
+            // if the last message is not generated, we need to generate a reply so we enable the "resend" button
+            _state.HasMessageGenerationFailed = true;
+         }
       }
       catch (Exception ex)
       {
@@ -144,11 +154,41 @@ public partial class Chat : AppPage<Chat>
          await _messageTextField!.BlurAsync().ConfigureAwait(false);
          // remove the key from the input field
          _state.Message = _state.Message![..^1];
-         await SendMessageAsync().ConfigureAwait(false);
+
+         //send the message only if we are not waiting for a reply
+         if (!_state.IsWaitingReply)
+         {
+            await SendMessageAsync().ConfigureAwait(false);
+         }
+
          await _messageTextField!.FocusAsync().ConfigureAwait(false);
          return;
       }
    }
 
-   Task Resend(ChatMessage message) => SendMessageToConnector(message);
+   Task Resend() => SendMessageToConnector();
+
+   async Task OnDeleteMessage(ChatMessage message)
+   {
+      bool? result = await DialogService.ShowMessageBox(
+         "Do you want to REMOVE the message?",
+         "Removing the message is permanent and cannot be undone.",
+         yesText: "Remove it!", cancelText: "Cancel").ConfigureAwait(false);
+
+      if (result != true) return;
+
+      if (await ChatStorage.DeleteMessageAsync(_state.SelectedConversation!, message).ConfigureAwait(false))
+      {
+         await _state.Messages.RemoveItemAsync(message).ConfigureAwait(false);
+
+         // we cannot remove easily a message from the PromptGenerator, so we just reset the conversation
+         var conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation!.ConversationId).ConfigureAwait(false);
+         ChatPromptGenerator.InitializeConversation(conversation);
+         if (conversation.Messages?.LastOrDefault()?.IsGenerated == false)
+         {
+            // if the last message is not generated, we need to generate a reply so we enable the "resend" button
+            _state.HasMessageGenerationFailed = true;
+         }
+      }
+   }
 }

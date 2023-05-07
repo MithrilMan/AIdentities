@@ -1,4 +1,7 @@
-﻿namespace AIdentities.Chat.Services;
+﻿using System.Text;
+using AIdentities.Chat.Models;
+
+namespace AIdentities.Chat.Services;
 public class ChatStorage : IChatStorage
 {
    const string CONVERSATION_POSTFIX = ".conv.json";
@@ -46,7 +49,7 @@ public class ChatStorage : IChatStorage
          Messages = new List<ChatMessage>()
       };
 
-      var messagesFileName = $"{conversationId}{CONVERSATION_MESSAGES_POSTFIX}";
+      var messagesFileName = GetConversationMessagesFileName(conversationId);
       try
       {
          var messages = await _pluginStorage.ReadAsync(messagesFileName).ConfigureAwait(false);
@@ -76,6 +79,8 @@ public class ChatStorage : IChatStorage
       return conversation!;
    }
 
+   private static string GetConversationMessagesFileName(Guid conversationId) => $"{conversationId}{CONVERSATION_MESSAGES_POSTFIX}";
+
    public async ValueTask<bool> UpdateConversationAsync(ConversationMetadata conversationMetadata, ChatMessage? message)
    {
       var fileName = $"{conversationMetadata.ConversationId}{CONVERSATION_POSTFIX}";
@@ -91,6 +96,40 @@ public class ChatStorage : IChatStorage
       await _pluginStorage.WriteAsJsonAsync(fileName, conversationMetadata).ConfigureAwait(false);
 
       return true;
+   }
+
+   public async ValueTask<bool> DeleteMessageAsync(ConversationMetadata conversationMetadata, ChatMessage message)
+   {
+      var fileName = $"{conversationMetadata.ConversationId}{CONVERSATION_POSTFIX}";
+      conversationMetadata.UpdatedAt = DateTimeOffset.UtcNow;
+
+      var messagesFileName = GetConversationMessagesFileName(conversationMetadata.ConversationId);
+      var messages = await _pluginStorage.ReadAsync(messagesFileName).ConfigureAwait(false);
+
+      var newMessages = new StringBuilder();
+      var textToFind = message.Id.ToString();
+      int messageDeleted = 0;
+      foreach (var line in messages!.Split('\n'))
+      {
+         if (line.Contains(textToFind))
+         {
+            messageDeleted++;
+            continue;
+         }
+         newMessages.AppendLine(line);
+      }
+
+      if (messageDeleted > 0)
+      {
+         //we found the message id to delete, we rewrite whole file (we need a better storage, maybe sqlite)
+         await _pluginStorage.WriteAsync(messagesFileName, newMessages.ToString()).ConfigureAwait(false);
+
+         //update the metadata too
+         conversationMetadata.MessageCount -= messageDeleted;
+         await _pluginStorage.WriteAsJsonAsync(fileName, conversationMetadata).ConfigureAwait(false);
+      }
+
+      return messageDeleted > 0;
    }
 
    public ValueTask StartConversationAsync(Conversation conversation)

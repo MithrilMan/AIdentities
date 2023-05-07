@@ -24,20 +24,25 @@
                @foreach (var message in _state.Messages.Items)
                {
                   <MudListItem Class="flex-shrink-0" @key="message" Value="message">
-                     <Message ChatMessage="message" IsSelected="@(_state.SelectedMessage == message)" OnResend="(() => Resend(message))" />
+                     <Message ChatMessage="message" IsSelected="@(_state.SelectedMessage == message)" OnDelete="OnDeleteMessage" />
                   </MudListItem>
                }
             </MudList>
          </MudPaper>
       </div>
 
-      <MudPaper Class="flex-shrink-0 d-flex flex-row pa-0" Style="" Elevation="3">
+      <MudPaper Class="flex-shrink-0 d-flex flex-row pa-0 gap-1 align-center px-1" Elevation="3">
+         @if (_state.HasMessageGenerationFailed)
+         {
+            <MudButton StartIcon="@Icons.Material.Outlined.Refresh" Color="Color.Error" ButtonType="ButtonType.Button" Size="Size.Large" Variant="Variant.Filled"
+                    OnClick="Resend" Disabled="@(_state.IsWaitingReply)">Resend</MudButton>
+         }
          <MudTextField Variant="Variant.Outlined" Lines="_state.MessageTextLines" @ref="_messageTextField"
                        Placeholder="Enter your message..." Immediate="true" Margin="Margin.Dense" Class="pa-0 ma-0"
                        OnKeyDown="OnKeyDown" Disabled="@(_state.SelectedConversation == null)"
                        @bind-Value="_state.Message" @bind-Value:after="_state.SetMessageTextLines" />
-         <MudButton StartIcon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button"
-                    OnClick="SendMessageAsync" Disabled="@(!_state.CanSendMessage)" />
+         <MudIconButton Icon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button" Size="Size.Medium"
+                        OnClick="SendMessageAsync" Disabled="@(!_state.CanSendMessage)" />
       </MudPaper>
    </MudItem>
 

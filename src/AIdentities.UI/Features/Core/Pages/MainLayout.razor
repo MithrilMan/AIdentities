@@ -17,10 +17,10 @@
       <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
    </MudAppBar>
 
-   <MudDrawer @bind-Open="@_state.IsDrawerOpen" ClipMode="DrawerClipMode.Always" Style="height:calc(100% - 96px)" Class="mud-theme-dark"
+   <MudDrawer @bind-Open="@_state.IsDrawerOpen" ClipMode="DrawerClipMode.Always" Style="height:calc(100% - 96px)"
               Anchor="Anchor.Left"
               Elevation="2" Variant="@DrawerVariant.Mini">
-      <MudNavMenu Bordered="true" Margin="Margin.Dense" Color="Color.Secondary" Class="mud-height-full d-flex flex-column mud-theme-dark">
+      <MudNavMenu Bordered="true" Margin="Margin.Dense" Color="Color.Secondary" Class="mud-height-full d-flex flex-column">
          <AIdentities.UI.Features.Core.Components.AvailablePages />
          <MudSpacer />
          <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/settings" Class="object-bottom">Settings</MudNavLink>

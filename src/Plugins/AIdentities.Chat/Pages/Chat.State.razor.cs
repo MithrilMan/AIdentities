@@ -23,6 +23,8 @@ public partial class Chat
 
       public bool CanSendMessage => !IsWaitingReply && SelectedConversation != null;
 
+      public bool HasMessageGenerationFailed { get; internal set; }
+
       public void Initialize(Func<IEnumerable<ChatMessage>, ValueTask<IEnumerable<ChatMessage>>> messageFilter)
       {
          MessageSearchText = null;

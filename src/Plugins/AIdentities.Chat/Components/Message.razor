@@ -8,11 +8,13 @@
          <MudPaper Class="pa-1" Elevation="2">
             <MudText Typo="Typo.body2" Align="Align.Start" Class="message">@ChatMessage.Message</MudText>
          </MudPaper>
+         <MudSpacer />
          <MudItem xs="3">
             @if (IsSelected)
             {
-               <MudStack Row="true" Justify="Justify.FlexEnd">
+               <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Class="px-2 pb-1">
                   <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
+                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="Delete" />
                </MudStack>
             }
          </MudItem>
@@ -24,9 +26,9 @@
          <MudItem xs="3">
             @if (IsSelected)
             {
-               <MudStack Row="true" Spacing="0" Justify="Justify.FlexStart" Class="px-2 pb-1">
+               <MudStack Row="true" Spacing="1" Justify="Justify.FlexStart" Class="px-2 pb-1">
+                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="Delete" />
                   <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
-                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.Refresh" OnClick="Resend" />
                </MudStack>
             }
          </MudItem>

@@ -9,12 +9,12 @@ public partial class Message : ComponentBase
 
    [Parameter] public ChatMessage ChatMessage { get; set; } = default!;
    [Parameter] public bool IsSelected { get; set; } = default!;
-   [Parameter] public EventCallback OnResend { get; set; }
+   [Parameter] public EventCallback<ChatMessage> OnDelete { get; set; }
 
    private async Task CopyToClipboard()
    {
       await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", ChatMessage.Message).ConfigureAwait(false);
    }
 
-   Task Resend() => OnResend.InvokeAsync();
+   Task Delete() => OnDelete.InvokeAsync(ChatMessage);
 }

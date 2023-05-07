@@ -42,7 +42,7 @@ public class OpenAIConnector : IChatConnector
       var apiRequest = new ChatCompletionRequest
       {
          FrequencyPenalty = request.RepetitionPenalityRange,
-         MaxTokens = request.MaxGeneratedTokens,
+         MaxTokens = null,// request.MaxGeneratedTokens,
          Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
          {
             Content = m.Content,
@@ -59,7 +59,7 @@ public class OpenAIConnector : IChatConnector
          User = request.UserId,
       };
 
-      _logger.LogDebug("Performing request");
+      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
       using HttpResponseMessage response = await client.PostAsJsonAsync(Endpoint, apiRequest, _serializerOptions).ConfigureAwait(false);
       _logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
 

@@ -37,4 +37,12 @@ public interface IChatStorage
    /// <param name="conversationId">The conversation id.</param>
    /// <returns>True if the conversation was deleted, false otherwise.</returns>
    ValueTask<bool> DeleteConversationAsync(Guid conversationId);
+
+   /// <summary>
+   /// Deletes a message from a conversation and update the metadata.
+   /// </summary>
+   /// <param name="conversationMetadata">The conversation metadata.</param>
+   /// <param name="message">The message to delete.</param>
+   /// <returns>True if the message was deleted, false otherwise.</returns>
+   ValueTask<bool> DeleteMessageAsync(ConversationMetadata conversationMetadata, ChatMessage message);
 }
