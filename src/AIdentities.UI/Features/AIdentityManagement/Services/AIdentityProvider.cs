@@ -32,14 +32,22 @@ public class AIdentityProvider : IAIdentityProvider
          var filename = Path.GetFileNameWithoutExtension(file);
          if (!Guid.TryParse(filename, out var id))
          {
-            _logger.LogWarning($"Unable to parse filename {filename} to Guid");
+            _logger.LogWarning("Invalid AIdentity file name {AIdentityFile}. AIdentity skipped", file);
             continue;
          }
 
-         var aidentity = ReadAIdentity(id);
-         if (aidentity != null)
+         try
          {
-            _aidentities[aidentity.Id] = aidentity;
+            var aidentity = ReadAIdentity(id);
+            if (aidentity != null)
+            {
+               _aidentities[aidentity.Id] = aidentity;
+            }
+         }
+         catch (Exception ex)
+         {
+            _logger.LogError("Error reading AIdentity {AIdentityId} from file {AIdentityFile}: {ErrorMessage}. AIdentity skipped", id, file, ex.Message);
+            continue;
          }
       }
    }

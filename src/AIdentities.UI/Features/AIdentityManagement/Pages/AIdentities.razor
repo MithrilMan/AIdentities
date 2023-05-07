@@ -79,7 +79,9 @@
                                                                          IsEditingChanged="OnIsEditingChanged" />
       @foreach (var featureRegistration in AIdentityFeatureRegistrations)
       {
-         <AIdentities.UI.Features.AIdentityManagement.Components.AIdentityFeatureTab FeatureRegistration="featureRegistration" AIdentity="_state.CurrentAIDentity" />
+         <AIdentities.UI.Features.AIdentityManagement.Components.AIdentityFeatureTab @bind-IsEditing="_state.IsEditing"
+                                                                                  FeatureRegistration="featureRegistration"
+                                                                                  AIdentity="_state.CurrentAIDentity" />
       }
    </MudTabs>
 </div>
