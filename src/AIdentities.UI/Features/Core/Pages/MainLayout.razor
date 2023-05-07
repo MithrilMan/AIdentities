@@ -29,8 +29,10 @@
 
    <MudMainContent Class="d-flex flex-grow-1 overflow-hidden" Style="padding-bottom: 48px; height: 100vh;">@Body</MudMainContent>
 
-   <MudAppBar Bottom="true" DisableGutters="true" Elevation="3" Dense="true" Color="Color.Primary" Style="top: auto; bottom: 0">
-      <MudText Typo="Typo.body2" Class="ml-3">&copy; Mithril Man 2023</MudText>
+   <MudAppBar Bottom="true" DisableGutters="true" Elevation="3" Dense="true" Color="Color.Primary" Style="top: auto; bottom: 0" ToolBarClass="d-flex flex-row mud-width-full px-3">
+      <MudText Typo="Typo.body2">&copy; Mithril Man 2023</MudText>
+      <MudSpacer />
+      <MudLink Href="https://github.com/MithrilMan/AIdentities/" Target="_blank" Class="mud-theme-primary"><MudIcon Icon="@Icons.Custom.Brands.GitHub" /></MudLink>
    </MudAppBar>
 
 </MudLayout>
