@@ -1,6 +1,8 @@
-﻿namespace AIdentities.Chat.Extendability;
+﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
 
-public record ChatApiResponse
+namespace AIdentities.Chat.Extendability;
+
+public record ChatApiResponse : IConversionalResponse
 {
-
+   public string? GeneratedMessage { get; set; }
 }

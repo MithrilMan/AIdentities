@@ -1,6 +1,8 @@
-﻿namespace AIdentities.Chat.Extendability;
+﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
 
-public interface IChatApiRequest
+namespace AIdentities.Chat.Extendability;
+
+public interface IChatApiRequest : IConversationalRequest
 {
 
    /// <summary>

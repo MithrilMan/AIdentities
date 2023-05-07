@@ -10,10 +10,18 @@ public partial class Chat
       public string? MessageSearchText { get; set; }
       public ConversationMetadata? SelectedConversation { get; set; }
       public string? Message { get; set; }
-
+      public ChatMessage? SelectedMessage { get; set; } = default!;
       public FilteredObservableCollection<ChatMessage> Messages { get; private set; } = default!;
 
       public int MessageTextLines { get; set; } = DEFAULT_MESSAGE_TEXT_LINES;
+
+      /// <summary>
+      /// This is used to prevent the user from sending multiple messages before the first one has been replied to.
+      /// When the user send a message, this is set to true, and when the message is replied to, it is set to false.
+      /// </summary>
+      public bool IsWaitingReply { get; set; }
+
+      public bool CanSendMessage => !IsWaitingReply && SelectedConversation != null;
 
       public void Initialize(Func<IEnumerable<ChatMessage>, ValueTask<IEnumerable<ChatMessage>>> messageFilter)
       {

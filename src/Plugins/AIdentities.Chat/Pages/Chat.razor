@@ -18,12 +18,13 @@
 
       <div class="d-flex flex-column flex-grow-1 overflow-y-auto" id="@LIST_ID">
          <MudPaper Class="d-flex flex-column flex-grow-1 pa-2 gap-1" Outlined="true">
-            <MudList Class="list d-flex flex-column flex-grow-1" Clickable="true" DisablePadding="true" DisableGutters="true" Dense="true">
+            <MudList Class="list d-flex flex-column flex-grow-1" DisablePadding="true" DisableGutters="true" Dense="true"
+                     Clickable="true" SelectedItemChanged="OnSelectedMessageChanged">
                <MudSpacer />
                @foreach (var message in _state.Messages.Items)
                {
-                  <MudListItem Class="flex-shrink-0" @key="message">
-                     <Message ChatMessage="message" />
+                  <MudListItem Class="flex-shrink-0" @key="message" Value="message">
+                     <Message ChatMessage="message" IsSelected="@(_state.SelectedMessage == message)" OnResend="(() => Resend(message))" />
                   </MudListItem>
                }
             </MudList>
@@ -35,7 +36,8 @@
                        Placeholder="Enter your message..." Immediate="true" Margin="Margin.Dense" Class="pa-0 ma-0"
                        OnKeyDown="OnKeyDown" Disabled="@(_state.SelectedConversation == null)"
                        @bind-Value="_state.Message" @bind-Value:after="_state.SetMessageTextLines" />
-         <MudButton OnClick="SendMessageAsync" StartIcon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button" Disabled="@(_state.SelectedConversation == null)" />
+         <MudButton StartIcon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button"
+                    OnClick="SendMessageAsync" Disabled="@(!_state.CanSendMessage)" />
       </MudPaper>
    </MudItem>
 
@@ -55,4 +57,6 @@
       }
       return _state.SelectedConversation.Title;
    }
+
+   void OnSelectedMessageChanged(MudListItem item) => _state.SelectedMessage = item.Value as ChatMessage;
 }

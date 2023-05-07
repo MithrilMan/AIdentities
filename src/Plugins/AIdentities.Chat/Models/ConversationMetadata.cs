@@ -1,6 +1,6 @@
 ﻿namespace AIdentities.Chat.Models;
 
-public class ConversationMetadata
+public record ConversationMetadata
 {
    public Guid ConversationId { get; set; }
    public Guid? UserId { get; set; }

@@ -1,9 +1,13 @@
-﻿namespace AIdentities.Chat.Services.Connectors.OpenAI;
+﻿using AIdentities.Shared;
+
+namespace AIdentities.Chat.Services.Connectors.OpenAI;
 
 public class OpenAIOptions
 {
-   public const string SECTION_NAME = "OpenAI";
+   public const string SECTION_NAME = $"{AppOptions.SECTION_NAME}:Chat:OpenAI";
+
    const bool DEFAULT_ENABLED = false;
+   const string DEFAULT_MODEL = "gpt-3.5-turbo";
 
    /// <summary>
    /// Enable or disable the OpenAI API.
@@ -20,4 +24,9 @@ public class OpenAIOptions
    /// OpenAI API Key.
    /// </summary>
    public string ApiKey { get; set; } = default!;
+
+   /// <summary>
+   /// The default model to use if no model has been specified in the request.
+   /// </summary>
+   public string DefaultModel { get; set; } = DEFAULT_MODEL;
 }

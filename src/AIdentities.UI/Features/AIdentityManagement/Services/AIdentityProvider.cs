@@ -81,6 +81,8 @@ public class AIdentityProvider : IAIdentityProvider
 
    public AIdentity? Get(Guid id)
    {
+      if (id == Guid.Empty) return null;
+
       if (!_aidentities.TryGetValue(id, out var aidentity))
       {
          //try to read again from disk

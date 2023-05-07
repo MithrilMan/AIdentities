@@ -13,23 +13,24 @@ public partial class Chat : AppPage<Chat>
    [Inject] private IChatConnector ChatConnector { get; set; } = null!;
    [Inject] private IChatStorage ChatStorage { get; set; } = null!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
+   [Inject] private IChatPromptGenerator ChatPromptGenerator { get; set; } = null!;
 
    MudTextField<string>? _messageTextField = default!;
 
    protected override void OnInitialized()
    {
       base.OnInitialized();
-      _state.Initialize(DutyFilter);
+      _state.Initialize(Filter);
    }
 
-   public async ValueTask<IEnumerable<ChatMessage>> DutyFilter(IEnumerable<ChatMessage> unfilteredItems)
+   public async ValueTask<IEnumerable<ChatMessage>> Filter(IEnumerable<ChatMessage> unfilteredItems)
    {
       if (_state.MessageSearchText is null) return unfilteredItems;
 
       await ValueTask.CompletedTask.ConfigureAwait(false);
 
       unfilteredItems = unfilteredItems
-         .Where(duty => duty.Message?.Contains(_state.MessageSearchText, StringComparison.OrdinalIgnoreCase) ?? false);
+         .Where(item => item.Message?.Contains(_state.MessageSearchText, StringComparison.OrdinalIgnoreCase) ?? false);
 
       return unfilteredItems;
    }
@@ -50,8 +51,7 @@ public partial class Chat : AppPage<Chat>
          {
             Message = _state.Message,
             IsGenerated = false,
-            User = "ME",
-            //ToUserId = null,
+            User = "ME"
          };
 
          await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, message).ConfigureAwait(false);
@@ -63,6 +63,43 @@ public partial class Chat : AppPage<Chat>
          _state.SetMessageTextLines();
 
          await ScrollToEndOfMessageList().ConfigureAwait(false);
+
+         await SendMessageToConnector(message).ConfigureAwait(false);
+      }
+   }
+
+   private async Task SendMessageToConnector(ChatMessage message)
+   {
+      _state.IsWaitingReply = true;
+
+      try
+      {
+         ChatPromptGenerator.AppendMessage(message);
+         var request = await ChatPromptGenerator.GenerateApiRequest().ConfigureAwait(false);
+
+         var reply = await ChatConnector.SendMessageAsync(request).ConfigureAwait(false);
+
+         if (reply is not null)
+         {
+            var repliedMessage = new ChatMessage()
+            {
+               Message = reply.GeneratedMessage,
+               IsGenerated = true,
+               AIDentityId = _state.SelectedConversation?.AIdentityId
+            };
+            await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, repliedMessage).ConfigureAwait(false);
+            await InvokeAsync(() => _state.Messages.AppendItemAsync(repliedMessage).AsTask()).ConfigureAwait(false);
+            await ScrollToEndOfMessageList().ConfigureAwait(false);
+         }
+      }
+      catch (Exception ex)
+      {
+         NotificationService.ShowError($"Failed to send message to connector: {ex.Message}");
+         return;
+      }
+      finally
+      {
+         _state.IsWaitingReply = false;
       }
    }
 
@@ -76,6 +113,7 @@ public partial class Chat : AppPage<Chat>
    {
       if (_state.SelectedConversation is null)
       {
+         ChatPromptGenerator.InitializeConversation(null);
          await _state.Messages.LoadItemsAsync(null).ConfigureAwait(false);
          return;
       }
@@ -85,6 +123,7 @@ public partial class Chat : AppPage<Chat>
       try
       {
          conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation.ConversationId).ConfigureAwait(false);
+         ChatPromptGenerator.InitializeConversation(conversation);
       }
       catch (Exception ex)
       {
@@ -103,9 +142,13 @@ public partial class Chat : AppPage<Chat>
       if (e.Key is "Enter" or "NumppadEnter" && !e.ShiftKey)
       {
          await _messageTextField!.BlurAsync().ConfigureAwait(false);
+         // remove the key from the input field
+         _state.Message = _state.Message![..^1];
          await SendMessageAsync().ConfigureAwait(false);
          await _messageTextField!.FocusAsync().ConfigureAwait(false);
          return;
       }
    }
+
+   Task Resend(ChatMessage message) => SendMessageToConnector(message);
 }
