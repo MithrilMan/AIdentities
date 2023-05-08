@@ -27,6 +27,23 @@
                      <Message ChatMessage="message" IsSelected="@(_state.SelectedMessage == message)" OnDelete="OnDeleteMessage" />
                   </MudListItem>
                }
+               @if (_state.IsWaitingReply)
+               {
+                  <MudListItem Class="flex-shrink-0">
+                     <MudSkeleton Animation="Animation.Pulse">
+                        <MudStack Row="true" Justify="Justify.FlexStart" AlignItems="AlignItems.End">
+                           <MudAvatar Color="Color.Tertiary" Size="Size.Medium">
+                              <MudSkeleton SkeletonType="SkeletonType.Circle"></MudSkeleton>
+                           </MudAvatar>
+                           <MudPaper Class="pa-1" Elevation="2">
+                              <MudText Typo="Typo.body2" Align="Align.Start" Class="message">Generating message....</MudText>
+                           </MudPaper>
+                           <MudSpacer />
+                           <MudItem xs="3" />
+                        </MudStack>
+                     </MudSkeleton>
+                  </MudListItem>
+               }
             </MudList>
          </MudPaper>
       </div>

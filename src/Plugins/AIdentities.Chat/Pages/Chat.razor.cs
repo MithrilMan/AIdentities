@@ -1,5 +1,4 @@
 ﻿using AIdentities.Chat.Extendability;
-using AIdentities.Chat.Models;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 
@@ -74,6 +73,8 @@ public partial class Chat : AppPage<Chat>
    private async Task SendMessageToConnector()
    {
       _state.IsWaitingReply = true;
+      await ScrollToEndOfMessageList().ConfigureAwait(false);
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
 
       try
       {

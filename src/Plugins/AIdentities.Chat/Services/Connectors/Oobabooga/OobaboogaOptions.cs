@@ -4,6 +4,7 @@ public class OobaboogaOptions
 {
    public const string SECTION_NAME = "Oobabooga";
    const bool DEFAULT_ENABLED = false;
+   const int DEFAULT_TIMEOUT = 15000;
 
    /// <summary>
    /// Enable or disable the OpenAI API.
@@ -20,4 +21,10 @@ public class OobaboogaOptions
    /// OpenAI API Key.
    /// </summary>
    public string ApiKey { get; set; } = default!;
+
+
+   /// <summary>
+   /// The default timeout for the API.
+   /// </summary>
+   public int Timeout { get; set; } = DEFAULT_TIMEOUT;
 }

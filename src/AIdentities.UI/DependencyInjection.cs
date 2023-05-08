@@ -47,6 +47,7 @@ public static class DependencyInjection
          .BindConfiguration(AppOptions.SECTION_NAME);
 
       services.AddMudServices();
+      services.AddMudMarkdownServices();
       services.AddBlazoredLocalStorage();
 
       services.AddScoped<IPageDefinitionProvider, PageDefinitionProvider>();
