@@ -1,35 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
-
-   <PropertyGroup>
-      <TargetFramework>net7.0</TargetFramework>
-      <Nullable>enable</Nullable>
-      <ImplicitUsings>enable</ImplicitUsings>
-      <UserSecretsId>ea1e0d63-da95-4dff-9daf-bd71044f404a</UserSecretsId>
-      <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
-      <DockerfileContext>..\..</DockerfileContext>
-      <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
-   </PropertyGroup>
-
-   <ItemGroup>
-      <PackageReference Include="McMaster.NETCore.Plugins" Version="1.4.0" />
-      <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
-      <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.5" />
-      <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
-      <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.30.0" />
-      <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
-      <PackageReference Include="LibSassBuilder" Version="3.0.0" />
-   </ItemGroup>
-
-   <ItemGroup>
-      <ProjectReference Include="..\AIdentities.Shared\AIdentities.Shared.csproj" />
-   </ItemGroup>
-   
-   <ItemGroup>
-      <ProjectReference Include="..\Plugins\AIdentities.Chat\AIdentities.Chat.csproj" />
-      <ProjectReference Include="..\Plugins\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
-   </ItemGroup>
-
-   <Target Name="Restore Local Tools" BeforeTargets="Compile">
-      <Exec Command="dotnet tool restore" />
-   </Target>
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>ea1e0d63-da95-4dff-9daf-bd71044f404a</UserSecretsId>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileContext>..\..</DockerfileContext>
+    <DockerComposeProjectPath>..\..\docker-compose.dcproj</DockerComposeProjectPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="ElectronNET.API" Version="23.6.1" />
+    <PackageReference Include="McMaster.NETCore.Plugins" Version="1.4.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.5" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.30.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
+    <PackageReference Include="LibSassBuilder" Version="3.0.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\AIdentities.Shared\AIdentities.Shared.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Plugins\AIdentities.Chat\AIdentities.Chat.csproj" />
+    <ProjectReference Include="..\Plugins\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
+  </ItemGroup>
+  <Target Name="Restore Local Tools" BeforeTargets="Compile">
+    <Exec Command="dotnet tool restore" />
+  </Target>
+  <ItemGroup>
+    <Content Update="electron.manifest.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

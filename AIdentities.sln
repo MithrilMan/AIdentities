@@ -40,6 +40,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.SharedTests", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.PluginBuilder", "src\AIdentities.PluginBuilder\AIdentities.PluginBuilder.csproj", "{0B32E3CA-2CA0-499B-9D3D-3B02A086105D}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deploy", "Deploy", "{743425F7-DAC9-4BA4-A040-8EAA0E0BD65E}"
+	ProjectSection(SolutionItems) = preProject
+		deploy\build-linux.bat = deploy\build-linux.bat
+		deploy\build-win.bat = deploy\build-win.bat
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -94,6 +100,7 @@ Global
 		{90BDAC9D-6923-4AC4-B335-51A8CED94AD9} = {3B5F4E8B-3A44-41A2-9B78-4C5385555837}
 		{819B04A8-C1AF-4640-B7F2-29B192F1E1FB} = {3B5F4E8B-3A44-41A2-9B78-4C5385555837}
 		{0B32E3CA-2CA0-499B-9D3D-3B02A086105D} = {396E75FB-E2A2-428F-8DD1-CF3642A7C8EB}
+		{743425F7-DAC9-4BA4-A040-8EAA0E0BD65E} = {30D43C74-72D9-44CB-AD7C-CBBA5AD89062}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5D13AC76-EB81-47F7-ADBA-CEA6CB4D97FF}
