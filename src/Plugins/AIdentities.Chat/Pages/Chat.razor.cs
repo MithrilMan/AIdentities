@@ -93,6 +93,7 @@ public partial class Chat : AppPage<Chat>
                AIDentityId = _state.SelectedConversation?.AIdentityId
             };
             await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, repliedMessage).ConfigureAwait(false);
+            ChatPromptGenerator.AppendMessage(repliedMessage);
             await InvokeAsync(() => _state.Messages.AppendItemAsync(repliedMessage).AsTask()).ConfigureAwait(false);
             await ScrollToEndOfMessageList().ConfigureAwait(false);
          }
