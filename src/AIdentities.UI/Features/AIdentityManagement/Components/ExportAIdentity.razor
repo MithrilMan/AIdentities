@@ -1,0 +1,36 @@
+﻿@if (AIdentityExporters?.Any() != true)
+{
+   <MudDialog>
+      <DialogContent>
+         <MudAlert Severity="Severity.Error" Variant="Variant.Filled">No AIdentity Exporters found!</MudAlert>
+      </DialogContent>
+   </MudDialog>
+}
+else
+{
+   <MudDialog>
+      <DialogContent>
+         <MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0">
+            <MudPaper Class="flex-1 d-flex flex-column gap-2 overflow-y-auto">
+               <MudStack>
+                  <MudAutocomplete T="IAIdentityExporter" AutoFocus="true" Immediate="true" Variant="Variant.Filled"
+                                @bind-Value="_state.SelectedExporter" For="@(() => _state.SelectedExporter)"
+                                SearchFunc="@SearchImporter" ToStringFunc="(importer => importer?.Name)"
+                                Placeholder="Select the AIdentity Importer">
+                  </MudAutocomplete>
+               </MudStack>
+
+               <MudTextField Immediate @bind-Text="_state.FileName" For="(()=> _state.FileName)" />
+               <MudTextField @bind-Value="@_state.FileName" Label="File Name" For="() => _state.FileName"
+                          Variant="Variant.Filled" Immediate="true"
+                          Placeholder="@HELP_FILENAME" />
+            </MudPaper>
+         </MudForm>
+      </DialogContent>
+
+      <DialogActions>
+         <MudButton OnClick="Cancel">Cancel</MudButton>
+         <MudButton Color="Color.Primary" OnClick="Export" ButtonType="ButtonType.Submit">Import AIdentity!</MudButton>
+      </DialogActions>
+   </MudDialog>
+}

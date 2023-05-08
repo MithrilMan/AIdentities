@@ -47,6 +47,7 @@ public static class DependencyInjection
          .BindConfiguration(AppOptions.SECTION_NAME);
 
       services.AddMudServices();
+      services.AddMudMarkdownServices();
       services.AddBlazoredLocalStorage();
 
       services.AddScoped<IPageDefinitionProvider, PageDefinitionProvider>();
@@ -98,7 +99,7 @@ public static class DependencyInjection
       // we add the AppOptionsValidator to the temporary service collection so we can validate the AppOptions explicitly before registering plugins.
       temporaryServices.AddSingleton<AppOptionsValidator>();
       // Register debuggable module services.
-      RegisterDebuggableModules(temporaryServices);
+      DebuggableModulesRegistration.RegisterDebuggableModules(temporaryServices);
 
       // we build a temporary service provider so we can use it to load plugins.
       var temporaryServiceProvider = temporaryServices.BuildServiceProvider();
@@ -185,18 +186,5 @@ public static class DependencyInjection
          }
          throw new Exception("AppOptions validation failed.");
       }
-   }
-
-   /// <summary>
-   /// In order to let debuggable modules register their services, we need to register them.
-   /// This is a manual process, since we cannot use the plugin manager to do this for us.
-   /// So everytime we want to develop a plugin but we want to take advantage of the debuggable modules in a more
-   /// comfortable way, we need to register them here.
-   /// </summary>
-   /// <param name="services">The service collection where to register plugin services.</param>
-   private static void RegisterDebuggableModules(IServiceCollection services)
-   {
-      services.AddSingleton<IDebuggableModule, Chat.DebuggableModule>();
-      services.AddSingleton<IDebuggableModule, BooruAIdentityImporter.DebuggableModule>();
    }
 }

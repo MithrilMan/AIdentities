@@ -21,6 +21,9 @@ public class PluginEntry : BasePluginEntry
          .BindConfiguration(OpenAIOptions.SECTION_NAME)
          .ValidateOnStart();
 
+      services
+         .AddTransient<IChatPromptGenerator, ChatPromptGenerator>();
+
       // Register the AIdentity feature to expose an editor in the AIdentity management page.
       RegisterFeature<AIdentityChatFeature, TabAIdentityFeatureChat>("Chat");
    }

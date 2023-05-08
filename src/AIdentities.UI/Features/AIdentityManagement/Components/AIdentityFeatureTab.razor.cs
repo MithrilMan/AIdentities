@@ -1,12 +1,19 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using AIdentities.Chat.Models;
+using AIdentities.Shared.Features.AIdentities.Abstracts;
+using AIdentities.UI.Features.AIdentityManagement.Services;
+using Microsoft.AspNetCore.Components;
 
 namespace AIdentities.UI.Features.AIdentityManagement.Components;
 
 public partial class AIdentityFeatureTab
-//where TFeature : IAIdentityFeature
 {
+   [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
+   [Inject] public INotificationService NotificationService { get; set; } = default!;
+
    [Parameter] public AIdentityFeatureRegistration FeatureRegistration { get; set; } = default!;
    [Parameter] public AIdentity AIdentity { get; set; } = default!;
+   [Parameter] public bool IsEditing { get; set; }
+   [Parameter] public EventCallback<bool> IsEditingChanged { get; set; }
 
    private readonly Dictionary<string, object?> _parameters = new();
 
@@ -20,6 +27,32 @@ public partial class AIdentityFeatureTab
       _parameters["Feature"] = AIdentity?.Features[FeatureRegistration.FeatureType];
    }
 
+   public async Task SaveAsync()
+   {
+      var aidentityFeatureTab = (IAIdentityFeatureTab)_featureTab!.Instance!;
+      var result = await aidentityFeatureTab.SaveAsync().ConfigureAwait(false);
 
-   //TODO: move here the save/undo logic and call _featureTab.Instance.SaveAsync() and _featureTab.Instance.UndoChangesAsync()
+      if (result == null)
+      {
+         NotificationService.ShowWarning("Please fix the errors on the form.");
+         return;
+      }
+
+      AIdentity.Features[FeatureRegistration.FeatureType] = result;
+
+      AIdentityProvider.Update(AIdentity);
+
+      // update the parameters to apply the needed changes
+      _parameters["Feature"] = AIdentity?.Features[FeatureRegistration.FeatureType];
+
+      NotificationService.ShowSuccess("AIdentity updated successfully!");
+   }
+
+   public async Task UndoChangesAsync()
+   {
+      var aidentityFeatureTab = (IAIdentityFeatureTab)_featureTab!.Instance!;
+      await aidentityFeatureTab.UndoChangesAsync().ConfigureAwait(false);
+
+      await IsEditingChanged.InvokeAsync(false).ConfigureAwait(false);
+   }
 }

@@ -8,7 +8,11 @@ public partial class AIdentities
    {
       public AIdentity? CurrentAIDentity { get; set; }
 
-      public bool IsEditing => CurrentAIDentity != null;
+      public bool IsEditing
+      {
+         get { return CurrentAIDentity != null; }
+         set { CurrentAIDentity = null; }
+      }
 
       public int ActivePanelIndex { get; set; }
    }

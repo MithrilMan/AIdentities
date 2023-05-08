@@ -18,24 +18,49 @@
 
       <div class="d-flex flex-column flex-grow-1 overflow-y-auto" id="@LIST_ID">
          <MudPaper Class="d-flex flex-column flex-grow-1 pa-2 gap-1" Outlined="true">
-            <MudList Class="list d-flex flex-column flex-grow-1" Clickable="true" DisablePadding="true" DisableGutters="true" Dense="true">
+            <MudList Class="list d-flex flex-column flex-grow-1" DisablePadding="true" DisableGutters="true" Dense="true"
+                     Clickable="true" SelectedItemChanged="OnSelectedMessageChanged">
                <MudSpacer />
                @foreach (var message in _state.Messages.Items)
                {
-                  <MudListItem Class="flex-shrink-0" @key="message">
-                     <Message ChatMessage="message" />
+                  <MudListItem Class="flex-shrink-0" @key="message" Value="message">
+                     <Message ChatMessage="message" IsSelected="@(_state.SelectedMessage == message)" OnDelete="OnDeleteMessage" />
                   </MudListItem>
+               }
+               @if (_state.IsWaitingReply)
+               {
+                  <MudStack Row="true" Class="mud-width-full">
+                     <MudItem xs="11">
+                        <MudCard Class="flex-grow-1" Elevation="0">
+                           <MudCardHeader Class="py-1 px-0">
+                              <CardHeaderAvatar>
+                                 <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Height="40px" Width="40px" />
+                              </CardHeaderAvatar>
+                              <CardHeaderContent>
+                                 <MudSkeleton Animation="Animation.Wave" Height="40px" SkeletonType="SkeletonType.Rectangle" />
+                              </CardHeaderContent>
+                           </MudCardHeader>
+                        </MudCard>
+                     </MudItem>
+                     <MudItem xs="1"></MudItem>
+                  </MudStack>
                }
             </MudList>
          </MudPaper>
       </div>
 
-      <MudPaper Class="flex-shrink-0 d-flex flex-row pa-0" Style="" Elevation="3">
+      <MudPaper Class="flex-shrink-0 d-flex flex-row pa-0 gap-1 align-center px-1" Elevation="3">
+         @if (_state.HasMessageGenerationFailed)
+         {
+            <MudButton StartIcon="@Icons.Material.Outlined.Refresh" Color="Color.Error" ButtonType="ButtonType.Button" Size="Size.Large" Variant="Variant.Filled"
+                    OnClick="Resend" Disabled="@(_state.IsWaitingReply)">Resend</MudButton>
+         }
          <MudTextField Variant="Variant.Outlined" Lines="_state.MessageTextLines" @ref="_messageTextField"
                        Placeholder="Enter your message..." Immediate="true" Margin="Margin.Dense" Class="pa-0 ma-0"
                        OnKeyDown="OnKeyDown" Disabled="@(_state.SelectedConversation == null)"
                        @bind-Value="_state.Message" @bind-Value:after="_state.SetMessageTextLines" />
-         <MudButton OnClick="SendMessageAsync" StartIcon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button" Disabled="@(_state.SelectedConversation == null)" />
+         <MudIconButton Icon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button" Size="Size.Medium"
+                        OnClick="SendMessageAsync" Disabled="@(!_state.CanSendMessage)" />
       </MudPaper>
    </MudItem>
 
@@ -55,4 +80,6 @@
       }
       return _state.SelectedConversation.Title;
    }
+
+   void OnSelectedMessageChanged(MudListItem item) => _state.SelectedMessage = item.Value as ChatMessage;
 }

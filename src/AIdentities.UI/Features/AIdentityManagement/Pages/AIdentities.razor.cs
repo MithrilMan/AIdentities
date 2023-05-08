@@ -26,7 +26,7 @@ public partial class AIdentities : AppPage<AIdentities>
       _state.ActivePanelIndex = 1;
    }
 
-   async Task ImportAIdentity()
+   async Task Import()
    {
       var dialog = await DialogService.ShowAsync<ImportAIdentity>("Import a new AIdentity", new DialogOptions()
       {
@@ -40,6 +40,22 @@ public partial class AIdentities : AppPage<AIdentities>
       if (result.Data is not AIdentity aIdentity) return;
 
       EditAIdentity(aIdentity);
+   }
+
+   async Task Export()
+   {
+      var parameters = new DialogParameters
+      {
+         { nameof(ExportAIdentity.AIdentity), _state.CurrentAIDentity }
+      };
+
+      var dialog = await DialogService.ShowAsync<ExportAIdentity>("Export the AIdentity", parameters, new DialogOptions()
+      {
+         CloseButton = true,
+         CloseOnEscapeKey = true,
+         Position = DialogPosition.Center,
+         FullWidth = true,
+      }).ConfigureAwait(false);
    }
 
    void OnIsEditingChanged(bool isEditing)

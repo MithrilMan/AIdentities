@@ -1,4 +1,5 @@
-﻿using MudBlazor;
+﻿using System.Reflection.Metadata.Ecma335;
+using MudBlazor;
 
 namespace AIdentities.Chat.Components;
 public partial class TabAIdentityFeatureChat : IAIdentityFeatureTab<AIdentityChatFeature>
@@ -32,11 +33,11 @@ It has no impact on how it responds, It's purely cosmetic.";
       await _form!.Validate().ConfigureAwait(false);
       if (!_form.IsValid)
       {
-         NotificationService.ShowWarning("Please fix the errors on the form.");
          return null;
       }
 
-      return Feature with
+      // care about this expression, parenthesis are important
+      return (Feature ?? new AIdentityChatFeature()) with
       {
          Background = _state.Background,
          FullPrompt = _state.FullPrompt!,
@@ -45,6 +46,16 @@ It has no impact on how it responds, It's purely cosmetic.";
       };
    }
 
-   public Task UndoChangesAsync() => throw new NotImplementedException();
+   public Task UndoChangesAsync()
+   {
+      _state.SetFormFields(Feature);
+      return Task.CompletedTask;
+   }
 
+   async Task<object?> IAIdentityFeatureTab.SaveAsync()
+   {
+      var result = await SaveAsync().ConfigureAwait(false);
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+      return result;
+   }
 }

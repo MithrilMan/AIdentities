@@ -21,6 +21,7 @@ The usage depends on the feature using the AIdentity.
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
 
    [Parameter] public AIdentity? AIdentity { get; set; }
+   [Parameter] public EventCallback<AIdentity?> AIdentityChanged { get; set; }
    [Parameter] public bool IsEditing { get; set; }
    [Parameter] public EventCallback<bool> IsEditingChanged { get; set; }
 
@@ -99,6 +100,7 @@ The usage depends on the feature using the AIdentity.
 
       AIdentityProvider.Update(modifiedAIdentity);
       NotificationService.ShowSuccess("AIdentity updated successfully!");
+      await AIdentityChanged.InvokeAsync(modifiedAIdentity).ConfigureAwait(false);
    }
 
    void StopDragging() => _state.IsDragging = false;

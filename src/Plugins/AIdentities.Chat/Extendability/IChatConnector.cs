@@ -2,5 +2,5 @@
 
 public interface IChatConnector : IEndpointConnector
 {
-   Task<ChatApiResponse?> Request(ChatApiRequest request);
+   Task<ChatApiResponse?> SendMessageAsync(ChatApiRequest request);
 }

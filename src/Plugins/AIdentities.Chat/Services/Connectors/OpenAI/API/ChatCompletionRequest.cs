@@ -1,9 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using AIdentities.Shared.Plugins.Connectors.Conversational;
 
 namespace AIdentities.Chat.Services.Connectors.OpenAI.API;
 
-public record ChatCompletionRequest
+public record ChatCompletionRequest : IConversationalRequest
 {
    /// <summary>
    /// ID of the model to use. Currently, only &#x60;gpt-3.5-turbo&#x60; and &#x60;gpt-3.5-turbo-0301&#x60; are supported.

@@ -1,11 +1,14 @@
-﻿namespace AIdentities.Chat.Extendability;
+﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
 
-public record ChatApiRequest
+namespace AIdentities.Chat.Extendability;
+
+public record ChatApiRequest : IConversationalRequest
 {
    private const int DEFAULT_COMPLETITIONRESULTS = 1;
    private const bool DEFAULT_STREAM = false;
 
-   public record Message(string Role, string Content, string Name);
+   public record Message(MessageRole Role, string Content, string? Name);
+   public enum MessageRole { System, Assistant, User }
 
    /// <summary>
    /// The ID of the model to use.

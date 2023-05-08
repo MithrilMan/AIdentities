@@ -1,22 +1,60 @@
 ﻿<div class="">
    @if (ChatMessage.IsGenerated)
    {
-      <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
-         <MudAvatar Color="Color.Secondary" Size="Size.Medium">@ChatMessage.User?.ToUpper() </MudAvatar>
-         <MudPaper Class="pa-1" Elevation="2">
-            <MudText Typo="Typo.body2" Align="Align.Start" Class="message">@ChatMessage.Message</MudText>
-         </MudPaper>
-         <MudItem xs="3"></MudItem>
+      <MudStack Row="true" Justify="Justify.FlexStart" AlignItems="AlignItems.End">
+         <MudItem xs="11">
+            <MudStack Row="true">
+               <MudAvatar Color="Color.Tertiary" Size="Size.Medium">
+                  <MudImage Src="@GetAIdentityImage(ChatMessage)" />
+               </MudAvatar>
+               <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@GetMessageStyle()">
+                  <MudMarkdown Value="@ChatMessage.Message" />
+               </MudPaper>
+               <MudSpacer />
+            </MudStack>
+         </MudItem>
+         <MudItem xs="1">
+            @if (IsSelected)
+            {
+               <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Class="px-2 pb-1">
+                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
+                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="Delete" />
+               </MudStack>
+            }
+         </MudItem>
       </MudStack>
    }
    else
    {
       <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
-         <MudItem xs="3"></MudItem>
-         <MudPaper Class="pa-1" Elevation="2">
-            <MudText Typo="Typo.body2" Align="Align.End" Class="message">@ChatMessage.Message</MudText>
-         </MudPaper>
-         <MudAvatar Color="Color.Secondary" Size="Size.Medium">@ChatMessage.User?.ToUpper() </MudAvatar>
+         <MudItem xs="1">
+            @if (IsSelected)
+            {
+               <MudStack Row="true" Spacing="1" Justify="Justify.FlexStart" Class="px-2 pb-1">
+                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="Delete" />
+                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
+               </MudStack>
+            }
+         </MudItem>
+         <MudItem xs="11">
+            <MudStack Row="true">
+               <MudSpacer />
+               <MudPaper Class="pa-1 overflow-x-auto mud-theme-primary" Elevation="2" Style="@GetMessageStyle()">
+                  <MudMarkdown Value="@ChatMessage.Message" />
+               </MudPaper>
+               <MudAvatar Color="Color.Secondary" Size="Size.Medium">@ChatMessage.User?.ToUpper() </MudAvatar>
+            </MudStack>
+         </MudItem>
       </MudStack>
    }
 </div>
+
+@code {
+   string GetAIdentityImage(ChatMessage message)
+   {
+      var image = AIdentityProvider.Get(message.AIDentityId ?? Guid.Empty)?.Image;
+      return image is null ? "/images/user.svg" : image;
+   }
+
+   string GetMessageStyle() => IsSelected ? "user-select:text" : "";
+}
