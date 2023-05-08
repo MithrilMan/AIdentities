@@ -1,4 +1,6 @@
-﻿namespace AIdentities.Chat.Pages;
+﻿using System.Text;
+
+namespace AIdentities.Chat.Pages;
 
 public partial class Chat
 {
@@ -24,6 +26,13 @@ public partial class Chat
       public bool CanSendMessage => !IsWaitingReply && SelectedConversation != null;
 
       public bool HasMessageGenerationFailed { get; internal set; }
+
+      /// <summary>
+      /// The response from the chat API, streamed as it comes in.
+      /// During the streaming, this is used to store the response, and when the streaming is done, it is 
+      /// cleared and the response is added to the <see cref="Messages"/> collection.
+      /// </summary>
+      public ChatMessage? StreamedResponse { get; set; }
 
       public void Initialize(Func<IEnumerable<ChatMessage>, ValueTask<IEnumerable<ChatMessage>>> messageFilter)
       {

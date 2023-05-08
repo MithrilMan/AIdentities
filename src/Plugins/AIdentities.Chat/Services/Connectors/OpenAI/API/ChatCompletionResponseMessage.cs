@@ -17,5 +17,5 @@ public record ChatCompletionResponseMessage
    /// </summary>
    [Required]
    [JsonPropertyName("content")]
-   public string Content { get; set; }
+   public string Content { get; set; } = default!;
 }

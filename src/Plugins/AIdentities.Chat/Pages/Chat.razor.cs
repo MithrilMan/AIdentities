@@ -1,4 +1,5 @@
-﻿using AIdentities.Chat.Extendability;
+﻿using System.Threading;
+using AIdentities.Chat.Extendability;
 using Microsoft.AspNetCore.Components.Web;
 using MudBlazor;
 
@@ -16,7 +17,7 @@ public partial class Chat : AppPage<Chat>
    [Inject] private IScrollService ScrollService { get; set; } = null!;
    [Inject] private IChatPromptGenerator ChatPromptGenerator { get; set; } = null!;
 
-   MudTextField<string>? _messageTextField = default!;
+   MudTextField<string?> _messageTextField = default!;
 
    protected override void OnInitialized()
    {
@@ -80,21 +81,30 @@ public partial class Chat : AppPage<Chat>
       {
          var request = await ChatPromptGenerator.GenerateApiRequest().ConfigureAwait(false);
 
-         var reply = await ChatConnector.SendMessageAsync(request).ConfigureAwait(false);
+         _state.StreamedResponse = new ChatMessage()
+         {
+            IsGenerated = true,
+            AIDentityId = _state.SelectedConversation?.AIdentityId
+         };
 
-         if (reply is not null)
+         var completions = ChatConnector.RequestChatCompletionAsStreamAsync(request, CancellationToken.None)
+            .ConfigureAwait(false)
+            .WithCancellation(CancellationToken.None);
+         await foreach (var completion in completions)
+         {
+            _state.StreamedResponse.Message += completion.GeneratedMessage;
+            // we force the update to show the streamed response
+            await ScrollToEndOfMessageList().ConfigureAwait(false);
+            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+         }
+
+         if (_state.StreamedResponse.Message?.Length > 0)
          {
             _state.HasMessageGenerationFailed = false;
 
-            var repliedMessage = new ChatMessage()
-            {
-               Message = reply.GeneratedMessage,
-               IsGenerated = true,
-               AIDentityId = _state.SelectedConversation?.AIdentityId
-            };
-            await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, repliedMessage).ConfigureAwait(false);
-            ChatPromptGenerator.AppendMessage(repliedMessage);
-            await InvokeAsync(() => _state.Messages.AppendItemAsync(repliedMessage).AsTask()).ConfigureAwait(false);
+            await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, _state.StreamedResponse).ConfigureAwait(false);
+            ChatPromptGenerator.AppendMessage(_state.StreamedResponse);
+            await InvokeAsync(() => _state.Messages.AppendItemAsync(_state.StreamedResponse).AsTask()).ConfigureAwait(false);
             await ScrollToEndOfMessageList().ConfigureAwait(false);
          }
       }
@@ -106,6 +116,7 @@ public partial class Chat : AppPage<Chat>
       }
       finally
       {
+         _state.StreamedResponse = null;
          _state.IsWaitingReply = false;
       }
    }

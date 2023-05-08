@@ -39,85 +39,10 @@ public class OobaboogaConnector : IChatConnector
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<ChatApiResponse?> SendMessageAsync(ChatApiRequest request)
+   public async Task<ChatApiResponse?> RequestChatCompletionAsync(ChatApiRequest request)
    {
       throw new NotImplementedException();
-      //var apiRequest = new ChatCompletionRequest
-      //{
-      //   FrequencyPenalty = request.RepetitionPenalityRange,
-      //   MaxTokens = request.MaxGeneratedTokens,
-      //   Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
-      //   {
-      //      Content = m.Content,
-      //      Name = m.Name,
-      //      Role = MapRole(m.Role)
-      //   }).ToList(),
-      //   Model = request.ModelId ?? _options.Value.DefaultModel,
-      //   PresencePenalty = request.RepetitionPenality,
-      //   N = request.CompletitionResults,
-      //   Stop = request.StopSequences,
-      //   Stream = request.Stream,
-      //   Temperature = request.Temperature,
-      //   TopP = request.TopPSamplings,
-      //   User = request.UserId,
-      //};
-
-      //_logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
-      //using HttpResponseMessage response = await _client.PostAsJsonAsync(Endpoint, apiRequest, _serializerOptions).ConfigureAwait(false);
-      //_logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
-
-      //if (response.IsSuccessStatusCode)
-      //{
-      //   _logger.LogDebug("Request succeeded: {RequestContent}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-      //   var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
-      //   return new ChatApiResponse
-      //   {
-      //      GeneratedMessage = responseData?.Choices.FirstOrDefault()?.Message.Content
-      //   };
-      //}
-      //else
-      //{
-      //   _logger.LogError("Request failed: {Error}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-      //   throw new Exception($"Request failed with status code {response.StatusCode}");
-      //}
    }
-
-   //private static ChatCompletionRoleEnum? MapRole(ChatApiRequest.MessageRole role) => role switch
-   //{
-   //   ChatApiRequest.MessageRole.User => ChatCompletionRoleEnum.User,
-   //   ChatApiRequest.MessageRole.Assistant => ChatCompletionRoleEnum.Assistant,
-   //   ChatApiRequest.MessageRole.System => ChatCompletionRoleEnum.System,
-   //   _ => throw new NotImplementedException()
-   //};
-
-   //private async Task PerformStreamRequestAsync(ChatApiRequest request, CancellationToken cancellationToken)
-   //{
-   //   HttpClient client = CreateHttpClient();
-   //   bool requestEnded = false;
-
-   //   while (!cancellationToken.IsCancellationRequested && !requestEnded)
-   //   {
-   //      try
-   //      {
-   //         _logger.LogDebug("Establishing connection");
-   //         var stream = await client.GetStreamAsync(Endpoint, cancellationToken).ConfigureAwait(false);
-   //         using var streamReader = new StreamReader(stream);
-   //         while (!streamReader.EndOfStream)
-   //         {
-   //            var message = await streamReader.ReadLineAsync(cancellationToken).ConfigureAwait(false);
-   //            _logger.LogDebug("Received a message");
-   //            if (message == "DONE") // data: DONE
-   //            {
-   //               requestEnded = true;
-   //            }
-   //         }
-   //      }
-   //      catch (Exception ex)
-   //      {
-   //         _logger.LogError(ex, "Streaming failed.");
-   //      }
-   //   }
-   //}
 
    private HttpClient CreateHttpClient()
    {
@@ -129,4 +54,6 @@ public class OobaboogaConnector : IChatConnector
 
       return client;
    }
+
+   public IAsyncEnumerable<ChatApiResponse> RequestChatCompletionAsStreamAsync(ChatApiRequest request, CancellationToken cancellationToken) => throw new NotImplementedException();
 }

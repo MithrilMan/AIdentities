@@ -29,21 +29,30 @@
                }
                @if (_state.IsWaitingReply)
                {
-                  <MudStack Row="true" Class="mud-width-full">
-                     <MudItem xs="11">
-                        <MudCard Class="flex-grow-1" Elevation="0">
-                           <MudCardHeader Class="py-1 px-0">
-                              <CardHeaderAvatar>
-                                 <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Height="40px" Width="40px" />
-                              </CardHeaderAvatar>
-                              <CardHeaderContent>
-                                 <MudSkeleton Animation="Animation.Wave" Height="40px" SkeletonType="SkeletonType.Rectangle" />
-                              </CardHeaderContent>
-                           </MudCardHeader>
-                        </MudCard>
-                     </MudItem>
-                     <MudItem xs="1"></MudItem>
-                  </MudStack>
+                  if (_state.StreamedResponse is { Message.Length: > 0 })
+                  {
+                     <MudListItem Class="flex-shrink-0" Value="_state.StreamedResponse">
+                        <Message ChatMessage="_state.StreamedResponse" IsSelected="@(_state.SelectedMessage == _state.StreamedResponse)" OnDelete="OnDeleteMessage" />
+                     </MudListItem>
+                  }
+                  else
+                  {
+                     <MudStack Row="true" Class="mud-width-full">
+                        <MudItem xs="11">
+                           <MudCard Class="flex-grow-1" Elevation="0">
+                              <MudCardHeader Class="py-1 px-0">
+                                 <CardHeaderAvatar>
+                                    <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Height="40px" Width="40px" />
+                                 </CardHeaderAvatar>
+                                 <CardHeaderContent>
+                                    <MudSkeleton Animation="Animation.Wave" Height="40px" SkeletonType="SkeletonType.Rectangle" />
+                                 </CardHeaderContent>
+                              </MudCardHeader>
+                           </MudCard>
+                        </MudItem>
+                        <MudItem xs="1"></MudItem>
+                     </MudStack>
+                  }
                }
             </MudList>
          </MudPaper>

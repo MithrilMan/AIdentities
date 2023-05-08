@@ -4,7 +4,7 @@ namespace AIdentities.Chat.Extendability;
 
 public record ChatApiRequest : IConversationalRequest
 {
-   private const int DEFAULT_COMPLETITIONRESULTS = 1;
+   private const int DEFAULT_COMPLETIONRESULTS = 1;
    private const bool DEFAULT_STREAM = false;
 
    public record Message(MessageRole Role, string Content, string? Name);
@@ -23,7 +23,7 @@ public record ChatApiRequest : IConversationalRequest
    /// <summary>
    /// How many chat completion choices to generate for each prompt.
    /// </summary>
-   public int? CompletitionResults { get; init; } = DEFAULT_COMPLETITIONRESULTS;
+   public int? CompletionResults { get; init; } = DEFAULT_COMPLETIONRESULTS;
 
    /// <summary>
    /// Whether the chat response should stream back partial progress.

@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 namespace AIdentities.Chat.Services.Connectors.OpenAI.API;
 
 /// <summary>
-/// 
+/// The response from the chat completion API.
 /// </summary>
 public record ChatCompletionResponseChoices
 {
@@ -17,11 +17,22 @@ public record ChatCompletionResponseChoices
    /// Gets or Sets Message
    /// </summary>
    [JsonPropertyName("message")]
-   public ChatCompletionResponseMessage Message { get; set; } = default!;
+   public ChatCompletionResponseMessage? Message { get; set; } = default!;
 
    /// <summary>
    /// Gets or Sets FinishReason
    /// </summary>
    [JsonPropertyName("finish_reason")]
    public string FinishReason { get; set; } = default!;
+
+   /// <summary>
+   /// The delta that may arrive with a stream response.
+   /// For simplicity it's routed to the same property as the message.
+   /// </summary>
+   [JsonPropertyName("delta")]
+   public ChatCompletionResponseMessage? Delta
+   {
+      get => Message;
+      set => Message = value;
+   }
 }

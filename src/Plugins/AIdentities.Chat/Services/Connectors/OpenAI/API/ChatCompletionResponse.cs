@@ -44,5 +44,5 @@ public record ChatCompletionResponse
    /// Gets or Sets Usage
    /// </summary>
    [JsonPropertyName("usage")]
-   public CompletionResponseUsage Usage { get; set; }
+   public CompletionResponseUsage? Usage { get; set; }
 }
