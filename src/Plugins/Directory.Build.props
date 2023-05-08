@@ -5,6 +5,8 @@
       <PluginVersion>1.0.0</PluginVersion>
       <PluginBuilderPackagePath>$(MSBuildThisFileDirectory)/../AIdentities.PluginBuilder/bin/Debug</PluginBuilderPackagePath>
       <FullPluginBuilderPackagePath>$(PluginBuilderPackagePath)/$(PluginAssemblyName).$(PluginVersion).nupkg</FullPluginBuilderPackagePath>
+      <AddPluginBuilder Condition=" '$(AddPluginBuilder)' == '' ">True</AddPluginBuilder>
+      <ExcludeAdiManifest Condition=" '$(AddPluginBuilder)' == '' ">False</ExcludeAdiManifest>
    </PropertyGroup>
 
    <!-- This is the way I found to include easily a local package source -->

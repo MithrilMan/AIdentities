@@ -8,15 +8,16 @@ EXPOSE 443
 FROM mcr.microsoft.com/dotnet/sdk:7.0 AS build
 WORKDIR /src
 COPY ["src/AIdentities.UI/AIdentities.UI.csproj", "src/AIdentities.UI/"]
-COPY ["src/AIdentities.Chat/AIdentities.Chat.csproj", "src/AIdentities.Chat/"]
 COPY ["src/AIdentities.Shared/AIdentities.Shared.csproj", "src/AIdentities.Shared/"]
+COPY ["src/Plugins/AIdentities.Chat/AIdentities.Chat.csproj", "src/Plugins/AIdentities.Chat/"]
+COPY ["src/Plugins/AIdentities.BooruAIdentityImporter/AIdentities.BooruAIdentityImporter.csproj", "src/Plugins/AIdentities.BooruAIdentityImporter/"]
 RUN dotnet restore "src/AIdentities.UI/AIdentities.UI.csproj"
 COPY . .
 WORKDIR "/src/src/AIdentities.UI"
-RUN dotnet build "AIdentities.UI.csproj" -c Release -o /app/build
+RUN dotnet build "AIdentities.UI.csproj" -c Release -o /app/build /p:AddPluginBuilder=false /p:ExcludeAdiManifest=true
 
 FROM build AS publish
-RUN dotnet publish "AIdentities.UI.csproj" -c Release -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "AIdentities.UI.csproj" -c Release -o /app/publish /p:UseAppHost=false /p:AddPluginBuilder=false /p:ExcludeAdiManifest=true
 
 FROM base AS final
 WORKDIR /app

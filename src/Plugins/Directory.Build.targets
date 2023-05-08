@@ -30,16 +30,17 @@
       found that value set to true.
       We shouldn't use that flag to true when packaging our plugins.
       -->
-   <ItemGroup Condition="'$(PublishReadyToRun)' == 'True'">
+   <ItemGroup Condition="'$(PublishReadyToRun)' == 'True' Or '$(ExcludeAdiManifest)' == 'True'">
       <Content Remove="aid-manifest.json"/>
       <None Include="aid-manifest.json">
          <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
          <CopyToPublishDirectory>Never</CopyToPublishDirectory>
       </None>
    </ItemGroup>
-   
+
    <!--We ensure we have a proper plugin builder package in our local NuGet package source set in the Directory.Build.props file-->
-   <Target Name="CheckFullPluginBuilderPackagePath" BeforeTargets="PrepareForBuild">
+   <Target Name="CheckFullPluginBuilderPackagePath" BeforeTargets="PrepareForBuild" Condition="'$(AddPluginBuilder)' == 'True'">
+      <Message Importance="high" Text="CheckFullPluginBuilderPackagePath"/>
       <Message Condition="!Exists('$(FullPluginBuilderPackagePath)')"
                Importance="High"
                Text="The plugin builder package '$(FullPluginBuilderPackagePath)' does not exist. Trying to compile the AIdentities.PluginBuilder..." />
