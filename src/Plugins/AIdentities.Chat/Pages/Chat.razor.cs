@@ -186,11 +186,9 @@ public partial class Chat : AppPage<Chat>
          // we cannot remove easily a message from the PromptGenerator, so we just reset the conversation
          var conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation!.ConversationId).ConfigureAwait(false);
          ChatPromptGenerator.InitializeConversation(conversation);
-         if (conversation.Messages?.LastOrDefault()?.IsGenerated == false)
-         {
-            // if the last message is not generated, we need to generate a reply so we enable the "resend" button
-            _state.HasMessageGenerationFailed = true;
-         }
+
+         // if the last message is not generated, we need to generate a reply so we enable the "resend" button
+         _state.HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsGenerated == false;
       }
    }
 }
