@@ -43,10 +43,18 @@ If you are just interested to try the software and not on the development, You c
 
 The docker file is in the src/AIdentities.UI folder but there is already a docker-compose file here in the root folder and if you are lucky and the port aren't already taken in your environment you can just run
 
+Before running the container, you need to configure your `.env` file
+
+Here you can find a `.env-example` file that you can use as reference, just copy it as `.env` and tweak based on your need. (that's the place where you'd want to set your OpenAI API key or any other sensitive information, other than change ports in case of conflicts with your environment)
+
+Now you are ready to run
+
 `docker-compose up --build`
 
-and then access the web app to the address https://localhost:5001/
+and then access the web app to the address you specified in your .env HTTPS_PORT (by default https://localhost:5001/ ) or HTTP_PORT (by default http://localhost:5000 )
 If your system doesn't have the port 5000 available you should edit the docker-compose.override.yml file and edit the port with one available (or you can go deeper and add an environment file and configure it externally, that's the preferred way to deal with this kind of apps).
+
+If during the docker-compose build you encounter errors about self signed certificates and you don't want to mess with your system trying to find a solution, you can disable the 443 port (see .env-example) and run it on http port only.
 
 {% note %}
 **Note** You can map the volume of the container path `/app/packages/_storage_/`
