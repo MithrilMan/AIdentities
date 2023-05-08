@@ -29,20 +29,21 @@
                }
                @if (_state.IsWaitingReply)
                {
-                  <MudListItem Class="flex-shrink-0">
-                     <MudSkeleton Animation="Animation.Pulse">
-                        <MudStack Row="true" Justify="Justify.FlexStart" AlignItems="AlignItems.End">
-                           <MudAvatar Color="Color.Tertiary" Size="Size.Medium">
-                              <MudSkeleton SkeletonType="SkeletonType.Circle"></MudSkeleton>
-                           </MudAvatar>
-                           <MudPaper Class="pa-1" Elevation="2">
-                              <MudText Typo="Typo.body2" Align="Align.Start" Class="message">Generating message....</MudText>
-                           </MudPaper>
-                           <MudSpacer />
-                           <MudItem xs="3" />
-                        </MudStack>
-                     </MudSkeleton>
-                  </MudListItem>
+                  <MudStack Row="true" Class="mud-width-full">
+                     <MudItem xs="11">
+                        <MudCard Class="flex-grow-1" Elevation="0">
+                           <MudCardHeader Class="py-1 px-0">
+                              <CardHeaderAvatar>
+                                 <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Height="40px" Width="40px" />
+                              </CardHeaderAvatar>
+                              <CardHeaderContent>
+                                 <MudSkeleton Animation="Animation.Wave" Height="40px" SkeletonType="SkeletonType.Rectangle" />
+                              </CardHeaderContent>
+                           </MudCardHeader>
+                        </MudCard>
+                     </MudItem>
+                     <MudItem xs="1"></MudItem>
+                  </MudStack>
                }
             </MudList>
          </MudPaper>

@@ -2,14 +2,18 @@
    @if (ChatMessage.IsGenerated)
    {
       <MudStack Row="true" Justify="Justify.FlexStart" AlignItems="AlignItems.End">
-         <MudAvatar Color="Color.Tertiary" Size="Size.Medium">
-            <MudImage Src="@GetAIdentityImage(ChatMessage)" />
-         </MudAvatar>
-         <MudPaper Class="pa-1" Elevation="2" Style="@(IsSelected ? "user-select:text":"")">
-            <MudMarkdown Value="@ChatMessage.Message" />
-         </MudPaper>
-         <MudSpacer />
-         <MudItem xs="3">
+         <MudItem xs="11">
+            <MudStack Row="true">
+               <MudAvatar Color="Color.Tertiary" Size="Size.Medium">
+                  <MudImage Src="@GetAIdentityImage(ChatMessage)" />
+               </MudAvatar>
+               <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@GetMessageStyle()">
+                  <MudMarkdown Value="@ChatMessage.Message" />
+               </MudPaper>
+               <MudSpacer />
+            </MudStack>
+         </MudItem>
+         <MudItem xs="1">
             @if (IsSelected)
             {
                <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Class="px-2 pb-1">
@@ -23,7 +27,7 @@
    else
    {
       <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
-         <MudItem xs="3">
+         <MudItem xs="1">
             @if (IsSelected)
             {
                <MudStack Row="true" Spacing="1" Justify="Justify.FlexStart" Class="px-2 pb-1">
@@ -32,11 +36,15 @@
                </MudStack>
             }
          </MudItem>
-         <MudSpacer />
-         <MudPaper Class="pa-1 mud-theme-primary" Elevation="2" Style="@(IsSelected ? "user-select:text":"")">
-            <MudMarkdown Value="@ChatMessage.Message" />
-         </MudPaper>
-         <MudAvatar Color="Color.Secondary" Size="Size.Medium">@ChatMessage.User?.ToUpper() </MudAvatar>
+         <MudItem xs="11">
+            <MudStack Row="true">
+               <MudSpacer />
+               <MudPaper Class="pa-1 overflow-x-auto mud-theme-primary" Elevation="2" Style="@GetMessageStyle()">
+                  <MudMarkdown Value="@ChatMessage.Message" />
+               </MudPaper>
+               <MudAvatar Color="Color.Secondary" Size="Size.Medium">@ChatMessage.User?.ToUpper() </MudAvatar>
+            </MudStack>
+         </MudItem>
       </MudStack>
    }
 </div>
@@ -47,4 +55,6 @@
       var image = AIdentityProvider.Get(message.AIDentityId ?? Guid.Empty)?.Image;
       return image is null ? "/images/user.svg" : image;
    }
+
+   string GetMessageStyle() => IsSelected ? "user-select:text" : "";
 }
