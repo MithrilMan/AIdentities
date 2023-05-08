@@ -20,6 +20,24 @@
       </ItemGroup>
    </Target>-->
 
+
+   <!-- 
+      When plugins are referenced by AIdentities.UI, some files are overwritten by the last plugin referenced.
+      This is fine becaue the files should be only the aid-manifest.json files.
+      `electronize start` used to start the app hosted in Electron, fails on publish because of this collision
+      so we remove the files from the publish process.
+      Since the default value of PublishReadyToRun for Electron.NET is true, we only remove the files if we 
+      found that value set to true.
+      We shouldn't use that flag to true when packaging our plugins.
+      -->
+   <ItemGroup Condition="'$(PublishReadyToRun)' == 'True'">
+      <Content Remove="aid-manifest.json"/>
+      <None Include="aid-manifest.json">
+         <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+         <CopyToPublishDirectory>Never</CopyToPublishDirectory>
+      </None>
+   </ItemGroup>
+   
    <!--We ensure we have a proper plugin builder package in our local NuGet package source set in the Directory.Build.props file-->
    <Target Name="CheckFullPluginBuilderPackagePath" BeforeTargets="PrepareForBuild">
       <Message Condition="!Exists('$(FullPluginBuilderPackagePath)')"
