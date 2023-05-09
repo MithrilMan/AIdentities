@@ -14,6 +14,14 @@
       <RestoreSources>$(RestoreSources);$(PluginBuilderPackagePath);https://api.nuget.org/v3/index.json;</RestoreSources>
    </PropertyGroup>
 
+   <!--
+   TODO: investigate on EnableDynamicLoading and plugin loading within a context
+   e.g. https://learn.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support
+   -->
+   <!--<PropertyGroup>
+      <EnableDynamicLoading>true</EnableDynamicLoading>
+   </PropertyGroup>-->
+
    <!-- 
    Automatically add the reference to the plugin builder to every plugin project. Just ensure to update the correct version. 
    Also I disabled cache to ensure the plugin builder is always updated if I change something in the plugin builder project and don't

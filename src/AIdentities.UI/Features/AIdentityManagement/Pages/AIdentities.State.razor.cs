@@ -1,6 +1,4 @@
-﻿using AIdentities.Shared.Validation;
-
-namespace AIdentities.UI.Features.AIdentityManagement.Pages;
+﻿namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 
 public partial class AIdentities
 {

@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Options;
+using Microsoft.JSInterop;
 
 namespace AIdentities.UI.Features.AIdentityManagement.Services;
 
@@ -10,7 +11,9 @@ public class AIdentityProvider : IAIdentityProvider
    readonly AIdentityProviderSerializationSettings _serializationSettings;
    readonly Dictionary<Guid, AIdentity> _aidentities = new();
 
-   public AIdentityProvider(ILogger<AIdentityProvider> logger, IOptions<AppOptions> options, AIdentityProviderSerializationSettings serializationSettings)
+   public AIdentityProvider(ILogger<AIdentityProvider> logger,
+                            IOptions<AppOptions> options,
+                            AIdentityProviderSerializationSettings serializationSettings)
    {
       _logger = logger;
       _options = options;
@@ -120,5 +123,11 @@ public class AIdentityProvider : IAIdentityProvider
    {
       var json = JsonSerializer.Serialize(aidentity, _serializationSettings.SerializerOptions);
       File.WriteAllText(GetAIdentityFileName(aidentity.Id), json);
+   }
+
+   public async Task<(string originalFileName, byte[] content)> GetRaw(Guid id)
+   {
+      var originalFileName = GetAIdentityFileName(id);
+      return (Path.GetFileName(originalFileName), await File.ReadAllBytesAsync(originalFileName).ConfigureAwait(false));
    }
 }

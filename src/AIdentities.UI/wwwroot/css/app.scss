@@ -7,3 +7,18 @@
 .flex-h-fix {
    min-height: 0;
 }
+
+@for $i from 1 through 5 {
+   .line-clamp-#{$i} {
+      overflow: hidden;
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: #{$i};
+   }
+}
+
+@for $i from 1 through 10 {
+   .opacity-#{$i}0 {
+      opacity: $i/10;
+   }
+}

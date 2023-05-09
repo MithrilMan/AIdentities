@@ -47,6 +47,11 @@ public record AIdentity : Entity
    public string? Personality { get; set; }
 
    /// <summary>
+   /// The AIdentity's tags.
+   /// </summary>
+   public HashSet<string> Tags { get; init; } = new();
+
+   /// <summary>
    /// The features of the AIdentity.
    /// Plugin developers can use this to add and manage custom features to their AIdentities or access other plugins' features.
    /// </summary>

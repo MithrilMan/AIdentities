@@ -1,5 +1,6 @@
 ﻿using AIdentities.UI.Features.AIdentityManagement.Components;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 
@@ -12,6 +13,7 @@ public partial class AIdentities : AppPage<AIdentities>
    [Inject] IEnumerable<AIdentityFeatureRegistration> AIdentityFeatureRegistrations { get; set; } = null!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
    [Inject] IDialogService DialogService { get; set; } = null!;
+   [Inject] IJSRuntime JSRuntime { get; set; } = null!;
 
    MudTabs? _tabs = default!;
 
@@ -23,7 +25,7 @@ public partial class AIdentities : AppPage<AIdentities>
    void StartEditing(AIdentity aIdentity)
    {
       _state.CurrentAIDentity = aIdentity;
-      _state.ActivePanelIndex = 1;
+      _state.ActivePanelIndex = 0;
    }
 
    async Task Import()
@@ -58,12 +60,19 @@ public partial class AIdentities : AppPage<AIdentities>
       }).ConfigureAwait(false);
    }
 
+   async Task DownloadAIdentity()
+   {
+      var (fileName, content) = await AIdentityProvider.GetRaw(_state.CurrentAIDentity!.Id).ConfigureAwait(false);
+      using var dataStream = new MemoryStream(content);
+      using var streamRef = new DotNetStreamReference(dataStream);
+      await JSRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef).ConfigureAwait(false);
+   }
+
    void OnIsEditingChanged(bool isEditing)
    {
       if (!isEditing)
       {
          _state.CurrentAIDentity = null;
-         _state.ActivePanelIndex = 0;
       }
    }
 }

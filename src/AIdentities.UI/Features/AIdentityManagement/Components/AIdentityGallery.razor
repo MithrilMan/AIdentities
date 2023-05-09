@@ -1,0 +1,59 @@
+﻿<MudGrid Spacing="1">
+   <MudItem xs="12" md="8">
+      <MudTextField T="string" Placeholder="Search an AIdentity by name or tag" @bind-Value="_state.AIdentitySearchText" @bind-Value:after="@ApplyFilterAsync"
+                    Variant="Variant.Filled" Clearable="true" AutoFocus="true"
+                    DebounceInterval="250" Class="mx-2 my-0"
+                    Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                    AdornmentColor="Color.Secondary" />
+   </MudItem>
+   <MudItem xs="12" md="4" Class="d-flex align-center">
+      <MudChipSet SelectedValues="_state.AIdentityTags" AllClosable="true">
+         @foreach (var tag in _state.AIdentityTags)
+         {
+            <MudChip Color="Color.Secondary" OnClose="@(() => _state.AIdentityTags.Remove(tag))">@tag</MudChip>
+         }
+      </MudChipSet>
+   </MudItem>
+</MudGrid>
+
+<MudContainer Style="max-width:100%" Class="pa-0">
+   <MudPaper Class="flex-1 pa-2">
+      <MudGrid>
+         @foreach (var aIdentity in _state.AIdentities.Items)
+         {
+            <MudItem xs="12" sm="6" md="3" lg="2">
+               <MudCard Class="mud-height-full">
+                  <MudCardActions>
+                     <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Primary" Size="Size.Medium" />
+                     <MudSpacer />
+                     <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" Size="Size.Medium" />
+                  </MudCardActions>
+                  @if (aIdentity.Image is not null)
+                  {
+                     <div class="relative">
+                        <img src="@aIdentity.Image" alt="@aIdentity.Name" class="card-image" />
+                        <MudPaper Class="absolute opacity-80" Style="bottom:0px;left:0;right:0">
+                           <MudChipSet Class="overflow-x-auto" Style="white-space: nowrap;"
+                                 SelectedValues="_state.AIdentityTags" Filter="true" MultiSelection="true">
+                              @foreach (var tag in aIdentity.Tags)
+                              {
+                                 <MudChip Value="tag" OnClick="() => ToggleTagSelection(tag)" SelectedColor="Color.Primary">@tag</MudChip>
+                              }
+                           </MudChipSet>
+                        </MudPaper>
+                     </div>
+                  }
+                  else
+                  {
+                     <MudSkeleton Class="card-image" SkeletonType="SkeletonType.Rectangle" />
+                  }
+                  <div class="pa-1">
+                     <h2>@aIdentity.Name</h2>
+                     <p class="line-clamp-3">@aIdentity.Description</p>
+                  </div>
+               </MudCard>
+            </MudItem>
+         }
+      </MudGrid>
+   </MudPaper>
+</MudContainer>

@@ -12,7 +12,7 @@
          <MudText Class="flex-1 text-ellipsis" Typo="Typo.h6">@GetConversationTitle()</MudText>
          <MudTextField T="string" Placeholder="Search Message..." @bind-Value="_state.MessageSearchText" @bind-Value:after="@ApplyFilter"
                        Variant="Variant.Filled" DebounceInterval="250" Class="flex-1 ma-0" Margin="Margin.Dense"
-                       Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                       Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true"
                        AdornmentColor="Color.Secondary" />
       </MudStack>
 
