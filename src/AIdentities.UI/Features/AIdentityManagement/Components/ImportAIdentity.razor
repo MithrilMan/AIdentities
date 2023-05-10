@@ -18,25 +18,20 @@ else
                                 SearchFunc="@SearchImporter" ToStringFunc="(importer => importer?.Name)"
                                 Placeholder="Select the AIdentity Importer">
                   </MudAutocomplete>
-                  <MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="false" Accept="@GetAllowedFileExtensions()" MaximumFileCount="1"
-                              Class="flex-shrink-0" InputClass="absolute mud-width-full mud-height-full z-20" InputStyle="opacity:0"
-                              Disabled="!_state.IsEditing" OnFilesChanged="OnImageUpload"
-                              @ondragenter="@StartDragging" @ondragleave="@StopDragging" @ondragend="@StopDragging">
-                     <ButtonTemplate>
-                        <MudPaper Outlined="true" Class="@(GetDragClass() + ((_state.IsEditing) ? " cursor-pointer mud-theme-secondary" : " cursor-none mud-theme-default"))">
-                           <MudText Typo="Typo.h4" Align="Align.Center">
-                              @if (_state.SelectedImporter is null)
-                              {
-                                 <span>Select an Importer</span>
-                              }
-                              else
-                              {
-                                 <span>Drop here the file to import or click to select.</span>
-                              }
-                           </MudText>
-                        </MudPaper>
-                     </ButtonTemplate>
-                  </MudFileUpload>
+                  <DragAndDropFileUpload Accept="@GetAllowedFileExtensions()" IsDisabled="!_state.IsEditing" OnFilesChanged="OnImageUpload">
+                     <DropZoneTemplate>
+                        <MudText Typo="Typo.h4" Align="Align.Center">
+                           @if (_state.SelectedImporter is null)
+                           {
+                              <span>Select an Importer</span>
+                           }
+                           else
+                           {
+                              <span>Drop here the file to import or click to select.</span>
+                           }
+                        </MudText>
+                     </DropZoneTemplate>
+                  </DragAndDropFileUpload>
                </MudStack>
                @if (_state.File != null)
                {

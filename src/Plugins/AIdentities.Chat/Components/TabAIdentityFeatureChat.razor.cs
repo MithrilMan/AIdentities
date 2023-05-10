@@ -1,7 +1,4 @@
-﻿using System.Reflection.Metadata.Ecma335;
-using MudBlazor;
-
-namespace AIdentities.Chat.Components;
+﻿namespace AIdentities.Chat.Components;
 public partial class TabAIdentityFeatureChat : IAIdentityFeatureTab<AIdentityChatFeature>
 {
    const string HELP_BACKGROUND = @"AIdentity's background.
@@ -16,16 +13,18 @@ It has no impact on how it responds, It's purely cosmetic.";
    [Inject] protected INotificationService NotificationService { get; set; } = default!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
 
+   [Parameter] public bool IsChanged { get; set; } = default!;
    [Parameter] public AIdentityChatFeature Feature { get; set; } = default!;
 
    MudForm? _form;
 
-   protected override void OnInitialized() => base.OnInitialized();
-
    protected override void OnParametersSet()
    {
       base.OnParametersSet();
-      _state.SetFormFields(Feature);
+      if (IsChanged)
+      {
+         _state.SetFormFields(Feature);
+      }
    }
 
    public async Task<AIdentityChatFeature?> SaveAsync()

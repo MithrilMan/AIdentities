@@ -7,16 +7,16 @@
                     AdornmentColor="Color.Secondary" />
    </MudItem>
    <MudItem xs="12" md="4" Class="d-flex align-center">
-      <MudChipSet SelectedValues="_state.AIdentityTags" AllClosable="true">
-         @foreach (var tag in _state.AIdentityTags)
-         {
-            <MudChip Color="Color.Secondary" OnClose="@(() => _state.AIdentityTags.Remove(tag))">@tag</MudChip>
-         }
-      </MudChipSet>
+      <MudExtensions.MudSelectExtended MultiSelection="true" ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" Variant="Variant.Filled"
+                                       ItemCollection="_state.AvailableAIdentityTags" Class="mt-0"
+                                       T="string" @bind-SelectedValues="_state.AIdentityTags" AnchorOrigin="Origin.BottomCenter"
+                                       Dense="true" Clearable="true" Label="Filter by tags" Color="Color.Secondary"
+                                       ChipCloseable="true" ChipSize="Size.Medium" ChipVariant="Variant.Filled">
+      </MudExtensions.MudSelectExtended>
    </MudItem>
 </MudGrid>
 
-<MudContainer Style="max-width:100%" Class="pa-0">
+<MudContainer MaxWidth="MaxWidth.False" Style="max-width:100%" Class="pa-0">
    <MudPaper Class="flex-1 pa-2">
       <MudGrid>
          @foreach (var aIdentity in _state.AIdentities.Items)
@@ -40,7 +40,7 @@
                         <img src="@aIdentity.Image" alt="@aIdentity.Name" class="card-image" />
                         <MudPaper Class="absolute opacity-80" Style="bottom:0px;left:0;right:0">
                            <MudChipSet Class="overflow-x-auto" Style="white-space: nowrap;"
-                                 SelectedValues="_state.AIdentityTags" Filter="true" MultiSelection="true">
+                                 SelectedValues="_state.AIdentityTags.Select(i => (object)i).ToList()" Filter="true" MultiSelection="true">
                               @foreach (var tag in aIdentity.Tags)
                               {
                                  <MudChip Value="tag" OnClick="() => ToggleTagSelection(tag)" SelectedColor="Color.Primary">@tag</MudChip>
@@ -63,3 +63,6 @@
       </MudGrid>
    </MudPaper>
 </MudContainer>
+@code {
+   string v;
+}

@@ -15,3 +15,5 @@ global using AIdentities.Shared.Services.Javascript;
 global using AIdentities.Shared.Validation;
 global using Microsoft.AspNetCore.Components;
 global using Microsoft.Extensions.Logging;
+global using MudBlazor;
+global using MudExtensions;

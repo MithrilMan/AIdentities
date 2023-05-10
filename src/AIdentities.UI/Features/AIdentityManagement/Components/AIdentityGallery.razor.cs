@@ -21,7 +21,13 @@ public partial class AIdentityGallery
 
    protected override async Task OnInitializedAsync()
    {
+      await FetchAIdentities().ConfigureAwait(false);
+   }
+
+   private async Task FetchAIdentities()
+   {
       await _state.AIdentities.LoadItemsAsync(AIdentityProvider.All()).ConfigureAwait(false);
+      _state.AvailableAIdentityTags = _state.AIdentities.UnfilteredItems.SelectMany(i => i.Tags).ToHashSet();
       await ApplyFilterAsync().ConfigureAwait(false);
    }
 
@@ -30,8 +36,7 @@ public partial class AIdentityGallery
       await base.OnParametersSetAsync().ConfigureAwait(false);
       if (NeedToReload)
       {
-         await _state.AIdentities.LoadItemsAsync(AIdentityProvider.All()).ConfigureAwait(false);
-         await ApplyFilterAsync().ConfigureAwait(false);
+         await FetchAIdentities().ConfigureAwait(false);
          await NeedToReloadChanged.InvokeAsync(false).ConfigureAwait(false);
       }
    }
@@ -62,11 +67,11 @@ public partial class AIdentityGallery
    {
       if (_state.AIdentityTags.Contains(value))
       {
-         _state.AIdentityTags.Remove(value);
+         ((HashSet<string>)_state.AIdentityTags).Remove(value);
       }
       else
       {
-         _state.AIdentityTags.Add(value);
+         ((HashSet<string>)_state.AIdentityTags).Add(value);
       }
    }
 

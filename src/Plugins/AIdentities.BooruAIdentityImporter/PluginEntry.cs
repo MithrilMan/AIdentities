@@ -3,30 +3,22 @@ using AIdentities.BooruAIdentityImporter.Services.FormatDetector.Formats;
 
 namespace AIdentities.BooruAIdentityImporter;
 
-public class PluginEntry : IPluginEntry
+public class PluginEntry : BasePluginEntry
 {
-   private PluginManifest _manifest = default!;
-
-   public void Initialize(PluginManifest manifest, IServiceCollection services, IPluginStorage pluginStorage)
-   {
-      _manifest = manifest;
-
-      RegisterServices(services);
-   }
-
-   public void RegisterServices(IServiceCollection services)
+   public override void RegisterServices(IServiceCollection services)
    {
       services.AddScoped<IAIdentityImporter, Services.BooruAIdentityImporter>();
       services.AddSingleton<IFormatDetector, FormatDetector>();
 
       RegisterFormatDetectors(services);
+
+      RegisterAIdentitySafetyChecker<BooruAIdentitySafetyChecker>();
    }
 
-
    private static void RegisterFormatDetectors(IServiceCollection services) => services
-            .AddSingleton<ICharacterFormatDetector, CaiCharacterFormat>()
-            .AddSingleton<ICharacterFormatDetector, CaiHistoryFormat>()
-            .AddSingleton<ICharacterFormatDetector, TavernCharacterFormat>()
-            .AddSingleton<ICharacterFormatDetector, TextGenerationCharacterFormat>()
-            ;
+         .AddSingleton<ICharacterFormatDetector, CaiCharacterFormat>()
+         .AddSingleton<ICharacterFormatDetector, CaiHistoryFormat>()
+         .AddSingleton<ICharacterFormatDetector, TavernCharacterFormat>()
+         .AddSingleton<ICharacterFormatDetector, TextGenerationCharacterFormat>()
+         ;
 }

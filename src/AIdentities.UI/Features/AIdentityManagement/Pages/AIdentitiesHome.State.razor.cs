@@ -1,6 +1,6 @@
 ﻿namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 
-public partial class AIdentities
+public partial class AIdentitiesHome
 {
    class State
    {

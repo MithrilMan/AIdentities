@@ -1,15 +1,13 @@
 ﻿using System.Text;
-using AIdentities.Shared.Features.AIdentities.Models;
 using AIdentities.UI.Features.AIdentityManagement.Components;
 using AIdentities.UI.Features.Core.Extensions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using MudBlazor.Extensions;
 
 namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 
 [PageDefinition("AIdentities", Icons.Material.Filled.Person, "aidentities", Description = "Create and manage your set of AIdentities.")]
-public partial class AIdentities : AppPage<AIdentities>
+public partial class AIdentitiesHome : AppPage<AIdentitiesHome>
 {
    /// <summary>
    /// The list of all the AIdentity feature registrations registered by plugins.
@@ -62,10 +60,13 @@ public partial class AIdentities : AppPage<AIdentities>
       foreach (var registration in AIdentitySafetyCheckerRegistrations)
       {
          var details = await registration.SafetyChecker.GetAIdentityActivityAsync(aIdentity).ConfigureAwait(false);
-         foreach (var detail in details!)
+         if (details != null)
          {
-            sb.AppendLine($"<b>{registration.PluginSignature.Name}</b><br>");
-            sb.AppendLine($"<i>{detail.Key}</i>: {detail.Value.Description}<br>");
+            foreach (var detail in details!)
+            {
+               sb.AppendLine($"<b>{registration.PluginSignature.Name}</b><br>");
+               sb.AppendLine($"<i>{detail.Key}</i>: {detail.Value.Description}<br>");
+            }
          }
       }
       MarkupString content = new MarkupString(sb.ToString());
@@ -80,6 +81,12 @@ public partial class AIdentities : AppPage<AIdentities>
    {
       _state.CurrentAIDentity = aIdentity;
       _state.ActivePanelIndex = 0;
+   }
+
+   void ExitEditing()
+   {
+      _state.CurrentAIDentity = null;
+      _state.IsEditing = false;
    }
 
    async Task Import()

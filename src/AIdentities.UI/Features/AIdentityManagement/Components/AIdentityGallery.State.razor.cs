@@ -8,7 +8,8 @@ public partial class AIdentityGallery
    {
       public string? AIdentitySearchText { get; set; }
       public FilteredObservableCollection<AIdentity> AIdentities { get; private set; } = default!;
-      public HashSet<object> AIdentityTags { get; set; } = new();
+      public HashSet<string> AvailableAIdentityTags { get; set; } = new HashSet<string>();
+      public IEnumerable<string> AIdentityTags { get; set; } = new HashSet<string>();
 
       public void Initialize(Func<IEnumerable<AIdentity>, ValueTask<IEnumerable<AIdentity>>> filter)
       {

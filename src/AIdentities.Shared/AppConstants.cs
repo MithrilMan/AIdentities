@@ -2,6 +2,8 @@
 
 public static class AppConstants
 {
+   public const string APP_TITLE = "AIdentities - Road to AGI";
+
    public static class LocalStorage
    {
       /// <summary>

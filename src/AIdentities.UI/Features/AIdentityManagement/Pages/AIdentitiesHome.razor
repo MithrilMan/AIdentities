@@ -1,12 +1,15 @@
 ﻿@page "/aidentities"
-@inherits AppPage<AIdentities>
+@inherits AppPage<AIdentitiesHome>
 
-<div class="d-flex flex-column gap-1 flex-grow-1 mud-width-full">
+<div class="d-flex flex-column gap-1 flex-grow-1 mud-width-full overflow-x-hidden overflow-y-auto">
    <MudGrid Spacing="0">
-      <MudItem xs="12" lg="4" Class="d-flex flex-column px-4">
+      <MudItem xs="12" lg="3" Class="d-flex flex-column px-4 relative">
          @if (_state.IsEditing)
          {
-            <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Tertiary">Editing</MudText>
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+               <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" Size="Size.Medium" Color="Color.Secondary" Variant="Variant.Filled" OnClick="ExitEditing" />
+               <MudText Typo="Typo.h3" Align="Align.Center" Color="Color.Tertiary" Style="text-transform:uppercase">Editing</MudText>
+            </MudStack>
             <MudStack Row="true" AlignItems="AlignItems.Center">
                <MudAvatar Size="Size.Large">
                   <MudImage Src="@_state.CurrentAIDentity!.Image" />
@@ -38,7 +41,7 @@
          }
       </MudItem>
       <MudHidden Breakpoint="Breakpoint.SmAndDown">
-         <MudItem xs="12" lg="8">
+         <MudItem xs="12" lg="9">
             <MudPaper Class="overflow-y-auto" Style="max-height:225px">
                <div class="pa-4 d-flex flex-column flex-grow-1">
                   <MudSpacer></MudSpacer>
@@ -62,22 +65,22 @@
 
    @if (_state.CurrentAIDentity is null)
    {
-      <AIdentities.UI.Features.AIdentityManagement.Components.AIdentityGallery @bind-AIdentity="_state.CurrentAIDentity"
-                                                                            OnEdit="EditAIdentity" OnDelete="DeleteAIdentity"
-                                                                            @bind-NeedToReload="_state.NeedToReload" />
+      <AIdentityGallery @bind-AIdentity="_state.CurrentAIDentity"
+                     OnEdit="EditAIdentity" OnDelete="DeleteAIdentity"
+                     @bind-NeedToReload="_state.NeedToReload" />
    }
    else
    {
       <MudTabs Class="flex-h-fix flex-grow-1" PanelClass="d-flex flex-column flex-h-fix flex-grow-1" TabPanelClass="px-0" MinimumTabWidth="120px"
             Elevation="4" Rounded="false" Color="@Color.Primary" SliderColor="Color.Tertiary" @ref="_tabs" @bind-ActivePanelIndex="_state.ActivePanelIndex">
-         <AIdentities.UI.Features.AIdentityManagement.Components.TabGeneric @bind-AIdentity="@_state.CurrentAIDentity"
-                                                                         IsEditing="_state.IsEditing"
-                                                                         IsEditingChanged="OnIsEditingChanged" />
+         <TabGeneric @bind-AIdentity="@_state.CurrentAIDentity"
+                  IsEditing="_state.IsEditing"
+                  IsEditingChanged="OnIsEditingChanged" />
          @foreach (var featureRegistration in AIdentityFeatureRegistrations)
          {
-            <AIdentities.UI.Features.AIdentityManagement.Components.AIdentityFeatureTab @bind-IsEditing="_state.IsEditing"
-                                                                                  FeatureRegistration="featureRegistration"
-                                                                                  AIdentity="_state.CurrentAIDentity" />
+            <AIdentityFeatureTab @bind-IsEditing="_state.IsEditing"
+                           FeatureRegistration="featureRegistration"
+                           AIdentity="_state.CurrentAIDentity" />
          }
       </MudTabs>
    }

@@ -1,6 +1,4 @@
-﻿using AIdentities.Chat.Models;
-using AIdentities.Shared.Features.AIdentities.Abstracts;
-using AIdentities.UI.Features.AIdentityManagement.Services;
+﻿using AIdentities.Shared.Features.AIdentities.Abstracts;
 using Microsoft.AspNetCore.Components;
 
 namespace AIdentities.UI.Features.AIdentityManagement.Components;
@@ -15,16 +13,14 @@ public partial class AIdentityFeatureTab
    [Parameter] public bool IsEditing { get; set; }
    [Parameter] public EventCallback<bool> IsEditingChanged { get; set; }
 
-   private readonly Dictionary<string, object?> _parameters = new();
-
    private DynamicComponent? _featureTab;
+
+   protected override void OnInitialized() => base.OnInitialized(); //TODO viene sempre chiamato, quindi il tab lo distrugge
 
    protected override void OnParametersSet()
    {
       base.OnParametersSet();
-
-      _parameters.Clear();
-      _parameters["Feature"] = AIdentity?.Features[FeatureRegistration.FeatureType];
+      _state.SetCurrentFeature(AIdentity?.Features[FeatureRegistration.FeatureType]);
    }
 
    public async Task SaveAsync()
@@ -43,7 +39,7 @@ public partial class AIdentityFeatureTab
       AIdentityProvider.Update(AIdentity);
 
       // update the parameters to apply the needed changes
-      _parameters["Feature"] = AIdentity?.Features[FeatureRegistration.FeatureType];
+      _state.SetCurrentFeature(AIdentity?.Features[FeatureRegistration.FeatureType]);
 
       NotificationService.ShowSuccess("AIdentity updated successfully!");
    }
