@@ -88,8 +88,8 @@ public partial class Chat : AppPage<Chat>
          };
 
          var completions = ChatConnector.RequestChatCompletionAsStreamAsync(request, CancellationToken.None)
-            .ConfigureAwait(false)
-            .WithCancellation(CancellationToken.None);
+            .WithCancellation(CancellationToken.None)
+            .ConfigureAwait(false);
          await foreach (var completion in completions)
          {
             _state.StreamedResponse.Message += completion.GeneratedMessage;

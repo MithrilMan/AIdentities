@@ -63,5 +63,19 @@ public class NotificationService : INotificationService
       _snackbar.Add(message, Severity.Error, o => o.VisibleStateDuration = VISIBLE_DURATION_MILLISECONDS);
    }
 
+   public void ShowError(string message, string actionLabel, Func<Task> onAction)
+   {
+      if (_options.Diagnostic.LogNotifications)
+      {
+         _logger.LogError(message);
+      }
+      _snackbar.Add(message, Severity.Error, o =>
+      {
+         o.VisibleStateDuration = VISIBLE_DURATION_MILLISECONDS;
+         o.Onclick = (snackbar) => onAction();
+         o.Action = actionLabel;
+      });
+   }
+
    public void ShowError(Exception ex) => ShowError(ex.Message);
 }

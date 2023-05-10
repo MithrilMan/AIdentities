@@ -1,6 +1,10 @@
-﻿using AIdentities.UI.Features.AIdentityManagement.Components;
+﻿using System.Text;
+using AIdentities.Shared.Features.AIdentities.Models;
+using AIdentities.UI.Features.AIdentityManagement.Components;
+using AIdentities.UI.Features.Core.Extensions;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
+using MudBlazor.Extensions;
 
 namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 
@@ -11,6 +15,7 @@ public partial class AIdentities : AppPage<AIdentities>
    /// The list of all the AIdentity feature registrations registered by plugins.
    /// </summary>
    [Inject] IEnumerable<AIdentityFeatureRegistration> AIdentityFeatureRegistrations { get; set; } = null!;
+   [Inject] IEnumerable<AIdentitySafetyCheckerRegistration> AIdentitySafetyCheckerRegistrations { get; set; } = null!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
    [Inject] IDialogService DialogService { get; set; } = null!;
    [Inject] IJSRuntime JSRuntime { get; set; } = null!;
@@ -21,6 +26,55 @@ public partial class AIdentities : AppPage<AIdentities>
 
    void EditAIdentity(AIdentity aIdentity) => StartEditing(aIdentity);
 
+   async Task DeleteAIdentity(AIdentity aIdentity)
+   {
+      bool result = await DialogService.OkCancelDialog(
+          "DELETE AIdentity",
+          "Removing an AIdentity will remove it completly from the system and my corrupt other job that has been done by this AIdentity! Proceed?",
+          okText: "Remove it!",
+          okColor: Color.Error).ConfigureAwait(false);
+
+      if (result != true) return;
+
+      foreach (var registration in AIdentitySafetyCheckerRegistrations)
+      {
+         var (canDelete, reasonToNotDelete) = await registration.SafetyChecker.IsAIdentitySafeToBeDeletedAsync(aIdentity).ConfigureAwait(false);
+         if (canDelete == false)
+         {
+            NotificationService.ShowError(reasonToNotDelete ?? "", "More Details", () => GetSafetyCheckerDetails(aIdentity));
+            return;
+         }
+      }
+
+      Logger.LogDebug("Deleting AIdentity {AIdentity}", aIdentity);
+      AIdentityProvider.Delete(aIdentity);
+      if (_state.CurrentAIDentity == aIdentity)
+      {
+         _state.CurrentAIDentity = null;
+      }
+      Logger.LogDebug("AIdentity {AIdentity} deleted", aIdentity);
+      _state.NeedToReload = true;
+   }
+
+   private async Task GetSafetyCheckerDetails(AIdentity aIdentity)
+   {
+      StringBuilder sb = new StringBuilder();
+      foreach (var registration in AIdentitySafetyCheckerRegistrations)
+      {
+         var details = await registration.SafetyChecker.GetAIdentityActivityAsync(aIdentity).ConfigureAwait(false);
+         foreach (var detail in details!)
+         {
+            sb.AppendLine($"<b>{registration.PluginSignature.Name}</b><br>");
+            sb.AppendLine($"<i>{detail.Key}</i>: {detail.Value.Description}<br>");
+         }
+      }
+      MarkupString content = new MarkupString(sb.ToString());
+
+      await InvokeAsync(async () => await DialogService.ShowMessageBox(
+       "AIdentity activities by plugin",
+       content
+       ).ConfigureAwait(false)).ConfigureAwait(false);
+   }
 
    void StartEditing(AIdentity aIdentity)
    {

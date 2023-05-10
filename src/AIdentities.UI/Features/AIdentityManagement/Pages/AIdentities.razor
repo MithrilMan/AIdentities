@@ -62,7 +62,9 @@
 
    @if (_state.CurrentAIDentity is null)
    {
-      <AIdentities.UI.Features.AIdentityManagement.Components.AIdentityGallery @bind-AIdentity="_state.CurrentAIDentity" />
+      <AIdentities.UI.Features.AIdentityManagement.Components.AIdentityGallery @bind-AIdentity="_state.CurrentAIDentity"
+                                                                            OnEdit="EditAIdentity" OnDelete="DeleteAIdentity"
+                                                                            @bind-NeedToReload="_state.NeedToReload" />
    }
    else
    {

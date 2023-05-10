@@ -6,6 +6,12 @@ public partial class AIdentities
    {
       public AIdentity? CurrentAIDentity { get; set; }
 
+      /// <summary>
+      /// When set to true, the AIdentity gallery will be reloaded.
+      /// The gallery will set it back to false after reloading.
+      /// </summary>
+      public bool NeedToReload { get; set; }
+
       public bool IsEditing
       {
          get { return CurrentAIDentity != null; }

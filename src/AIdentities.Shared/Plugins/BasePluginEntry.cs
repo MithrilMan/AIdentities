@@ -63,6 +63,26 @@ public abstract class BasePluginEntry : IPluginEntry
    /// <summary>
    /// Has to be implemented by the plugin and it is used to register the plugin services and declare its capabilities.
    /// </summary>
-   /// <param name="services"></param>
+   /// <param name="services">The service collection where to register the services.</param>
    public abstract void RegisterServices(IServiceCollection services);
+
+   /// <summary>
+   /// Hooking point to register a custom AIdentity safety checker.
+   /// see <see cref="IAIdentitySafetyChecker"/> for more info.
+   /// Every plugin dealing with AIdentities should register its own valid AIdentity safety checker.
+   /// Plugins that doesn't deal with AIdentities can do nothing.
+   /// By default, no safety checker is registered.
+   /// </summary>
+   /// <param name="services">The service collection where to register the services.</param>
+   public void RegisterAIdentitySafetyChecker<TAIdentitySafetyChecker>()
+      where TAIdentitySafetyChecker : class, IAIdentitySafetyChecker
+   {
+      if (_services == null) throw new InvalidOperationException("Cannot register an AIdentitySafetyChecker before the plugin is initialized.");
+
+      //by default, no safety checker is registered.
+      if (typeof(TAIdentitySafetyChecker) == typeof(NoAIdentitySafetyChecker)) return;
+
+      _services.AddScoped<TAIdentitySafetyChecker>();
+      _services.AddScoped(sp => new AIdentitySafetyCheckerRegistration(_manifest.Signature, sp.GetRequiredService<TAIdentitySafetyChecker>()));
+   }
 }

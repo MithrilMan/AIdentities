@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using AIdentities.Chat.Models;
 
 namespace AIdentities.Chat.Services;
 public class ChatStorage : IChatStorage
@@ -25,14 +24,33 @@ public class ChatStorage : IChatStorage
 
    public async ValueTask<IEnumerable<ConversationMetadata>> GetConversationsAsync()
    {
+      var files = await _pluginStorage.ListAsync().ConfigureAwait(false);
+
       var conversations = new List<ConversationMetadata>();
-      var files = _pluginStorage.ListAsync().Result;
       foreach (var file in files.Where(f => f.EndsWith(CONVERSATION_POSTFIX)))
       {
          var conversation = await _pluginStorage.ReadAsJsonAsync<ConversationMetadata>(file).ConfigureAwait(false);
          conversations.Add(conversation!);
       }
+      return conversations;
+   }
 
+   public async ValueTask<IEnumerable<ConversationMetadata>> GetConversationsByAIdentityAsync(AIdentity aIdentity)
+   {
+      var files = await _pluginStorage.ListAsync().ConfigureAwait(false);
+
+      var conversations = new List<ConversationMetadata>();
+      foreach (var file in files)
+      {
+         if (file.EndsWith(CONVERSATION_POSTFIX)) continue;
+
+         //search if file contains the AIdentity id
+         var conversation = await _pluginStorage.ReadAsJsonAsync<ConversationMetadata>(file).ConfigureAwait(false);
+         if (conversation?.AIdentityId == aIdentity.Id)
+         {
+            conversations.Add(conversation);
+         }
+      }
       return conversations;
    }
 
@@ -72,7 +90,7 @@ public class ChatStorage : IChatStorage
       }
       catch (Exception ex)
       {
-         _logger.LogError(ex, $"Conversation with id {conversationId} is corrupted.");
+         _logger.LogError(ex, "Conversation with id {conversationId} is corrupted.", conversationId);
          throw new FormatException($"Conversation with id {conversationId} is corrupted.", ex);
       }
 

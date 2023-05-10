@@ -8,6 +8,10 @@ public partial class AIdentityGallery
 
    [Parameter] public AIdentity? AIdentity { get; set; }
    [Parameter] public EventCallback<AIdentity> AIdentityChanged { get; set; }
+   [Parameter] public EventCallback<AIdentity> OnEdit { get; set; }
+   [Parameter] public EventCallback<AIdentity> OnDelete { get; set; }
+   [Parameter] public bool NeedToReload { get; set; }
+   [Parameter] public EventCallback<bool> NeedToReloadChanged { get; set; }
 
    protected override void OnInitialized()
    {
@@ -19,6 +23,17 @@ public partial class AIdentityGallery
    {
       await _state.AIdentities.LoadItemsAsync(AIdentityProvider.All()).ConfigureAwait(false);
       await ApplyFilterAsync().ConfigureAwait(false);
+   }
+
+   protected override async Task OnParametersSetAsync()
+   {
+      await base.OnParametersSetAsync().ConfigureAwait(false);
+      if (NeedToReload)
+      {
+         await _state.AIdentities.LoadItemsAsync(AIdentityProvider.All()).ConfigureAwait(false);
+         await ApplyFilterAsync().ConfigureAwait(false);
+         await NeedToReloadChanged.InvokeAsync(false).ConfigureAwait(false);
+      }
    }
 
    public ValueTask<IEnumerable<AIdentity>> Filter(IEnumerable<AIdentity> unfilteredItems)
@@ -54,4 +69,7 @@ public partial class AIdentityGallery
          _state.AIdentityTags.Add(value);
       }
    }
+
+   Task Delete(AIdentity identity) => OnDelete.InvokeAsync(identity);
+   Task Edit(AIdentity identity) => OnEdit.InvokeAsync(identity);
 }

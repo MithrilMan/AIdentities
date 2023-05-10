@@ -1,4 +1,6 @@
-﻿namespace AIdentities.Chat.Services;
+﻿using AIdentities.Shared.Features.AIdentities.Models;
+
+namespace AIdentities.Chat.Services;
 
 public interface IChatStorage
 {
@@ -7,6 +9,12 @@ public interface IChatStorage
    /// </summary>
    /// <returns>A list of stored conversations metadata.</returns>
    ValueTask<IEnumerable<ConversationMetadata>> GetConversationsAsync();
+
+   /// <summary>
+   /// Gets all stored conversations metadata for a given AIdentity.
+   /// </summary>
+   /// <returns>A list of stored conversations metadata held by the given AIdentity.</returns>
+   ValueTask<IEnumerable<ConversationMetadata>> GetConversationsByAIdentityAsync(AIdentity aIdentity);
 
    /// <summary>
    /// Loads a complete conversation by its id.
