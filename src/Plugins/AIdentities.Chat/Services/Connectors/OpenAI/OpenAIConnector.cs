@@ -1,14 +1,16 @@
-﻿using System.Net.Http.Headers;
+﻿using System.Diagnostics;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text.Json.Serialization;
 using AIdentities.Chat.Extendability;
 using AIdentities.Chat.Services.Connectors.OpenAI.API;
+using AIdentities.Shared.Plugins.Connectors.Conversational;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
 
 namespace AIdentities.Chat.Services.Connectors.OpenAI;
-public class OpenAIConnector : IChatConnector
+public class OpenAIConnector : IConversationalConnector
 {
    const string NAME = nameof(OpenAIConnector);
    const string DESCRIPTION = "OpenAI Chat Connector that uses ChatCompletion API.";
@@ -47,21 +49,30 @@ public class OpenAIConnector : IChatConnector
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<ChatApiResponse?> RequestChatCompletionAsync(ChatApiRequest request)
+   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request)
    {
-      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request);
+      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
+      Stopwatch sw = Stopwatch.StartNew();
+
       using HttpResponseMessage response = await _client.PostAsJsonAsync(_endpoint, apiRequest, _serializerOptions).ConfigureAwait(false);
+
       _logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
 
       if (response.IsSuccessStatusCode)
       {
          _logger.LogDebug("Request succeeded: {ResponseContent}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
          var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
-         return new ChatApiResponse
+
+         sw.Stop();
+         return new ConversationalResponse
          {
-            GeneratedMessage = responseData?.Choices.FirstOrDefault()?.Message?.Content
+            GeneratedMessage = responseData?.Choices.FirstOrDefault()?.Message?.Content,
+            PromptTokens = responseData?.Usage?.PromptTokens,
+            TotalTokens = responseData?.Usage?.TotalTokens,
+            CompletionTokens = responseData?.Usage?.CompletionTokens,
+            ResponseTime = sw.Elapsed
          };
       }
       else
@@ -71,12 +82,12 @@ public class OpenAIConnector : IChatConnector
       }
    }
 
-   public async IAsyncEnumerable<ChatApiResponse> RequestChatCompletionAsStreamAsync(ChatApiRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public async IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      request.Stream = true;
-
-      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request);
+      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, true);
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
+
+      Stopwatch sw = Stopwatch.StartNew();
 
       using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _endpoint)
       {
@@ -99,7 +110,13 @@ public class OpenAIConnector : IChatConnector
             line = line[_streamDataMarkerLength..];
          }
 
-         if (string.IsNullOrWhiteSpace(line)) continue; //empty line
+         if (string.IsNullOrWhiteSpace(line))
+         {
+            _logger.LogDebug("Received EMPTY line");
+            continue; //empty line
+         }
+
+         _logger.LogDebug("Received streamed response: {Response}", line);
 
          if (line == "[DONE]") break;
 
@@ -107,9 +124,13 @@ public class OpenAIConnector : IChatConnector
 
          if (streamedResponse is not null)
          {
-            yield return new ChatApiResponse
+            yield return new ConversationalStreamedResponse
             {
-               GeneratedMessage = streamedResponse?.Choices[0].Message?.Content
+               GeneratedMessage = streamedResponse?.Choices.FirstOrDefault()?.Message?.Content,
+               PromptTokens = streamedResponse?.Usage?.PromptTokens,
+               CumulativeTotalTokens = streamedResponse?.Usage?.TotalTokens,
+               CumulativeCompletionTokens = streamedResponse?.Usage?.CompletionTokens,
+               CumulativeResponseTime = sw.Elapsed
             };
          }
       }
@@ -132,7 +153,7 @@ public class OpenAIConnector : IChatConnector
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private ChatCompletionRequest BuildChatCompletionRequest(ChatApiRequest request) => new ChatCompletionRequest
+   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream) => new ChatCompletionRequest
    {
       FrequencyPenalty = request.RepetitionPenalityRange,
       MaxTokens = request.MaxGeneratedTokens,
@@ -146,17 +167,17 @@ public class OpenAIConnector : IChatConnector
       PresencePenalty = request.RepetitionPenality,
       N = request.CompletionResults,
       Stop = request.StopSequences,
-      Stream = request.Stream,
+      Stream = requireStream,
       Temperature = request.Temperature,
       TopP = request.TopPSamplings,
       User = request.UserId,
    };
 
-   private static ChatCompletionRoleEnum? MapRole(ChatApiRequest.MessageRole role) => role switch
+   private static ChatCompletionRoleEnum? MapRole(ConversationalRole role) => role switch
    {
-      ChatApiRequest.MessageRole.User => ChatCompletionRoleEnum.User,
-      ChatApiRequest.MessageRole.Assistant => ChatCompletionRoleEnum.Assistant,
-      ChatApiRequest.MessageRole.System => ChatCompletionRoleEnum.System,
+      ConversationalRole.User => ChatCompletionRoleEnum.User,
+      ConversationalRole.Assistant => ChatCompletionRoleEnum.Assistant,
+      ConversationalRole.System => ChatCompletionRoleEnum.System,
       _ => throw new NotImplementedException()
    };
 }

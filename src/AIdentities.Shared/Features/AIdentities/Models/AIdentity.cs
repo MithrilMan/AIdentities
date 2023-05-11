@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Http.Features;
 namespace AIdentities.Shared.Features.AIdentities.Models;
 
 /// <summary>
-/// Represents an AIdentity, which is a conversional AI that can be used to chat with a user.
+/// Represents an AIdentity, which is a conversational AI that can be used to chat with a user.
 /// Each AIdentity has a unique name and description.
 /// Example of AIdentity:
 /// - AIdentity Name: Alice

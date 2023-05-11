@@ -1,6 +1,6 @@
 ﻿using AIdentities.Chat.Components;
-using AIdentities.Chat.Extendability;
 using AIdentities.Chat.Services.Connectors.OpenAI;
+using AIdentities.Shared.Plugins.Connectors.Conversational;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
@@ -9,7 +9,7 @@ public class PluginEntry : BasePluginEntry
 {
    public override void RegisterServices(IServiceCollection services)
    {
-      services.AddScoped<IChatConnector, OpenAIConnector>();
+      services.AddScoped<IConversationalConnector, OpenAIConnector>();
       services.AddScoped<IChatStorage>(sp => new ChatStorage(
          logger: sp.GetRequiredService<ILogger<ChatStorage>>(),
          pluginStorage: _storage
