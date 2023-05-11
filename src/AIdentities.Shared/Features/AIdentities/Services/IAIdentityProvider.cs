@@ -38,4 +38,11 @@ public interface IAIdentityProvider
    /// <param name="deletedAIdentity">The <see cref="AIdentity"/> to delete.</param>
    /// <returns>True if the <see cref="AIdentity"/> was deleted, otherwise false.</returns>
    bool Delete(AIdentity deletedAIdentity);
+
+   /// <summary>
+   /// Gets the raw content of a <see cref="AIdentity"/> file.
+   /// </summary>
+   /// <param name="id">The Id of the <see cref="AIdentity"/> to download.</param>
+   /// <returns>The original file name and the content of the <see cref="AIdentity"/> file.</returns>
+   Task<(string originalFileName, byte[] content)> GetRaw(Guid id);
 }

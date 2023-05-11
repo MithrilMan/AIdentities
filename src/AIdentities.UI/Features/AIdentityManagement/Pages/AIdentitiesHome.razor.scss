@@ -10,4 +10,12 @@
       animation-duration: 0.5s;
       animation-fill-mode: forwards;
    }
+
+   .card-image {
+      width: 100%;
+      height: auto;
+      border-radius: 5px;
+      object-fit: cover;
+      aspect-ratio: 1/1;
+   }
 }

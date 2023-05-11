@@ -1,4 +1,6 @@
 ﻿using AIdentities.Shared.Features.AIdentities.Services;
+using AIdentities.Shared.Features.Core.Abstracts;
+using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Storage;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -28,7 +30,7 @@ public abstract class BasePluginEntry : IPluginEntry
    /// Registers a feature to be exposed in the AIdentity management page.
    /// </summary>
    /// <typeparam name="TFeature">The AIdentity feature type that will be saved along the AIdentity.</typeparam>
-   /// <typeparam name="TFeatureTab">The AIdentity feature tab type that will be used to edit the AIdentity feature.</typeparam>
+   /// <typeparam name="TFeatureTab">The AIdentity feature component Type that will be used to edit the AIdentity feature.</typeparam>
    /// <param name="uiTitle">The UI title that will be shown on the Tab Panel.</param>
    /// <exception cref="InvalidOperationException">Thrown if the plugin is not initialized.</exception>
    protected void RegisterFeature<TFeature, TFeatureTab>(string uiTitle)
@@ -42,8 +44,45 @@ public abstract class BasePluginEntry : IPluginEntry
    }
 
    /// <summary>
+   /// Registers a plugin settings to be exposed in the Settings management page.
+   /// </summary>
+   /// <typeparam name="TPluginSettings">The plugin settings Type that will be saved into the ApplicationSettings.</typeparam>
+   /// <typeparam name="TPluginSettingsTab">The plugin settings component Type that will be used to edit the plugin settings.</typeparam>
+   /// <param name="uiTitle">The UI title that will be shown on the Tab Panel.</param>
+   /// <exception cref="InvalidOperationException">Thrown if the plugin is not initialized.</exception>
+   protected void RegisterPluginSettings<TPluginSettings, TPluginSettingsTab>(string uiTitle)
+     where TPluginSettings : class, IPluginSettings
+     where TPluginSettingsTab : class, IPluginSettingsTab<TPluginSettings>
+   {
+      if (_services == null) throw new InvalidOperationException("Cannot register a feature before the plugin is initialized.");
+
+      // Register the AIdentity feature to expose an editor in the AIdentity management page.
+      _services.AddSingleton(new PluginSettingRegistration(typeof(TPluginSettings), typeof(TPluginSettingsTab), uiTitle));
+   }
+
+   /// <summary>
    /// Has to be implemented by the plugin and it is used to register the plugin services and declare its capabilities.
    /// </summary>
-   /// <param name="services"></param>
+   /// <param name="services">The service collection where to register the services.</param>
    public abstract void RegisterServices(IServiceCollection services);
+
+   /// <summary>
+   /// Hooking point to register a custom AIdentity safety checker.
+   /// see <see cref="IAIdentitySafetyChecker"/> for more info.
+   /// Every plugin dealing with AIdentities should register its own valid AIdentity safety checker.
+   /// Plugins that doesn't deal with AIdentities can do nothing.
+   /// By default, no safety checker is registered.
+   /// </summary>
+   /// <param name="services">The service collection where to register the services.</param>
+   public void RegisterAIdentitySafetyChecker<TAIdentitySafetyChecker>()
+      where TAIdentitySafetyChecker : class, IAIdentitySafetyChecker
+   {
+      if (_services == null) throw new InvalidOperationException("Cannot register an AIdentitySafetyChecker before the plugin is initialized.");
+
+      //by default, no safety checker is registered.
+      if (typeof(TAIdentitySafetyChecker) == typeof(NoAIdentitySafetyChecker)) return;
+
+      _services.AddScoped<TAIdentitySafetyChecker>();
+      _services.AddScoped(sp => new AIdentitySafetyCheckerRegistration(_manifest.Signature, sp.GetRequiredService<TAIdentitySafetyChecker>()));
+   }
 }

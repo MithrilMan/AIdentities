@@ -5,6 +5,7 @@ using AIdentities.UI.Features.Core.Services.Plugins;
 using AIdentities.UI.Features.Core.Services.PluginStaticResources;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
+using MudExtensions.Services;
 
 namespace AIdentities.UI;
 
@@ -47,6 +48,7 @@ public static class DependencyInjection
          .BindConfiguration(AppOptions.SECTION_NAME);
 
       services.AddMudServices();
+      services.AddMudExtensions();
       services.AddMudMarkdownServices();
       services.AddBlazoredLocalStorage();
 

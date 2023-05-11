@@ -33,15 +33,10 @@ public partial class MainLayout
 
    MudTheme CreateTheme()
    {
-      var primaryHue = 35; // yellow-green
-      var secondaryHue = 250; // blue-purple
-      var tertiaryHue = (primaryHue + secondaryHue) / 2; // green-blue
-
-
       return new MudTheme()
       {
          Palette = LightPalettes.Palettes.Last(),
-         PaletteDark = DarkPalettes.Palettes.Last()
+         PaletteDark = DarkPalettes.Palettes.SkipLast(0).Last()
       };
    }
 
@@ -81,6 +76,75 @@ public partial class MainLayout
              Success = FromRgb(0, 204, 102), // Bright green
              Warning = FromRgb(255, 193, 7), // Yellow
              Error = FromRgb(220, 53, 69) // Red
+         },
+         new PaletteLight {
+            Primary = FromRgb(31, 40, 51),
+            Secondary = FromRgb(75, 101, 135),
+            Tertiary = FromRgb(102, 225, 211),
+            Background = FromRgb(245, 245, 245),
+            Surface = FromRgb(255, 255, 255),
+            DrawerBackground = FromRgb(235, 235, 235),
+            DrawerText = FromRgb(31, 40, 51),
+            AppbarBackground = FromRgb(255, 255, 255),
+            AppbarText = FromRgb(31, 40, 51),
+            TextPrimary = FromRgb(31, 40, 51),
+            TextSecondary = FromRgb(75, 101, 135),
+            TextDisabled = FromRgb(175, 175, 175),
+            ActionDefault = FromRgb(31, 40, 51),
+            ActionDisabled = FromRgb(175, 175, 175),
+            Divider = FromRgb(215, 215, 215),
+            DividerLight = FromRgb(235, 235, 235),
+            TableLines = FromRgb(235, 235, 235),
+            Info = FromRgb(102, 225, 211),
+            Success = FromRgb(0, 204, 102),
+            Warning = FromRgb(255, 193, 7),
+            Error = FromRgb(220, 53, 69)
+         },
+         new PaletteLight {
+            Primary = FromRgb(36, 32, 56),
+            Secondary = FromRgb(114, 88, 115),
+            Tertiary = FromRgb(214, 162, 232),
+            Background = FromRgb(245, 245, 245),
+            Surface = FromRgb(255, 255, 255),
+            DrawerBackground = FromRgb(235, 235, 235),
+            DrawerText = FromRgb(36, 32, 56),
+            AppbarBackground = FromRgb(255, 255, 255),
+            AppbarText = FromRgb(36, 32, 56),
+            TextPrimary = FromRgb(36, 32, 56),
+            TextSecondary = FromRgb(114, 88, 115),
+            TextDisabled = FromRgb(175, 175, 175),
+            ActionDefault = FromRgb(36, 32, 56),
+            ActionDisabled = FromRgb(175, 175, 175),
+            Divider = FromRgb(215, 215, 215),
+            DividerLight = FromRgb(235, 235, 235),
+            TableLines = FromRgb(235, 235, 235),
+            Info = FromRgb(214, 162, 232),
+            Success = FromRgb(0, 204, 102),
+            Warning = FromRgb(255, 193, 7),
+            Error = FromRgb(220, 53, 69)
+         },
+         new PaletteLight {
+            Primary = FromRgb(27, 38, 44),
+            Secondary = FromRgb(15, 76, 117),
+            Tertiary = FromRgb(50, 130, 184),
+            Background = FromRgb(245, 245, 245),
+            Surface = FromRgb(255, 255, 255),
+            DrawerBackground = FromRgb(235, 235, 235),
+            DrawerText = FromRgb(27, 38, 44),
+            AppbarBackground = FromRgb(255, 255, 255),
+            AppbarText = FromRgb(27, 38, 44),
+            TextPrimary = FromRgb(27, 38, 44),
+            TextSecondary = FromRgb(15, 76, 117),
+            TextDisabled = FromRgb(175, 175, 175),
+            ActionDefault = FromRgb(27, 38, 44),
+            ActionDisabled = FromRgb(175, 175, 175),
+            Divider = FromRgb(215, 215, 215),
+            DividerLight = FromRgb(235, 235, 235),
+            TableLines = FromRgb(235, 235, 235),
+            Info = FromRgb(50, 130, 184),
+            Success = FromRgb(0, 204, 102),
+            Warning = FromRgb(255, 193, 7),
+            Error = FromRgb(220, 53, 69)
          }
       };
    }
@@ -111,6 +175,75 @@ public partial class MainLayout
              Success = FromRgb(0, 204, 102), // Bright green
              Warning = FromRgb(255, 193, 7), // Yellow
              Error = FromRgb(220, 53, 69) // Red
+         },
+         new PaletteDark {
+            Primary = FromRgb(31, 40, 51),
+            Secondary = FromRgb(75, 101, 135),
+            Tertiary = FromRgb(102, 225, 211),
+            Background = FromRgb(21, 27, 35),
+            Surface = FromRgb(26, 34, 45),
+            DrawerBackground = FromRgb(18, 24, 31),
+            DrawerText = FromRgb(202, 225, 235),
+            AppbarBackground = FromRgb(26, 34, 45),
+            AppbarText = FromRgb(202, 225, 235),
+            TextPrimary = FromRgb(202, 225, 235),
+            TextSecondary = FromRgb(150, 180, 190),
+            TextDisabled = FromRgb(100, 130, 140),
+            ActionDefault = FromRgb(202, 225, 235),
+            ActionDisabled = FromRgb(100, 130, 140),
+            Divider = FromRgb(50, 65, 85),
+            DividerLight = FromRgb(75, 95, 120),
+            TableLines = FromRgb(75, 95, 120),
+            Info = FromRgb(102, 225, 211),
+            Success = FromRgb(0, 204, 102),
+            Warning = FromRgb(255, 193, 7),
+            Error = FromRgb(220, 53, 69)
+         },
+         new PaletteDark {
+            Primary = FromRgb(36, 32, 56),
+            Secondary = FromRgb(114, 88, 115),
+            Tertiary = FromRgb(214, 162, 232),
+            Background = FromRgb(28, 24, 43),
+            Surface = FromRgb(31, 27, 48),
+            DrawerBackground = FromRgb(24, 20, 36),
+            DrawerText = FromRgb(235, 205, 245),
+            AppbarBackground = FromRgb(31, 27, 48),
+            AppbarText = FromRgb(235, 205, 245),
+            TextPrimary = FromRgb(235, 205, 245),
+            TextSecondary = FromRgb(190, 160, 205),
+            TextDisabled = FromRgb(140, 110, 155),
+            ActionDefault = FromRgb(235, 205, 245),
+            ActionDisabled = FromRgb(140, 110, 155),
+            Divider = FromRgb(85, 60, 100),
+            DividerLight = FromRgb(120, 85, 135),
+            TableLines = FromRgb(120, 85, 135),
+            Info = FromRgb(214, 162, 232),
+            Success = FromRgb(0, 204, 102),
+            Warning = FromRgb(255, 193, 7),
+            Error = FromRgb(220, 53, 69)
+         },
+         new PaletteDark {
+            Primary = FromRgb(27, 38, 44),
+            Secondary = FromRgb(15, 76, 117),
+            Tertiary = FromRgb(50, 130, 184),
+            Background = FromRgb(18, 26, 31),
+            Surface = FromRgb(22, 33, 39),
+            DrawerBackground = FromRgb(14, 20, 24),
+            DrawerText = FromRgb(200, 240, 255),
+            AppbarBackground = FromRgb(22, 33, 39),
+            AppbarText = FromRgb(200, 240, 255),
+            TextPrimary = FromRgb(200, 240, 255),
+            TextSecondary = FromRgb(150, 190, 205),
+            TextDisabled = FromRgb(100, 140, 155),
+            ActionDefault = FromRgb(200, 240, 255),
+            ActionDisabled = FromRgb(100, 140, 155),
+            Divider = FromRgb(35, 50, 60),
+            DividerLight = FromRgb(65, 90, 110),
+            TableLines = FromRgb(65, 90, 110),
+            Info = FromRgb(50, 130, 184),
+            Success = FromRgb(0, 204, 102),
+            Warning = FromRgb(255, 193, 7),
+            Error = FromRgb(220, 53, 69)
          }
       };
    }

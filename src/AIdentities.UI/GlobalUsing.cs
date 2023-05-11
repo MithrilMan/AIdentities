@@ -3,6 +3,7 @@ global using AIdentities.Shared.Features.AIdentities.Models;
 global using AIdentities.Shared.Features.AIdentities.Services;
 global using AIdentities.Shared.Features.Automation.Models;
 global using AIdentities.Shared.Features.Core;
+global using AIdentities.Shared.Features.Core.Services;
 global using AIdentities.Shared.Plugins;
 global using AIdentities.Shared.Plugins.Connectors;
 global using AIdentities.Shared.Plugins.Events;

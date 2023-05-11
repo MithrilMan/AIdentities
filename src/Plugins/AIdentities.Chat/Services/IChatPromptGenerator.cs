@@ -1,4 +1,4 @@
-﻿using AIdentities.Chat.Extendability;
+﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
 
 namespace AIdentities.Chat.Services;
 public interface IChatPromptGenerator
@@ -20,5 +20,5 @@ public interface IChatPromptGenerator
    /// </summary>
    /// <param name="conversation"></param>
    /// <returns></returns>
-   Task<ChatApiRequest> GenerateApiRequest();
+   Task<IConversationalRequest> GenerateApiRequest();
 }

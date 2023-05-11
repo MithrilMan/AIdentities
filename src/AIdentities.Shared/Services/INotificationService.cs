@@ -3,6 +3,7 @@
 public interface INotificationService
 {
    void ShowError(Exception ex);
+   void ShowError(string message, string actionLabel, Func<Task> onAction);
    void ShowError(string message);
    void ShowInfo(string message);
    void ShowSuccess(string message);

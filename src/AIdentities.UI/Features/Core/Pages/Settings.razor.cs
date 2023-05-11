@@ -4,10 +4,8 @@ namespace AIdentities.UI.Features.Core.Pages;
 
 public partial class Settings : ComponentBase
 {
-   class State
-   {
-      public string? Message { get; set; }
-   }
-
-   private readonly State _state = new State();
+   /// <summary>
+   /// The list of all the Plugin Settings section registered by plugins.
+   /// </summary>
+   [Inject] IEnumerable<AIdentityFeatureRegistration> PluginSettingRegistration { get; set; } = null!;
 }

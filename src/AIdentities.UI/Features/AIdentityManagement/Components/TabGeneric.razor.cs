@@ -27,19 +27,25 @@ The usage depends on the feature using the AIdentity.
 
    MudForm? _form;
 
-   protected override void OnInitialized() => base.OnInitialized();
+
+   protected override void OnInitialized()
+   {
+      base.OnInitialized();
+      _state.IsEditing = IsEditing;
+      _state.SetAIdentity(AIdentity);
+   }
 
    protected override void OnParametersSet()
    {
       base.OnParametersSet();
-      _state.IsEditing = IsEditing;
-      _state.SetFormFields(AIdentity);
+      if (AIdentity != _state.CurrentAIdentity)
+      {
+         _state.SetAIdentity(AIdentity);
+      }
    }
 
    private async Task OnImageUpload(InputFileChangeEventArgs e)
    {
-      StopDragging();
-
       var file = e.File;
       var extension = Path.GetExtension(file.Name).ToLower();
 
@@ -77,7 +83,7 @@ The usage depends on the feature using the AIdentity.
 
    void OnUndo()
    {
-      _state.SetFormFields(null);
+      _state.SetAIdentity(null);
       IsEditingChanged.InvokeAsync(false);
    }
 
@@ -101,8 +107,7 @@ The usage depends on the feature using the AIdentity.
       AIdentityProvider.Update(modifiedAIdentity);
       NotificationService.ShowSuccess("AIdentity updated successfully!");
       await AIdentityChanged.InvokeAsync(modifiedAIdentity).ConfigureAwait(false);
-   }
 
-   void StopDragging() => _state.IsDragging = false;
-   void StartDragging() => _state.IsDragging = true;
+      await _form.ResetAsync().ConfigureAwait(false);
+   }
 }

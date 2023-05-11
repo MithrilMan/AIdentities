@@ -1,0 +1,25 @@
+﻿<MudFileUpload T="IReadOnlyList<IBrowserFile>" Hidden="false" Accept="@Accept" MaximumFileCount="1"
+               Class="flex-shrink-0" InputClass="absolute mud-width-full mud-height-full z-20" InputStyle="opacity:0"
+               Disabled="IsDisabled" OnFilesChanged="FilesChanged"
+               @ondragenter="@StartDragging" @ondragleave="@StopDragging" @ondragend="@StopDragging">
+   <ButtonTemplate>
+      <MudPaper Outlined="true" Class="@DragClass">
+         @if (DropZoneTemplate != null)
+         {
+            @DropZoneTemplate
+         }
+         else
+         {
+            <MudText Typo="Typo.h4" Align="Align.Center">@DropZoneText</MudText>
+         }
+      </MudPaper>
+   </ButtonTemplate>
+</MudFileUpload>
+
+@code {
+   protected string DragClass => new CssBuilder("relative rounded-lg border-2 border-dashed pa-4 mud-width-full mud-height-full z-10")
+      .AddClass("mud-border-primary mud-theme-tertiary", _isDragging)
+      .AddClass("cursor-none mud-theme-default", IsDisabled)
+      .AddClass("cursor-pointer mud-theme-secondary", !IsDisabled)
+      .Build();
+}

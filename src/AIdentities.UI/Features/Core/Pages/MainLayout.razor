@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<PageTitle>@APP_TITLE</PageTitle>
+<PageTitle>@AppConstants.APP_TITLE</PageTitle>
 
 <MudThemeProvider @bind-IsDarkMode="@_state.IsDarkMode" Theme="_theme" @ref="_mudThemeProvider" />
 <MudDialogProvider />
@@ -9,23 +9,37 @@
 <MudLayout Class="d-flex flex-column">
    <MudAppBar Elevation="1" DisableGutters="true" Dense="true" Color="Color.Primary">
       <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="px-7" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-      <MudText Typo="Typo.h5">@APP_TITLE</MudText>
+      <MudText Typo="Typo.h5">@AppConstants.APP_TITLE</MudText>
       <MudSpacer />
       <MudToggleIconButton @bind-Toggled="@_state.IsDarkMode" @bind-Toggled:after="@SaveTheme"
                            Icon="@Icons.Material.Filled.DarkMode" Title="Dark"
                            ToggledIcon="@Icons.Material.Filled.LightMode" ToggledTitle="Light" />
-      <MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />
+      @*<MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />*@
    </MudAppBar>
 
-   <MudDrawer @bind-Open="@_state.IsDrawerOpen" ClipMode="DrawerClipMode.Always" Style="height:calc(100% - 96px)"
-              Anchor="Anchor.Left"
-              Elevation="2" Variant="@DrawerVariant.Mini">
-      <MudNavMenu Bordered="true" Margin="Margin.Dense" Color="Color.Secondary" Class="mud-height-full d-flex flex-column">
-         <AIdentities.UI.Features.Core.Components.AvailablePages />
-         <MudSpacer />
-         <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/settings" Class="object-bottom">Settings</MudNavLink>
-      </MudNavMenu>
-   </MudDrawer>
+   <MudHidden Breakpoint="Breakpoint.LgAndUp">
+      <MudDrawer @bind-Open="@_state.IsDrawerOpen" ClipMode="DrawerClipMode.Always" Style="height:calc(100% - 96px)"
+                 Anchor="Anchor.Left"
+                 Elevation="2" Variant="@DrawerVariant.Responsive">
+         <MudNavMenu Bordered="true" Margin="Margin.Dense" Color="Color.Secondary" Class="mud-height-full d-flex flex-column">
+            <AIdentities.UI.Features.Core.Components.AvailablePages />
+            <MudSpacer />
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/settings" Class="object-bottom">Settings</MudNavLink>
+         </MudNavMenu>
+      </MudDrawer>
+   </MudHidden>
+
+   <MudHidden Breakpoint="Breakpoint.MdAndDown">
+      <MudDrawer @bind-Open="@_state.IsDrawerOpen" ClipMode="DrawerClipMode.Always" Style="height:calc(100% - 96px)"
+                 Anchor="Anchor.Left"
+                 Elevation="2" Variant="@DrawerVariant.Mini">
+         <MudNavMenu Bordered="true" Margin="Margin.Dense" Color="Color.Secondary" Class="mud-height-full d-flex flex-column">
+            <AIdentities.UI.Features.Core.Components.AvailablePages />
+            <MudSpacer />
+            <MudNavLink Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Settings" Href="/settings" Class="object-bottom">Settings</MudNavLink>
+         </MudNavMenu>
+      </MudDrawer>
+   </MudHidden>
 
    <MudMainContent Class="d-flex flex-grow-1 overflow-hidden" Style="padding-bottom: 48px; height: 100vh;">@Body</MudMainContent>
 
@@ -36,7 +50,3 @@
    </MudAppBar>
 
 </MudLayout>
-
-@code {
-   const string APP_TITLE = "AIdentities - Road to AGI";
-}

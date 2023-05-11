@@ -1,7 +1,5 @@
-﻿using System.Threading;
-using AIdentities.Chat.Extendability;
+﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
 using Microsoft.AspNetCore.Components.Web;
-using MudBlazor;
 
 namespace AIdentities.Chat.Pages;
 
@@ -12,17 +10,19 @@ public partial class Chat : AppPage<Chat>
    const string LIST_SELECTOR = $"#{LIST_ID}";
 
    [Inject] private IDialogService DialogService { get; set; } = null!;
-   [Inject] private IChatConnector ChatConnector { get; set; } = null!;
+   [Inject] private IEnumerable<IConversationalConnector> ChatConnectors { get; set; } = null!;
    [Inject] private IChatStorage ChatStorage { get; set; } = null!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
    [Inject] private IChatPromptGenerator ChatPromptGenerator { get; set; } = null!;
 
    MudTextField<string?> _messageTextField = default!;
+   private IConversationalConnector? _chatConnector;
 
    protected override void OnInitialized()
    {
       base.OnInitialized();
       _state.Initialize(Filter);
+      _chatConnector = ChatConnectors.FirstOrDefault();
    }
 
    public async ValueTask<IEnumerable<ChatMessage>> Filter(IEnumerable<ChatMessage> unfilteredItems)
@@ -73,6 +73,12 @@ public partial class Chat : AppPage<Chat>
 
    private async Task SendMessageToConnector()
    {
+      if(_chatConnector is null)
+      {
+         NotificationService.ShowError("No chat connector found");
+         return;
+      }
+
       _state.IsWaitingReply = true;
       await ScrollToEndOfMessageList().ConfigureAwait(false);
       await InvokeAsync(StateHasChanged).ConfigureAwait(false);
@@ -87,9 +93,9 @@ public partial class Chat : AppPage<Chat>
             AIDentityId = _state.SelectedConversation?.AIdentityId
          };
 
-         var completions = ChatConnector.RequestChatCompletionAsStreamAsync(request, CancellationToken.None)
-            .ConfigureAwait(false)
-            .WithCancellation(CancellationToken.None);
+         var completions = _chatConnector.RequestChatCompletionAsStreamAsync(request, CancellationToken.None)
+            .WithCancellation(CancellationToken.None)
+            .ConfigureAwait(false);
          await foreach (var completion in completions)
          {
             _state.StreamedResponse.Message += completion.GeneratedMessage;

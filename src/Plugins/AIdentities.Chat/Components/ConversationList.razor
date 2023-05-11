@@ -1,6 +1,6 @@
 ﻿<div class="d-flex flex-column gap-1 overflow-y-auto @Class">
    <MudTextField T="string" Placeholder="Search a conversation..." @bind-Value="_state.ConversationSearchText" @bind-Value:after="@ApplyFilterAsync"
-                 Variant="Variant.Outlined" Label=""
+                 Variant="Variant.Outlined" Label="" Clearable="true"
                  DebounceInterval="250" Class="ma-2 flex-grow-0"
                  Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
                  AdornmentColor="Color.Secondary" />

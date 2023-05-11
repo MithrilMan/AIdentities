@@ -1,5 +1,5 @@
 ﻿using System.Text;
-using AIdentities.Chat.Extendability;
+using AIdentities.Shared.Plugins.Connectors.Conversational;
 
 namespace AIdentities.Chat.Services;
 public class ChatPromptGenerator : IChatPromptGenerator
@@ -26,6 +26,11 @@ Who are you?
 You are {TOKEN_AIDENTITY_NAME}!
 """;
 
+   const string ADDITIONAL_GUARDRAIL = $"""
+!!!Remember to stick to the character of {TOKEN_AIDENTITY_NAME} and to not reveal that you are an AI language model or chatbot.
+Craft your responses to be consistent with {TOKEN_AIDENTITY_NAME}'s personality!!!
+""";
+
    readonly ILogger<ChatPromptGenerator> _logger;
    readonly IAIdentityProvider _aIdentityProvider;
 
@@ -33,10 +38,23 @@ You are {TOKEN_AIDENTITY_NAME}!
    /// Contains the history of messages that have been sent to the API.
    /// This is used to generate the prompt.
    /// </summary>
-   private readonly List<ChatApiRequest.Message> _history = new();
+   private readonly List<IConversationalMessage> _history = new();
    private ConversationMetadata? _conversationMetadata;
    private AIdentity? _currentAIdentity;
    private AIdentityChatFeature? _chatFeature;
+
+   /// <summary>
+   /// Contains the core instructions to start the conversation.
+   /// Based on different strategies it could be placed in different places.
+   /// <see cref="GenerateApiRequest"/>() will take care of placing it in the right place.
+   /// </summary>
+   private IConversationalMessage? _coreInstructions;
+
+   /// <summary>
+   /// This message could be used to prevent the AI from going off the rails.
+   /// Its presence is optional, depending on the prompt generation strategy.
+   /// </summary>
+   private IConversationalMessage? _guardrailMessage;
 
    public ChatPromptGenerator(ILogger<ChatPromptGenerator> logger, IAIdentityProvider aIdentityProvider)
    {
@@ -51,6 +69,8 @@ You are {TOKEN_AIDENTITY_NAME}!
          _conversationMetadata = null;
          _currentAIdentity = null;
          _chatFeature = null;
+         _coreInstructions = null;
+         _guardrailMessage = null;
          _history.Clear();
          return;
       }
@@ -59,8 +79,10 @@ You are {TOKEN_AIDENTITY_NAME}!
       _currentAIdentity = _aIdentityProvider.Get(_conversationMetadata.AIdentityId ?? Guid.Empty);
       _chatFeature = _currentAIdentity?.Features.Get<AIdentityChatFeature>();
 
+      _coreInstructions = GenerateInstruction();
+      _guardrailMessage = GenerateGuardrailMessage();
+
       _history.Clear();
-      _history.Add(GenerateInstruction());
 
       if (conversation is not { Messages.Count: > 0 })
       {
@@ -70,8 +92,8 @@ You are {TOKEN_AIDENTITY_NAME}!
 
       _history.AddRange(conversation.Messages.Select(message =>
       {
-         var role = message.AIDentityId == null ? ChatApiRequest.MessageRole.User : ChatApiRequest.MessageRole.Assistant;
-         return new ChatApiRequest.Message(message.AIDentityId == null ? ChatApiRequest.MessageRole.User : ChatApiRequest.MessageRole.Assistant, message.Message!, null);
+         var role = message.AIDentityId == null ? ConversationalRole.User : ConversationalRole.Assistant;
+         return new ConversationalMessage(message.AIDentityId == null ? ConversationalRole.User : ConversationalRole.Assistant, message.Message!, null);
       }));
    }
 
@@ -80,7 +102,7 @@ You are {TOKEN_AIDENTITY_NAME}!
    /// It has to take into account the used AIdentity.
    /// </summary>
    /// <returns>The system instruction to start the conversation.</returns>
-   private ChatApiRequest.Message GenerateInstruction()
+   private ConversationalMessage GenerateInstruction()
    {
       if (_conversationMetadata == null) { throw new ArgumentNullException(nameof(_conversationMetadata)); }
       if (_currentAIdentity == null) { throw new ArgumentNullException(nameof(_currentAIdentity)); }
@@ -99,36 +121,80 @@ You are {TOKEN_AIDENTITY_NAME}.
 {IMPERSONATE_GUARDRAIL}
 """);
 
-         systemPrompt.Replace(TOKEN_AIDENTITY_NAME, _currentAIdentity.Name);
-         systemPrompt.Replace(TOKEN_AIDENTITY_PERSONALITY, _currentAIdentity?.Personality ?? "");
-         systemPrompt.Replace(TOKEN_AIDENTITY_BACKGROUND, _chatFeature?.Background ?? "");
+         ReplaceTokens(systemPrompt);
       }
 
-      var instruction = new ChatApiRequest.Message(ChatApiRequest.MessageRole.System, systemPrompt.ToString(), null);
+      var instruction = new ConversationalMessage(ConversationalRole.System, systemPrompt.ToString(), null);
 
       return instruction;
+   }
+
+   /// <summary>
+   /// Generates the guardrail message.
+   /// </summary>
+   /// <returns>The guardrail message.</returns>
+   /// <exception cref="ArgumentNullException">Thrown when <see cref="_currentAIdentity"/> is null.</exception>
+   private IConversationalMessage? GenerateGuardrailMessage()
+   {
+      if (_currentAIdentity == null) { throw new ArgumentNullException(nameof(_currentAIdentity)); }
+      var guardrail = new StringBuilder(ADDITIONAL_GUARDRAIL);
+
+      ReplaceTokens(guardrail);
+
+      return new ConversationalMessage(ConversationalRole.System, guardrail.ToString(), null);
+   }
+
+
+   private void ReplaceTokens(StringBuilder systemPrompt)
+   {
+      systemPrompt.Replace(TOKEN_AIDENTITY_NAME, _currentAIdentity?.Name ?? "");
+      systemPrompt.Replace(TOKEN_AIDENTITY_PERSONALITY, _currentAIdentity?.Personality ?? "");
+      systemPrompt.Replace(TOKEN_AIDENTITY_BACKGROUND, _chatFeature?.Background ?? "");
    }
 
    public void AppendMessage(ChatMessage message)
    {
       if (_conversationMetadata == null) { throw new ArgumentNullException(nameof(_conversationMetadata)); }
 
-      var role = message.AIDentityId == null ? ChatApiRequest.MessageRole.User : ChatApiRequest.MessageRole.Assistant;
-      var chatMessage = new ChatApiRequest.Message(role, message.Message!, null);
+      var role = message.AIDentityId == null ? ConversationalRole.User : ConversationalRole.Assistant;
+      var chatMessage = new ConversationalMessage(role, message.Message!, null);
 
       _history.Add(chatMessage);
 
       //TODO: check token, create summary, etc...
    }
 
-   public Task<ChatApiRequest> GenerateApiRequest()
+   public Task<IConversationalRequest> GenerateApiRequest()
    {
-      var request = new ChatApiRequest()
+      IConversationalRequest request = new ConversationalRequest()
       {
-         Messages = _history,
+         Messages = BuildRequestMessages().ToList(),
          MaxGeneratedTokens = 500
       };
 
       return Task.FromResult(request);
+   }
+
+   private IEnumerable<IConversationalMessage> BuildRequestMessages()
+   {
+      if (_coreInstructions != null)
+      {
+         yield return _coreInstructions;
+      }
+
+      if (_history is { Count: > 0 })
+      {
+         foreach (var item in _history.SkipLast(1))
+         {
+            yield return item;
+         }
+
+         if (_guardrailMessage != null)
+         {
+            yield return _guardrailMessage;
+         }
+
+         yield return _history.Last();
+      }
    }
 }

@@ -1,12 +1,10 @@
-﻿using System.Net.Http.Json;
-using AIdentities.Chat.Extendability;
-using AIdentities.Chat.Services.Connectors.Oobabooga.API;
-using AIdentities.Chat.Services.Connectors.OpenAI;
+﻿using System.Runtime.CompilerServices;
+using AIdentities.Shared.Plugins.Connectors.Conversational;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
 
 namespace AIdentities.Chat.Services.Connectors.Oobabooga;
-public class OobaboogaConnector : IChatConnector
+public class OobaboogaConnector : IConversationalConnector
 {
    const string NAME = nameof(OobaboogaConnector);
    const string DESCRIPTION = "Oobabooga Chat Connector that uses ChatCompletion API.";
@@ -39,10 +37,16 @@ public class OobaboogaConnector : IChatConnector
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<ChatApiResponse?> RequestChatCompletionAsync(ChatApiRequest request)
+   public Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request)
    {
       throw new NotImplementedException();
    }
+
+   public IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   {
+      throw new NotImplementedException();
+   }
+
 
    private HttpClient CreateHttpClient()
    {
@@ -54,6 +58,4 @@ public class OobaboogaConnector : IChatConnector
 
       return client;
    }
-
-   public IAsyncEnumerable<ChatApiResponse> RequestChatCompletionAsStreamAsync(ChatApiRequest request, CancellationToken cancellationToken) => throw new NotImplementedException();
 }

@@ -13,10 +13,12 @@
       <PackageReference Include="Microsoft.Extensions.Hosting" Version="7.0.1" />
       <PackageReference Include="Microsoft.Extensions.Hosting.Abstractions" Version="7.0.0" />
       <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
-      <PackageReference Include="MudBlazor" Version="6.2.2" />
+      <PackageReference Include="MudBlazor" Version="6.2.3" />
       <PackageReference Include="MudBlazor.Markdown" Version="0.1.0" />
+      <PackageReference Include="CodeBeam.MudBlazor.Extensions" Version="6.4.12" />
       <PackageReference Include="Bogus" Version="34.0.2" />
       <PackageReference Include="Blazored.LocalStorage" Version="4.3.0" />
       <PackageReference Include="LibSassBuilder" Version="3.0.0" />
+      <PackageReference Include="System.Linq.Async" Version="6.0.1" />
    </ItemGroup>
 </Project>

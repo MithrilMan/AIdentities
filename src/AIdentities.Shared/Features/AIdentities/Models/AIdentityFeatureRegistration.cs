@@ -1,4 +1,4 @@
-﻿namespace AIdentities.Shared.Features.AIdentities.Services;
+﻿namespace AIdentities.Shared.Features.AIdentities.Models;
 
 /// <summary>
 /// Holds registration about an AIdentity feature Type and it's UI Type.
