@@ -18,6 +18,12 @@ It has no impact on how it responds, It's purely cosmetic.";
 
    MudForm? _form;
 
+   protected override void OnInitialized()
+   {
+      base.OnInitialized();
+      _state.SetFormFields(Feature);
+   }
+
    protected override void OnParametersSet()
    {
       base.OnParametersSet();

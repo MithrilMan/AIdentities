@@ -15,7 +15,6 @@ public partial class AIdentityFeatureTab
 
    private DynamicComponent? _featureTab;
 
-   protected override void OnInitialized() => base.OnInitialized(); //TODO viene sempre chiamato, quindi il tab lo distrugge
 
    protected override void OnParametersSet()
    {

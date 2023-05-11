@@ -72,7 +72,8 @@
    else
    {
       <MudTabs Class="flex-h-fix flex-grow-1" PanelClass="d-flex flex-column flex-h-fix flex-grow-1" TabPanelClass="px-0" MinimumTabWidth="120px"
-            Elevation="4" Rounded="false" Color="@Color.Primary" SliderColor="Color.Tertiary" @ref="_tabs" @bind-ActivePanelIndex="_state.ActivePanelIndex">
+            Elevation="4" Rounded="false" Color="@Color.Primary" SliderColor="Color.Tertiary"
+            KeepPanelsAlive="true" @ref="_tabs" @bind-ActivePanelIndex="_state.ActivePanelIndex">
          <TabGeneric @bind-AIdentity="@_state.CurrentAIDentity"
                   IsEditing="_state.IsEditing"
                   IsEditingChanged="OnIsEditingChanged" />

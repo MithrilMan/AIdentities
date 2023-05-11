@@ -1,7 +1,7 @@
 ﻿<MudTabPanel Text="Generic">
    <MudForm Model="@_state" @ref="@_form" Class="flex-grow-1 d-flex flex-h-fix flex-wrap" Disabled="@(!_state.IsEditing)"
             Validation="@(_validator.ValidateValue)" ValidationDelay="0" @bind-IsTouched="_state.IsTouched">
-      <MudItem xs="12" lg="3" Class="d-flex flex-column mat-elevation-1 pr-1">
+      <MudItem xs="12" lg="3" Class="d-flex flex-column mat-elevation-1 pr-1 mud-height-full">
          <MudPaper Class="flex-1 d-flex flex-column gap-2 overflow-y-auto">
             <DragAndDropFileUpload OnFilesChanged="OnImageUpload" IsDisabled="!_state.IsEditing" Accept="@VALID_FILE_TYPES" />
             <MudPaper Elevation="3" Class="flex-grow-1 d-flex flex-column align-content-center justify-center overflow-y-auto">
