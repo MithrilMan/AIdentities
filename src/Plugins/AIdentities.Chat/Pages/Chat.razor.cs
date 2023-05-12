@@ -1,7 +1,12 @@
-﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
+﻿using System.Collections;
+using System.Text;
+using System.Text.Json.Serialization;
+using AIdentities.Chat.Models;
+using AIdentities.Shared.Plugins.Connectors.Conversational;
+using AIdentities.Shared.Utils;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using Toolbelt.Blazor.HotKeys2;
-using static MudBlazor.CategoryTypes;
 
 namespace AIdentities.Chat.Pages;
 
@@ -19,6 +24,9 @@ public partial class Chat : AppPage<Chat>
    [Inject] private IChatStorage ChatStorage { get; set; } = null!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
    [Inject] private IChatPromptGenerator ChatPromptGenerator { get; set; } = null!;
+   [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
+   [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
+
 
    MudTextFieldExtended<string?> _messageTextField = default!;
    private IConversationalConnector? _chatConnector;
@@ -34,13 +42,35 @@ public partial class Chat : AppPage<Chat>
    {
       base.ConfigureHotKeys(hotKeysContext);
       hotKeysContext.Add(ModCode.Ctrl, Code.E, OnHotkeyExportConversation, "Exit from the conversation.");
+      hotKeysContext.Add(ModCode.None, Code.Delete, OnHotkeyDeleteMessage, "Delete the selected message.");
    }
 
    private async ValueTask OnHotkeyExportConversation()
    {
       if (_state.SelectedConversation == null) return;
 
-      await DialogService.ShowMessageBox("Export conversation", "Not implemented yet").ConfigureAwait(false);
+      if (_state.Messages.UnfilteredCount is not > 0)
+      {
+         NotificationService.ShowWarning("The conversation is empty, nothing to export.");
+         return;
+      }
+
+      bool? result = await DialogService.ShowMessageBox(
+          "Do you want to export the conversation?",
+          "Accept to export the conversation and save it locally",
+          yesText: "Export it!", cancelText: "Cancel").ConfigureAwait(false);
+      if (result != true) return;
+
+      Guid conversationId = _state.SelectedConversation.ConversationId;
+      await ConversationExporter.ExportConversationAsync(conversationId, ConversationExportFormat.Html).ConfigureAwait(false);
+   }
+
+   private async ValueTask OnHotkeyDeleteMessage()
+   {
+      if (_state.SelectedMessage == null) return;
+
+      await OnDeleteMessage(_state.SelectedMessage).ConfigureAwait(false);
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
    }
 
    public async ValueTask<IEnumerable<ChatMessage>> Filter(IEnumerable<ChatMessage> unfilteredItems)

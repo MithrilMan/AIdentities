@@ -1,0 +1,11 @@
+﻿global using System.ComponentModel.DataAnnotations;
+global using System.Runtime.Serialization;
+global using System.Text.Json;
+global using System.Text.Json.Serialization;
+global using AIdentities.Connector.OpenAI.Models.API;
+global using AIdentities.Shared.Plugins;
+global using AIdentities.Shared.Plugins.Connectors.Conversational;
+global using AIdentities.Shared.Serialization.Converters;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.Logging;

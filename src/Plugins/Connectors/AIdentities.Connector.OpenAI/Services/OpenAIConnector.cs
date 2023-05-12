@@ -2,14 +2,9 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
-using System.Text.Json.Serialization;
-using AIdentities.Chat.Extendability;
-using AIdentities.Chat.Services.Connectors.OpenAI.API;
-using AIdentities.Shared.Plugins.Connectors.Conversational;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.Extensions.Options;
 
-namespace AIdentities.Chat.Services.Connectors.OpenAI;
+namespace AIdentities.Connector.OpenAI.Services;
 public class OpenAIConnector : IConversationalConnector
 {
    const string NAME = nameof(OpenAIConnector);
@@ -21,10 +16,9 @@ public class OpenAIConnector : IConversationalConnector
    static readonly int _streamDataMarkerLength = STREAM_DATA_MARKER.Length;
 
    readonly ILogger<OpenAIConnector> _logger;
-   readonly IOptions<OpenAIOptions> _options;
-   readonly Uri _endpoint;
+   readonly OpenAISettings _settings;
 
-   public Uri Endpoint => _endpoint;
+   public Uri Endpoint => _settings.EndPoint;
    public string Name => NAME;
    public string Description => DESCRIPTION;
    public IFeatureCollection Features => new FeatureCollection();
@@ -32,12 +26,10 @@ public class OpenAIConnector : IConversationalConnector
    private readonly HttpClient _client;
    private readonly JsonSerializerOptions _serializerOptions;
 
-   public OpenAIConnector(ILogger<OpenAIConnector> logger, IOptions<OpenAIOptions> options)
+   public OpenAIConnector(ILogger<OpenAIConnector> logger, OpenAISettings settings)
    {
       _logger = logger;
-      _options = options;
-
-      Uri.TryCreate(_options.Value.EndPoint, UriKind.Absolute, out _endpoint!);
+      _settings = settings;
 
       _client = CreateHttpClient();
       _serializerOptions = new JsonSerializerOptions()
@@ -54,9 +46,9 @@ public class OpenAIConnector : IConversationalConnector
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
-      Stopwatch sw = Stopwatch.StartNew();
+      var sw = Stopwatch.StartNew();
 
-      using HttpResponseMessage response = await _client.PostAsJsonAsync(_endpoint, apiRequest, _serializerOptions).ConfigureAwait(false);
+      using HttpResponseMessage response = await _client.PostAsJsonAsync(_settings.EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
 
       _logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
 
@@ -87,9 +79,9 @@ public class OpenAIConnector : IConversationalConnector
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, true);
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
 
-      Stopwatch sw = Stopwatch.StartNew();
+      var sw = Stopwatch.StartNew();
 
-      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _endpoint)
+      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _settings.EndPoint)
       {
          Content = JsonContent.Create(apiRequest, null, _serializerOptions)
       };
@@ -106,9 +98,7 @@ public class OpenAIConnector : IConversationalConnector
          var line = (await streamReader.ReadLineAsync(cancellationToken).ConfigureAwait(false))!;
 
          if (line.StartsWith(STREAM_DATA_MARKER))
-         {
             line = line[_streamDataMarkerLength..];
-         }
 
          if (string.IsNullOrWhiteSpace(line)) continue; //empty line
 
@@ -126,9 +116,7 @@ public class OpenAIConnector : IConversationalConnector
             line += await streamReader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
             var error = JsonSerializer.Deserialize<ErrorResponse>(line);
             if (error?.Error is not null)
-            {
                throw new Exception($"Request failed with status code {error.Error.Code}: {error.Error.Message}");
-            }
          }
 
          if (streamedResponse is not null)
@@ -147,12 +135,12 @@ public class OpenAIConnector : IConversationalConnector
 
    private HttpClient CreateHttpClient()
    {
-      HttpClient client = new HttpClient
+      var client = new HttpClient
       {
-         Timeout = TimeSpan.FromMilliseconds(_options.Value.Timeout)
+         Timeout = TimeSpan.FromMilliseconds(_settings.Timeout)
       };
 
-      client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _options.Value.ApiKey);
+      client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _settings.ApiKey);
 
       return client;
    }
@@ -172,7 +160,7 @@ public class OpenAIConnector : IConversationalConnector
          Name = m.Name,
          Role = MapRole(m.Role)
       }).ToList(),
-      Model = request.ModelId ?? _options.Value.DefaultModel,
+      Model = request.ModelId ?? _settings.DefaultModel,
       PresencePenalty = request.RepetitionPenality,
       N = request.CompletionResults,
       Stop = request.StopSequences,

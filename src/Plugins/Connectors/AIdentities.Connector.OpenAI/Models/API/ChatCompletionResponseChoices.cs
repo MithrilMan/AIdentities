@@ -1,6 +1,4 @@
-using System.Text.Json.Serialization;
-
-namespace AIdentities.Chat.Services.Connectors.OpenAI.API;
+namespace AIdentities.Connector.OpenAI.Models.API;
 
 /// <summary>
 /// The response from the chat completion API.

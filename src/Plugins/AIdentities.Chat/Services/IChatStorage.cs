@@ -1,6 +1,4 @@
-﻿using AIdentities.Shared.Features.AIdentities.Models;
-
-namespace AIdentities.Chat.Services;
+﻿namespace AIdentities.Chat.Services;
 
 public interface IChatStorage
 {

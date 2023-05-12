@@ -49,9 +49,14 @@
                         <MudIconButton Size="Size.Medium" Class="pa-0" Icon="@Icons.Material.Filled.Delete" OnClick="()=>DeleteConversation(conversation)" />
                      </CardHeaderActions>
                   </MudCardHeader>
-                  <MudCardContent Class="pt-0 d-flex flex-column">
-                     <MudText Typo="Typo.caption">Created on @conversation.CreatedAt.LocalDateTime</MudText>
-                     <MudText Typo="Typo.caption">Last edited on @conversation.UpdatedAt.LocalDateTime</MudText>
+                  <MudCardContent Class="pt-0 d-flex align-end">
+                     <MudStack>
+                        <MudText Typo="Typo.caption">Created on @conversation.CreatedAt.LocalDateTime</MudText>
+                        <MudText Typo="Typo.caption">Last edited on @conversation.UpdatedAt.LocalDateTime</MudText>
+                     </MudStack>
+                     <MudSpacer />
+                     <MudIconButton Icon="@Icons.Material.Filled.FileDownload" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled"
+                                 OnClick="()=> ExportConversation(conversation)" />
                   </MudCardContent>
                </MudCard>
             </MudListItem>

@@ -5,6 +5,7 @@ public class PluginStorage : IPluginStorage
    readonly ILogger<PluginStorage> _logger;
    readonly PluginManifest _pluginManifest;
    readonly string _pluginStorageRoot;
+   private readonly string _pluginSettingsFolder;
 
    public PluginSignature Signature => _pluginManifest.Signature;
 
@@ -13,6 +14,7 @@ public class PluginStorage : IPluginStorage
       _logger = logger;
       _pluginManifest = pluginManifest;
       _pluginStorageRoot = Path.Combine(pluginStorageRoot, pluginManifest.Signature.Name);
+      _pluginSettingsFolder = Path.Combine(_pluginStorageRoot, AppConstants.SpecialFolders.PLUGIN_SETTINGS);
 
       if (!Directory.Exists(_pluginStorageRoot))
       {
@@ -73,4 +75,49 @@ public class PluginStorage : IPluginStorage
 
    public ValueTask WriteAsJsonAsync<TContent>(string fileName, TContent? content)
       => WriteAsync(fileName, JsonSerializer.Serialize(content));
+
+   public async ValueTask<TSettings> LoadSettings<TSettings>(TSettings defaultSettings) where TSettings : class
+   {
+      if (!Directory.Exists(_pluginSettingsFolder))
+      {
+         return defaultSettings;
+      }
+
+      string settingsFile = GetSettingsFileName<TSettings>();
+
+      try
+      {
+         var content = await ReadAsync(settingsFile).ConfigureAwait(false);
+         if (content == null) return defaultSettings;
+
+         return JsonSerializer.Deserialize<TSettings>(content) ?? defaultSettings;
+      }
+      catch (Exception ex)
+      {
+         _logger.LogError(ex, "Failed to load settings from {settingsFile}", settingsFile);
+         throw new Exception($"Failed to load settings from {settingsFile}: {ex.Message}");
+      }
+   }
+
+   private string GetSettingsFileName<TSettings>() where TSettings : class => Path.Combine(_pluginSettingsFolder, typeof(TSettings).Name, ".json");
+
+   public async ValueTask SaveSettings<TSettings>(TSettings settings) where TSettings : class
+   {
+      if (!Directory.Exists(_pluginSettingsFolder))
+      {
+         Directory.CreateDirectory(_pluginSettingsFolder);
+      }
+
+      string settingsFile = GetSettingsFileName<TSettings>();
+
+      try
+      {
+         await WriteAsJsonAsync(settingsFile, settings).ConfigureAwait(false);
+      }
+      catch (Exception ex)
+      {
+         _logger.LogError(ex, "Failed to save settings to {settingsFile}", settingsFile);
+         throw new Exception($"Failed to save settings to {settingsFile}: {ex.Message}");
+      }
+   }
 }

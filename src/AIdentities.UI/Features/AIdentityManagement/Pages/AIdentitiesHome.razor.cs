@@ -16,7 +16,7 @@ public partial class AIdentitiesHome : AppPage<AIdentitiesHome>
    [Inject] IEnumerable<AIdentitySafetyCheckerRegistration> AIdentitySafetyCheckerRegistrations { get; set; } = null!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
    [Inject] IDialogService DialogService { get; set; } = null!;
-   [Inject] IJSRuntime JSRuntime { get; set; } = null!;
+   [Inject] IDownloadService DownloadService { get; set; } = null!;
 
    MudTabs? _tabs = default!;
 
@@ -125,8 +125,7 @@ public partial class AIdentitiesHome : AppPage<AIdentitiesHome>
    {
       var (fileName, content) = await AIdentityProvider.GetRaw(_state.CurrentAIDentity!.Id).ConfigureAwait(false);
       using var dataStream = new MemoryStream(content);
-      using var streamRef = new DotNetStreamReference(dataStream);
-      await JSRuntime.InvokeVoidAsync("downloadFileFromStream", fileName, streamRef).ConfigureAwait(false);
+      await DownloadService.DownloadFileFromStreamAsync(fileName, dataStream).ConfigureAwait(false);
    }
 
    void OnIsEditingChanged(bool isEditing)

@@ -1,7 +1,4 @@
-using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-
-namespace AIdentities.Chat.Services.Connectors.OpenAI.API;
+namespace AIdentities.Connector.OpenAI.Models.API;
 
 public record ChatCompletionResponse
 {

@@ -1,11 +1,7 @@
-﻿using AIdentities.Shared;
+﻿namespace AIdentities.Connector.OpenAI.Services;
 
-namespace AIdentities.Chat.Services.Connectors.OpenAI;
-
-public class OpenAIOptions
+public class OpenAISettings : IConversationalConnectorSettings<OpenAIConnector>
 {
-   public const string SECTION_NAME = $"{AppOptions.SECTION_NAME}:Chat:OpenAI";
-
    const bool DEFAULT_ENABLED = false;
    const string DEFAULT_MODEL = "gpt-3.5-turbo";
    const int DEFAULT_TIMEOUT = 15000;
@@ -18,7 +14,7 @@ public class OpenAIOptions
    /// <summary>
    /// OpenAI API Endpoint.
    /// </summary>
-   public string? EndPoint { get; set; } = default!;
+   public Uri EndPoint { get; set; } = default!;
 
 
    /// <summary>

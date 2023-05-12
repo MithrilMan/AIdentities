@@ -70,4 +70,20 @@ public interface IPluginStorage
    /// </summary>
    /// <returns>The list of files in the plugin's folder.</returns>
    ValueTask<IEnumerable<string>> ListAsync();
+
+   /// <summary>
+   /// Loads a plugin settings from the plugin's folder.
+   /// </summary>
+   /// <typeparam name="TSettings">The type of the settings to load.</typeparam>
+   /// <returns>The plugin settings. If the settings file doesn't exist, the default settings are returned.</returns>
+   ValueTask<TSettings> LoadSettings<TSettings>(TSettings defaultSettings)
+      where TSettings : class;
+
+   /// <summary>
+   /// Stores a plugin settings in the plugin's folder.
+   /// </summary>
+   /// <typeparam name="TSettings">The type of the settings to store.</typeparam>
+   /// <param name="settings">The settings to store.</param>
+   ValueTask SaveSettings<TSettings>(TSettings settings)
+      where TSettings : class;
 }

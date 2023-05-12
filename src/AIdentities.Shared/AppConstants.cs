@@ -30,6 +30,11 @@ public static class AppConstants
       public const string PLUGIN_UPDATES = "_updates_";
 
       /// <summary>
+      /// The name of the folder where the plugin settings are located.
+      /// </summary>
+      public const string PLUGIN_SETTINGS = "_settings_";
+
+      /// <summary>
       /// The name of the folder where the aidentities are located.
       /// It's a subfolder of <see cref="STORAGE"/>.
       /// </summary>

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Components.Web;
-using MudBlazor;
 
 namespace AIdentities.Chat.Components;
 
@@ -9,6 +8,7 @@ public partial class ConversationList : ComponentBase
    [Inject] IDialogService DialogService { get; set; } = null!;
    [Inject] INotificationService NotificationService { get; set; } = null!;
    [Inject] IAIdentityProvider AIdentityProvider { get; set; } = null!;
+   [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
 
    [Parameter] public string? Class { get; set; }
    [Parameter] public ConversationMetadata? Conversation { get; set; }
@@ -124,5 +124,20 @@ public partial class ConversationList : ComponentBase
             await RenameConversation(_state.SelectedConversation!).ConfigureAwait(false);
             break;
       }
+   }
+
+   async Task ExportConversation(ConversationMetadata conversationMetadata)
+   {
+      bool? result = await DialogService.ShowMessageBox(
+          "Do you want to export tshe conversation?",
+          "Accept to export the conversation and save it locally",
+          yesText: "Export it!", cancelText: "Cancel").ConfigureAwait(false);
+      if (result != true) return;
+
+      await ConversationExporter.ExportConversationAsync(
+         conversationMetadata.ConversationId,
+         ConversationExportFormat.Html).ConfigureAwait(false);
+
+      NotificationService.ShowSuccess($"Conversation {conversationMetadata.Title} exported successfully");
    }
 }

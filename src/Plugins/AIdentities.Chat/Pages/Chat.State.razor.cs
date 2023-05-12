@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace AIdentities.Chat.Pages;
+﻿namespace AIdentities.Chat.Pages;
 
 public partial class Chat
 {

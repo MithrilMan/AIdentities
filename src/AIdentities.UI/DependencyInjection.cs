@@ -1,4 +1,5 @@
-﻿using AIdentities.Shared.Plugins.Storage;
+﻿using AIdentities.Chat.Services;
+using AIdentities.Shared.Plugins.Storage;
 using AIdentities.UI.Features.AIdentityManagement.Services;
 using AIdentities.UI.Features.Core.Services.PageManager;
 using AIdentities.UI.Features.Core.Services.Plugins;
@@ -67,7 +68,13 @@ public static class DependencyInjection
          .AddScoped<IAIdentityProvider, AIdentityProvider>()
          .AddScoped<AIdentityProviderSerializationSettings>();
 
-      services.AddScoped<IScrollService, ScrollService>();
+      // JS Interop services
+      services
+         .AddScoped<IScrollService, ScrollService>()
+         .AddScoped<IDownloadService, DownloadService>();
+
+      services
+         .AddScoped<IConversationExporter, ConversationExporter>();
 
       startupLogger = RegisterPlugins(services, webHostEnvironment, out pluginStaticWebProvider);
 
