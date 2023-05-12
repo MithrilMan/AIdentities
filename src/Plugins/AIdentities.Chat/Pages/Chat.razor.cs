@@ -3,9 +3,12 @@ using Microsoft.AspNetCore.Components.Web;
 
 namespace AIdentities.Chat.Pages;
 
-[PageDefinition("Chat", Icons.Material.Filled.ChatBubble, "chat", Description = "Allow the user to chat with one or multiple other AIdentities")]
+[Route(PAGE_URL)]
+[PageDefinition(PAGE_TITLE, Icons.Material.Filled.ChatBubble, PAGE_URL, Description = "Allow the user to chat with one or multiple other AIdentities")]
 public partial class Chat : AppPage<Chat>
 {
+   const string PAGE_TITLE = "Chat";
+   const string PAGE_URL = "/chat";
    const string LIST_ID = "message-list-wrapper";
    const string LIST_SELECTOR = $"#{LIST_ID}";
 
@@ -15,7 +18,7 @@ public partial class Chat : AppPage<Chat>
    [Inject] private IScrollService ScrollService { get; set; } = null!;
    [Inject] private IChatPromptGenerator ChatPromptGenerator { get; set; } = null!;
 
-   MudTextField<string?> _messageTextField = default!;
+   MudTextFieldExtended<string?> _messageTextField = default!;
    private IConversationalConnector? _chatConnector;
 
    protected override void OnInitialized()
@@ -62,7 +65,6 @@ public partial class Chat : AppPage<Chat>
          await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
 
          _state.Message = string.Empty;
-         _state.SetMessageTextLines();
 
          await ScrollToEndOfMessageList().ConfigureAwait(false);
 
@@ -73,7 +75,7 @@ public partial class Chat : AppPage<Chat>
 
    private async Task SendMessageToConnector()
    {
-      if(_chatConnector is null)
+      if (_chatConnector is null)
       {
          NotificationService.ShowError("No chat connector found");
          return;
@@ -205,5 +207,12 @@ public partial class Chat : AppPage<Chat>
          // if the last message is not generated, we need to generate a reply so we enable the "resend" button
          _state.HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsGenerated == false;
       }
+   }
+
+   void CloseConversation()
+   {
+      _state.SelectedConversation = null;
+      ChatPromptGenerator.InitializeConversation(null);
+      _state.Messages.LoadItemsAsync(Enumerable.Empty<ChatMessage>());
    }
 }

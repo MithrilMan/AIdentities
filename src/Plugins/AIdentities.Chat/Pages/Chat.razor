@@ -1,6 +1,4 @@
-﻿@page "/chat"
-
-@inherits AppPage<Chat>
+﻿@inherits AppPage<Chat>
 
 <HeadContent>
    <link href="_content/AIdentities.Chat/AIdentities.Chat.bundle.scp.css" rel="stylesheet">
@@ -9,11 +7,15 @@
 <MudGrid Class="flex-grow-1" Spacing="1" Justify="Justify.SpaceBetween">
    <MudItem xs="9" Class="mud-height-full d-flex flex-column gap-1">
       <MudStack Row="true" AlignItems="AlignItems.Center" Class="mud-elevation-3 px-1">
+         @if (_state.SelectedConversation is not null)
+         {
+            <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" Size="Size.Medium" Color="Color.Secondary" Variant="Variant.Filled" OnClick="CloseConversation" />
+         }
          <MudText Class="flex-1 text-ellipsis" Typo="Typo.h6">@GetConversationTitle()</MudText>
          <MudTextField T="string" Placeholder="Search Message..." @bind-Value="_state.MessageSearchText" @bind-Value:after="@ApplyFilter"
                        Variant="Variant.Filled" DebounceInterval="250" Class="flex-1 ma-0" Margin="Margin.Dense"
                        Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true"
-                       AdornmentColor="Color.Secondary" />
+                       AdornmentColor="Color.Secondary" Disabled="@(_state.SelectedConversation == null)" />
       </MudStack>
 
       <div class="d-flex flex-column flex-grow-1 overflow-y-auto" id="@LIST_ID">
@@ -64,10 +66,13 @@
             <MudButton StartIcon="@Icons.Material.Outlined.Refresh" Color="Color.Error" ButtonType="ButtonType.Button" Size="Size.Large" Variant="Variant.Filled"
                     OnClick="Resend" Disabled="@(_state.IsWaitingReply)">Resend</MudButton>
          }
-         <MudTextField Variant="Variant.Outlined" Lines="_state.MessageTextLines" @ref="_messageTextField"
-                       Placeholder="Enter your message..." Immediate="true" Margin="Margin.Dense" Class="pa-0 ma-0"
-                       OnKeyDown="OnKeyDown" Disabled="@(_state.SelectedConversation == null)"
-                       @bind-Value="_state.Message" @bind-Value:after="_state.SetMessageTextLines" />
+         <div class="pa-0 d-flex flex-1 ma-0 overflow-y-auto" style="max-height:300px">
+            <MudTextFieldExtended Variant="Variant.Outlined" Lines="2" @ref="_messageTextField"
+                                  Placeholder="Enter your message..." Immediate="true" Margin="Margin.Dense"
+                                  Class="pa-0 ma-0" AutoSize="true" AutoFocus="true"
+                                  OnKeyDown="OnKeyDown" Disabled="@(_state.SelectedConversation == null)"
+                                  @bind-Value="_state.Message" />
+         </div>
          <MudIconButton Icon="@Icons.Material.Outlined.Send" Color="Color.Secondary" ButtonType="ButtonType.Button" Size="Size.Medium"
                         OnClick="SendMessageAsync" Disabled="@(!_state.CanSendMessage)" />
       </MudPaper>

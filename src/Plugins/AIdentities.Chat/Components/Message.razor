@@ -1,4 +1,6 @@
-﻿<div class="">
+﻿@if (ChatMessage is null) return;
+
+<div class="">
    @if (ChatMessage.IsGenerated)
    {
       <MudStack Row="true" Justify="Justify.FlexStart" AlignItems="AlignItems.End">
