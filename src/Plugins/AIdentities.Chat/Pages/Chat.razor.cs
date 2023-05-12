@@ -1,5 +1,7 @@
 ﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
 using Microsoft.AspNetCore.Components.Web;
+using Toolbelt.Blazor.HotKeys2;
+using static MudBlazor.CategoryTypes;
 
 namespace AIdentities.Chat.Pages;
 
@@ -26,6 +28,19 @@ public partial class Chat : AppPage<Chat>
       base.OnInitialized();
       _state.Initialize(Filter);
       _chatConnector = ChatConnectors.FirstOrDefault();
+   }
+
+   protected override void ConfigureHotKeys(HotKeysContext hotKeysContext)
+   {
+      base.ConfigureHotKeys(hotKeysContext);
+      hotKeysContext.Add(ModCode.Ctrl, Code.E, OnHotkeyExportConversation, "Exit from the conversation.");
+   }
+
+   private async ValueTask OnHotkeyExportConversation()
+   {
+      if (_state.SelectedConversation == null) return;
+
+      await DialogService.ShowMessageBox("Export conversation", "Not implemented yet").ConfigureAwait(false);
    }
 
    public async ValueTask<IEnumerable<ChatMessage>> Filter(IEnumerable<ChatMessage> unfilteredItems)
@@ -209,10 +224,10 @@ public partial class Chat : AppPage<Chat>
       }
    }
 
-   void CloseConversation()
+   async Task CloseConversation()
    {
       _state.SelectedConversation = null;
       ChatPromptGenerator.InitializeConversation(null);
-      _state.Messages.LoadItemsAsync(Enumerable.Empty<ChatMessage>());
+      await _state.Messages.LoadItemsAsync(Enumerable.Empty<ChatMessage>()).ConfigureAwait(false);
    }
 }
