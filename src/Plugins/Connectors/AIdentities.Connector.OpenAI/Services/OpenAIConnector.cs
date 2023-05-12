@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
+using AIdentities.Shared.Plugins.Storage;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Connector.OpenAI.Services;
@@ -26,7 +27,7 @@ public class OpenAIConnector : IConversationalConnector
    private readonly HttpClient _client;
    private readonly JsonSerializerOptions _serializerOptions;
 
-   public OpenAIConnector(ILogger<OpenAIConnector> logger, OpenAISettings settings)
+   public OpenAIConnector(ILogger<OpenAIConnector> logger, OpenAISettings settings, IPluginStorage pluginStorage)
    {
       _logger = logger;
       _settings = settings;
@@ -179,4 +180,10 @@ public class OpenAIConnector : IConversationalConnector
    };
 
    public IConversationalConnectorSettings GetSettings() => _settings;
+
+   Task SetSettings(IConversationalConnectorSettings settings)
+   {
+      _settings = settings;
+      _plu
+   }
 }
