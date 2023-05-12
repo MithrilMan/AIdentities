@@ -1,11 +1,11 @@
 {
    "Signature": {
-      "Name": "OpenAIConnector",
+      "Name": "BrainWittle",
       "Version": "1.0.0-alpha",
       "Author": "Mithril Man",
-      "Entry": "lib/net7.0/AIdentities.Connector.OpenAI.dll"
+      "Entry": "lib/net7.0/AIdentities.BrainWittle.dll"
    },
-   "Description": "Allows to connect to OpenAI Conversational API",
+   "Description": "Allows the user to interact with BrainWittle, the personalized assistant.",
    "Website": "",
    "Email": "",
    "License": "MIT",

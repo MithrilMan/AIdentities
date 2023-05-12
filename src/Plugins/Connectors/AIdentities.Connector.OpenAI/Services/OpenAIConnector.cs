@@ -177,4 +177,6 @@ public class OpenAIConnector : IConversationalConnector
       ConversationalRole.System => ChatCompletionRoleEnum.System,
       _ => throw new NotImplementedException()
    };
+
+   public IConversationalConnectorSettings GetSettings() => _settings;
 }

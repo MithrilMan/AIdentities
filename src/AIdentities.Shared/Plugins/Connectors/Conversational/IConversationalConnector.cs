@@ -20,4 +20,16 @@ public interface IConversationalConnector : IEndpointConnector
    /// <param name="cancellationToken">The cancellation token to stop the stream generation.</param>
    /// <returns>The responses from the stream up to completion.</returns>
    IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, CancellationToken cancellationToken);
+
+   /// <summary>
+   /// Returns the settings for this connector.
+   /// </summary>
+   /// <returns></returns>
+   IConversationalConnectorSettings GetSettings();
+
+   /// <summary>
+   /// Sets the settings for this connector.
+   /// </summary>
+   /// <param name="settings">The settings to set.</param>
+   Task SetSettings(IConversationalConnectorSettings settings);
 }

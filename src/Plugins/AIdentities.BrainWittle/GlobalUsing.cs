@@ -1,0 +1,17 @@
+﻿global using System.Text.Json;
+global using AIdentities.Shared.Collections;
+global using AIdentities.Shared.Features.AIdentities.Abstracts;
+global using AIdentities.Shared.Features.AIdentities.Models;
+global using AIdentities.Shared.Features.AIdentities.Services;
+global using AIdentities.Shared.Plugins;
+global using AIdentities.Shared.Plugins.Connectors;
+global using AIdentities.Shared.Plugins.Pages;
+global using AIdentities.Shared.Plugins.Storage;
+global using AIdentities.Shared.Serialization.Converters;
+global using AIdentities.Shared.Services;
+global using AIdentities.Shared.Services.Javascript;
+global using AIdentities.Shared.Validation;
+global using Microsoft.AspNetCore.Components;
+global using Microsoft.Extensions.Logging;
+global using MudBlazor;
+global using MudExtensions;

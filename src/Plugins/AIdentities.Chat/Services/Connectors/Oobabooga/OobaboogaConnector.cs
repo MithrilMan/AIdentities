@@ -58,4 +58,7 @@ public class OobaboogaConnector : IConversationalConnector
 
       return client;
    }
+
+   public IConversationalConnectorSettings GetSettings() => throw new NotImplementedException();
+   public Task SetSettings(IConversationalConnectorSettings settings) => throw new NotImplementedException();
 }

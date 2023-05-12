@@ -1,11 +1,5 @@
-﻿using System.Collections;
-using System.Text;
-using System.Text.Json.Serialization;
-using AIdentities.Chat.Models;
-using AIdentities.Shared.Plugins.Connectors.Conversational;
-using AIdentities.Shared.Utils;
+﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.JSInterop;
 using Toolbelt.Blazor.HotKeys2;
 
 namespace AIdentities.Chat.Pages;
@@ -29,13 +23,12 @@ public partial class Chat : AppPage<Chat>
 
 
    MudTextFieldExtended<string?> _messageTextField = default!;
-   private IConversationalConnector? _chatConnector;
 
    protected override void OnInitialized()
    {
       base.OnInitialized();
       _state.Initialize(Filter);
-      _chatConnector = ChatConnectors.FirstOrDefault();
+      _state.Connector = ChatConnectors.FirstOrDefault();
    }
 
    protected override void ConfigureHotKeys(HotKeysContext hotKeysContext)
@@ -120,7 +113,7 @@ public partial class Chat : AppPage<Chat>
 
    private async Task SendMessageToConnector()
    {
-      if (_chatConnector is null)
+      if (_state.Connector is null)
       {
          NotificationService.ShowError("No chat connector found");
          return;
@@ -140,7 +133,7 @@ public partial class Chat : AppPage<Chat>
             AIDentityId = _state.SelectedConversation?.AIdentityId
          };
 
-         var completions = _chatConnector.RequestChatCompletionAsStreamAsync(request, CancellationToken.None)
+         var completions = _state.Connector.RequestChatCompletionAsStreamAsync(request, CancellationToken.None)
             .WithCancellation(CancellationToken.None)
             .ConfigureAwait(false);
          await foreach (var completion in completions)

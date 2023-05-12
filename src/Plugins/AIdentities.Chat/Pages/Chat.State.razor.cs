@@ -1,4 +1,6 @@
-﻿namespace AIdentities.Chat.Pages;
+﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
+
+namespace AIdentities.Chat.Pages;
 
 public partial class Chat
 {
@@ -16,7 +18,7 @@ public partial class Chat
       /// </summary>
       public bool IsWaitingReply { get; set; }
 
-      public bool CanSendMessage => !IsWaitingReply && SelectedConversation != null;
+      public bool CanSendMessage => Connector != null && !IsWaitingReply && SelectedConversation != null;
 
       public bool HasMessageGenerationFailed { get; internal set; }
 
@@ -26,6 +28,12 @@ public partial class Chat
       /// cleared and the response is added to the <see cref="Messages"/> collection.
       /// </summary>
       public ChatMessage? StreamedResponse { get; set; }
+
+      /// <summary>
+      /// Holds the reference to the current Conversational Connector.
+      /// If null, no chat message can be sent.
+      /// </summary>
+      public IConversationalConnector? Connector { get; set; }
 
       public void Initialize(Func<IEnumerable<ChatMessage>, ValueTask<IEnumerable<ChatMessage>>> messageFilter)
       {

@@ -24,6 +24,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Plugins\AIdentities.Chat\AIdentities.Chat.csproj" />
     <ProjectReference Include="..\Plugins\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
+    <ProjectReference Include="..\Plugins\Connectors\AIdentities.Connector.OpenAI\AIdentities.Connector.OpenAI.csproj" />
   </ItemGroup>
   <Target Name="Restore Local Tools" BeforeTargets="Compile">
     <Exec Command="dotnet tool restore" />

@@ -1,10 +1,10 @@
 ﻿namespace AIdentities.Shared.Plugins.Connectors.Conversational;
+
 /// <summary>
 /// This interface is used to define the settings for a conversational connector.
+/// To implement plugins, do not use this interface directly but use the generic version instead.
 /// </summary>
-/// <typeparam name="TConversationalConnector"></typeparam>
-public interface IConversationalConnectorSettings<TConversationalConnector>
-   where TConversationalConnector : IConversationalConnector
+public interface IConversationalConnectorSettings
 {
    /// <summary>
    /// Each conversational connector is expected to have an endpoint.
@@ -17,3 +17,11 @@ public interface IConversationalConnectorSettings<TConversationalConnector>
    /// </summary>
    string? ApiKey { get; }
 }
+
+/// <summary>
+/// This interface is used to define the settings for a conversational connector.
+/// </summary>
+/// <typeparam name="TConversationalConnector"></typeparam>
+public interface IConversationalConnectorSettings<TConversationalConnector> : IConversationalConnectorSettings
+   where TConversationalConnector : IConversationalConnector
+{ }
