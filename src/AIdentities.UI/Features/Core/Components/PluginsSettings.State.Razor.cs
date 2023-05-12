@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Components.Forms;
 
 namespace AIdentities.UI.Features.Core.Components;
 
-public partial class Plugins : ComponentBase
+public partial class PluginsSettings : ComponentBase
 {
    class State
    {

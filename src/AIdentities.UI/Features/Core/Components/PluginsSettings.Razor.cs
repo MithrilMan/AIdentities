@@ -4,13 +4,13 @@ using Microsoft.AspNetCore.Components.Forms;
 
 namespace AIdentities.UI.Features.Core.Components;
 
-public partial class Plugins : ComponentBase
+public partial class PluginsSettings : ComponentBase
 {
    const string VALID_FILE_TYPES = ".nupkg";
    const int MAX_FILE_NUMBER = 5;
    static readonly string[] _validFileTypes = VALID_FILE_TYPES.Split(',');
 
-   [Inject] ILogger<Plugins> Logger { get; set; } = null!;
+   [Inject] ILogger<PluginsSettings> Logger { get; set; } = null!;
    [Inject] IPluginManager PluginManager { get; set; } = null!;
    [Inject] INotificationService NotificationService { get; set; } = null!;
    [Inject] IDialogService DialogService { get; set; } = null!;
