@@ -101,17 +101,15 @@ public partial class Chat : AppPage<Chat>
             _state.StreamedResponse.Message += completion.GeneratedMessage;
             // we force the update to show the streamed response
             await ScrollToEndOfMessageList().ConfigureAwait(false);
-            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
          }
 
          if (_state.StreamedResponse.Message?.Length > 0)
          {
             _state.HasMessageGenerationFailed = false;
-
-            await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, _state.StreamedResponse).ConfigureAwait(false);
             ChatPromptGenerator.AppendMessage(_state.StreamedResponse);
             await InvokeAsync(() => _state.Messages.AppendItemAsync(_state.StreamedResponse).AsTask()).ConfigureAwait(false);
             await ScrollToEndOfMessageList().ConfigureAwait(false);
+            await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, _state.StreamedResponse).ConfigureAwait(false);
          }
       }
       catch (Exception ex)

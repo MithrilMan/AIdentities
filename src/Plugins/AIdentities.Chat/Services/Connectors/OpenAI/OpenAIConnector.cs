@@ -110,17 +110,26 @@ public class OpenAIConnector : IConversationalConnector
             line = line[_streamDataMarkerLength..];
          }
 
-         if (string.IsNullOrWhiteSpace(line))
-         {
-            _logger.LogDebug("Received EMPTY line");
-            continue; //empty line
-         }
-
-         _logger.LogDebug("Received streamed response: {Response}", line);
+         if (string.IsNullOrWhiteSpace(line)) continue; //empty line
 
          if (line == "[DONE]") break;
 
-         ChatCompletionResponse? streamedResponse = JsonSerializer.Deserialize<ChatCompletionResponse>(line);
+         ChatCompletionResponse? streamedResponse = null;
+         try
+         {
+            streamedResponse = JsonSerializer.Deserialize<ChatCompletionResponse>(line);
+         }
+         catch (Exception)
+         {
+            // if we can't deserialize the response, it's probably because it's an error, try to deserialize
+            // the rest of the stream as an error message
+            line += await streamReader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
+            var error = JsonSerializer.Deserialize<ErrorResponse>(line);
+            if (error?.Error is not null)
+            {
+               throw new Exception($"Request failed with status code {error.Error.Code}: {error.Error.Message}");
+            }
+         }
 
          if (streamedResponse is not null)
          {
