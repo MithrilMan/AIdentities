@@ -22,7 +22,10 @@
          {
             "from": "./bin",
             "to": "bin",
-            "filter": [ "**/*" ]
+            "filter": [
+               "**/*",
+               "!packages"
+            ]
          }
       ],
       "files": [
