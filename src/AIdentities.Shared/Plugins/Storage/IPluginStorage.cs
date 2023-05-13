@@ -1,4 +1,7 @@
-﻿namespace AIdentities.Shared.Plugins.Storage;
+﻿using AIdentities.Shared.Features.Core.Abstracts;
+using AIdentities.Shared.Features.Core.Services;
+
+namespace AIdentities.Shared.Plugins.Storage;
 
 /// <summary>
 /// Allow a default mechanism for plugins to store data on their specific folder.
@@ -73,17 +76,17 @@ public interface IPluginStorage
 
    /// <summary>
    /// Loads a plugin settings from the plugin's folder.
+   /// This method shouldn't be called directly, but through the <see cref="IPluginSettingsManager.GetAsync{TPluginSettings}"/>.
    /// </summary>
    /// <typeparam name="TSettings">The type of the settings to load.</typeparam>
    /// <returns>The plugin settings. If the settings file doesn't exist, the default settings are returned.</returns>
-   ValueTask<TSettings> LoadSettings<TSettings>(TSettings defaultSettings)
-      where TSettings : class;
+   ValueTask<IPluginSettings> LoadSettingsAsync(Type settingsType, IPluginSettings defaultSettings);
 
    /// <summary>
    /// Stores a plugin settings in the plugin's folder.
+   /// This method shouldn't be called directly, but through the <see cref="IPluginSettingsManager.SetAsync{TPluginSettings}(TPluginSettings)"/>.
    /// </summary>
    /// <typeparam name="TSettings">The type of the settings to store.</typeparam>
    /// <param name="settings">The settings to store.</param>
-   ValueTask SaveSettings<TSettings>(TSettings settings)
-      where TSettings : class;
+   ValueTask SaveSettingsAsync(IPluginSettings settings);
 }

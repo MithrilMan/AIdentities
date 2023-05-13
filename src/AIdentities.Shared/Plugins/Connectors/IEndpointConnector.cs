@@ -8,5 +8,5 @@ public interface IEndpointConnector : IConnector
    /// <summary>
    /// The endpoint of the connector.
    /// </summary>
-   Uri Endpoint { get; }
+   Uri EndPoint { get; }
 }

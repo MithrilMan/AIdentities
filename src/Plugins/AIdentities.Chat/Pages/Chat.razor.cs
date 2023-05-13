@@ -18,7 +18,6 @@ public partial class Chat : AppPage<Chat>
    [Inject] private IChatStorage ChatStorage { get; set; } = null!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
    [Inject] private IChatPromptGenerator ChatPromptGenerator { get; set; } = null!;
-   [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
    [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
 
 
@@ -28,7 +27,7 @@ public partial class Chat : AppPage<Chat>
    {
       base.OnInitialized();
       _state.Initialize(Filter);
-      _state.Connector = ChatConnectors.FirstOrDefault();
+      _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled);
    }
 
    protected override void ConfigureHotKeys(HotKeysContext hotKeysContext)
@@ -133,8 +132,8 @@ public partial class Chat : AppPage<Chat>
             AIDentityId = _state.SelectedConversation?.AIdentityId
          };
 
-         var completions = _state.Connector.RequestChatCompletionAsStreamAsync(request, CancellationToken.None)
-            .WithCancellation(CancellationToken.None)
+         var completions = _state.Connector.RequestChatCompletionAsStreamAsync(request, _state.MessageGenerationCancellationTokenSource.Token)
+            .WithCancellation(_state.MessageGenerationCancellationTokenSource.Token)
             .ConfigureAwait(false);
          await foreach (var completion in completions)
          {
@@ -151,6 +150,10 @@ public partial class Chat : AppPage<Chat>
             await ScrollToEndOfMessageList().ConfigureAwait(false);
             await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, _state.StreamedResponse).ConfigureAwait(false);
          }
+      }
+      catch (OperationCanceledException)
+      {
+         NotificationService.ShowInfo("Message generation cancelled");
       }
       catch (Exception ex)
       {
@@ -252,5 +255,18 @@ public partial class Chat : AppPage<Chat>
       _state.SelectedConversation = null;
       ChatPromptGenerator.InitializeConversation(null);
       await _state.Messages.LoadItemsAsync(Enumerable.Empty<ChatMessage>()).ConfigureAwait(false);
+   }
+
+
+   void StopMessageGeneration()
+   {
+      _state.MessageGenerationCancellationTokenSource.Cancel();
+      _state.MessageGenerationCancellationTokenSource = new CancellationTokenSource();
+   }
+
+   public override void Dispose()
+   {
+      base.Dispose();
+      _state.MessageGenerationCancellationTokenSource?.Dispose();
    }
 }

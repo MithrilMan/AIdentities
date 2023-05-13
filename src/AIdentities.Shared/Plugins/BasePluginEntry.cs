@@ -33,7 +33,7 @@ public abstract class BasePluginEntry : IPluginEntry
    /// <typeparam name="TFeatureTab">The AIdentity feature component Type that will be used to edit the AIdentity feature.</typeparam>
    /// <param name="uiTitle">The UI title that will be shown on the Tab Panel.</param>
    /// <exception cref="InvalidOperationException">Thrown if the plugin is not initialized.</exception>
-   protected void RegisterFeature<TFeature, TFeatureTab>(string uiTitle)
+   protected void RegisterAIdentityFeature<TFeature, TFeatureTab>(string uiTitle)
      where TFeature : class, IAIdentityFeature
      where TFeatureTab : class, IAIdentityFeatureTab<TFeature>
    {
@@ -57,7 +57,7 @@ public abstract class BasePluginEntry : IPluginEntry
       if (_services == null) throw new InvalidOperationException("Cannot register a feature before the plugin is initialized.");
 
       // Register the AIdentity feature to expose an editor in the AIdentity management page.
-      _services.AddSingleton(new PluginSettingRegistration(typeof(TPluginSettings), typeof(TPluginSettingsTab), uiTitle));
+      _services.AddSingleton(new PluginSettingRegistration(_storage, typeof(TPluginSettings), typeof(TPluginSettingsTab), uiTitle));
    }
 
    /// <summary>

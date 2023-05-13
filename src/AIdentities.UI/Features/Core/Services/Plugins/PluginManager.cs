@@ -364,12 +364,10 @@ public class PluginManager : IPluginManager
          var pluginAssembly = loader.LoadDefaultAssembly();
 
          var pageDefinitions = FindAppPages(manifest, pluginAssembly);
-         var connectors = FindConnectors(manifest, pluginAssembly);
 
          var loadedPackage = new Package(manifest, pluginAssembly, null)
          {
-            Pages = pageDefinitions,
-            Connectors = connectors,
+            Pages = pageDefinitions
          };
 
          //register the plugin services
@@ -387,7 +385,10 @@ public class PluginManager : IPluginManager
          }
 
          if (currentPluginStatus != null)
+         {
             currentPluginStatus.Status = PluginStatus.PackageStatus.Activated;
+         }
+
          _loadedPackages.Add(loadedPackage);
          PackageLoaded?.Invoke(this, loadedPackage);
 
@@ -432,14 +433,6 @@ public class PluginManager : IPluginManager
       }
 
       return pageDefinitions;
-   }
-
-
-   private IReadOnlyList<IConnector> FindConnectors(PluginManifest manifest, Assembly pluginAssembly)
-   {
-      var connectors = _packageInspector.FindConnectors(pluginAssembly);
-
-      return connectors;
    }
 
    public void AddDebuggableModuleAssembly(Assembly pluginAssembly)

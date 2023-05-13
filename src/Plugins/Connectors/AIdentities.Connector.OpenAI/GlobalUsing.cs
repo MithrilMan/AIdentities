@@ -3,6 +3,7 @@ global using System.Runtime.Serialization;
 global using System.Text.Json;
 global using System.Text.Json.Serialization;
 global using AIdentities.Connector.OpenAI.Models.API;
+global using AIdentities.Shared.Features.Core.Abstracts;
 global using AIdentities.Shared.Plugins;
 global using AIdentities.Shared.Plugins.Connectors.Conversational;
 global using AIdentities.Shared.Serialization.Converters;

@@ -1,0 +1,21 @@
+@inherits BasePluginSettingsTab<OpenAISettings, Settings.State>
+
+<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix gap-2">
+   <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-2">
+      <MudCard>
+         <MudSwitchM3 @bind-Checked="_state.Enabled" Label="Enabled" For="()=>_state.Enabled" />
+      </MudCard>
+      <MudCard>
+         <MudTextField @bind-Value="_state.EndPoint" Label="Endpoint" Variant="Variant.Text" For="()=>_state.EndPoint" />
+      </MudCard>
+      <MudCard>
+         <MudPasswordField @bind-Value="_state.ApiKey" Label="API Key" Variant="Variant.Text" For="()=>_state.ApiKey" />
+      </MudCard>
+      <MudCard>
+         <MudTextField @bind-Value="_state.DefaultModel" Label="Default Model" Variant="Variant.Text" For="()=>_state.DefaultModel" />
+      </MudCard>
+      <MudCard>
+         <MudNumericField @bind-Value="_state.Timeout" Label="Timeout" Variant="Variant.Text" For="()=>_state.Timeout" />
+      </MudCard>
+   </MudPaper>
+</MudForm>

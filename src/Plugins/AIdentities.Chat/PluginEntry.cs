@@ -15,7 +15,7 @@ public class PluginEntry : BasePluginEntry
          .AddTransient<IChatPromptGenerator, ChatPromptGenerator>();
 
       // Register the AIdentity feature to expose an editor in the AIdentity management page.
-      RegisterFeature<AIdentityChatFeature, TabAIdentityFeatureChat>("Chat");
+      RegisterAIdentityFeature<AIdentityChatFeature, TabAIdentityFeatureChat>("Chat");
 
       RegisterAIdentitySafetyChecker<ChatAIdentitySafetyChecker>();
    }

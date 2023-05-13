@@ -9,7 +9,7 @@ public interface IPluginSettingsTab
    /// The updated settings or null if the saving failed.
    /// There is no need to inform the user about the failure, it will be handled by the component owning this tab.
    /// </returns>
-   Task<object?> SaveAsync();
+   Task<IPluginSettings?> SaveAsync();
 
    /// <summary>
    /// Requests the component to undo any changes made to the settings.

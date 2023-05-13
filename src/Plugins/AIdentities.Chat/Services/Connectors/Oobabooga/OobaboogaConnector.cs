@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using AIdentities.Shared.Features.Core.Abstracts;
 using AIdentities.Shared.Plugins.Connectors.Conversational;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Options;
@@ -12,9 +13,11 @@ public class OobaboogaConnector : IConversationalConnector
    readonly IOptions<OobaboogaOptions> _options;
    readonly Uri _endpoint;
 
-   public Uri Endpoint => _endpoint;
+   public Uri EndPoint => _endpoint;
    public string Name => NAME;
    public string Description => DESCRIPTION;
+   public bool Enabled => true;
+
    public IFeatureCollection Features => new FeatureCollection();
 
    private readonly HttpClient _client;
@@ -59,6 +62,6 @@ public class OobaboogaConnector : IConversationalConnector
       return client;
    }
 
-   public IConversationalConnectorSettings GetSettings() => throw new NotImplementedException();
-   public Task SetSettings(IConversationalConnectorSettings settings) => throw new NotImplementedException();
+   public IPluginSettings GetSettings() => throw new NotImplementedException();
+   public Task SetSettings(IPluginSettings settings) => throw new NotImplementedException();
 }

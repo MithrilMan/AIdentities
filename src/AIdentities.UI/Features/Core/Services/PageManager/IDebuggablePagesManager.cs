@@ -4,7 +4,7 @@ namespace AIdentities.UI.Features.Core.Services.PageManager;
 
 /// <summary>
 /// Exposes a list of assemblies that contain components that can be used in the UI.
-/// This is meant to be used when deploying a AIdentities plugin because allow the developer to reference the 
+/// This is meant to be used when developing a AIdentities plugin because allow the developer to reference the 
 /// plugin directly in the AIdentities.UI project and then register an <see cref="IDebuggableModule"/> to expose its assembly.
 /// </summary>
 public interface IDebuggablePagesManager

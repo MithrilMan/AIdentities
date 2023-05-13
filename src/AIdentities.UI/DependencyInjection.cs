@@ -60,6 +60,8 @@ public static class DependencyInjection
       services.AddScoped<INotificationService, NotificationService>();
       services.AddScoped<IAppComponentSettingsManager, AppComponentSettingsManager>();
 
+      services.AddScoped<IPluginSettingsManager, PluginSettingsManager>();
+
       services
          .AddScoped<EventAggregator.Blazor.IEventAggregator, EventAggregator.Blazor.EventAggregator>()
          .AddScoped<IEventBus, EventBus>();

@@ -1,4 +1,7 @@
-﻿namespace AIdentities.Shared.Plugins.Storage;
+﻿using AIdentities.Shared.Features.Core.Abstracts;
+using Microsoft.Extensions.Options;
+
+namespace AIdentities.Shared.Plugins.Storage;
 
 public class PluginStorage : IPluginStorage
 {
@@ -76,21 +79,21 @@ public class PluginStorage : IPluginStorage
    public ValueTask WriteAsJsonAsync<TContent>(string fileName, TContent? content)
       => WriteAsync(fileName, JsonSerializer.Serialize(content));
 
-   public async ValueTask<TSettings> LoadSettings<TSettings>(TSettings defaultSettings) where TSettings : class
+   public async ValueTask<IPluginSettings> LoadSettingsAsync(Type settingsType, IPluginSettings defaultSettings)
    {
       if (!Directory.Exists(_pluginSettingsFolder))
       {
          return defaultSettings;
       }
 
-      string settingsFile = GetSettingsFileName<TSettings>();
+      string settingsFile = GetSettingsFileName(settingsType);
 
       try
       {
          var content = await ReadAsync(settingsFile).ConfigureAwait(false);
          if (content == null) return defaultSettings;
 
-         return JsonSerializer.Deserialize<TSettings>(content) ?? defaultSettings;
+         return JsonSerializer.Deserialize(content, settingsType) as IPluginSettings ?? defaultSettings;
       }
       catch (Exception ex)
       {
@@ -99,20 +102,21 @@ public class PluginStorage : IPluginStorage
       }
    }
 
-   private string GetSettingsFileName<TSettings>() where TSettings : class => Path.Combine(_pluginSettingsFolder, typeof(TSettings).Name, ".json");
+   private string GetSettingsFileName<TSettings>() where TSettings : class => Path.Combine(_pluginSettingsFolder, $"{typeof(TSettings).Name}.json");
+   private string GetSettingsFileName(Type settingsType) => Path.Combine(_pluginSettingsFolder, $"{settingsType.Name}.json");
 
-   public async ValueTask SaveSettings<TSettings>(TSettings settings) where TSettings : class
+   public async ValueTask SaveSettingsAsync(IPluginSettings settings)
    {
       if (!Directory.Exists(_pluginSettingsFolder))
       {
          Directory.CreateDirectory(_pluginSettingsFolder);
       }
 
-      string settingsFile = GetSettingsFileName<TSettings>();
+      string settingsFile = GetSettingsFileName(settings.GetType());
 
       try
       {
-         await WriteAsJsonAsync(settingsFile, settings).ConfigureAwait(false);
+         await WriteAsync(settingsFile, JsonSerializer.Serialize(settings, settings.GetType())).ConfigureAwait(false);
       }
       catch (Exception ex)
       {

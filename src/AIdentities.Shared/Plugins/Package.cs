@@ -20,9 +20,4 @@ public record Package(
    /// List of PageDefinitions that are defined in the plugin.
    /// </summary>
    public IReadOnlyList<PageDefinition>? Pages { get; init; }
-
-   /// <summary>
-   /// List of Connectors that are defined in the plugin.
-   /// </summary>
-   public IReadOnlyList<IConnector>? Connectors { get; init; }
 }

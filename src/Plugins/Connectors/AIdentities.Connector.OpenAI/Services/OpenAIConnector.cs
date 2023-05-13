@@ -2,11 +2,11 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
-using AIdentities.Shared.Plugins.Storage;
+using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Connector.OpenAI.Services;
-public class OpenAIConnector : IConversationalConnector
+public class OpenAIConnector : IConversationalConnector, IDisposable
 {
    const string NAME = nameof(OpenAIConnector);
    const string DESCRIPTION = "OpenAI Chat Connector that uses ChatCompletion API.";
@@ -17,26 +17,44 @@ public class OpenAIConnector : IConversationalConnector
    static readonly int _streamDataMarkerLength = STREAM_DATA_MARKER.Length;
 
    readonly ILogger<OpenAIConnector> _logger;
-   readonly OpenAISettings _settings;
+   readonly IPluginSettingsManager _settingsManager;
 
-   public Uri Endpoint => _settings.EndPoint;
+   public bool Enabled => _settingsManager.Get<OpenAISettings>().Enabled;
+   public Uri EndPoint => _settingsManager.Get<OpenAISettings>().EndPoint;
+   public int Timeout => _settingsManager.Get<OpenAISettings>().Timeout;
+   public string? ApiKey => _settingsManager.Get<OpenAISettings>().ApiKey;
+   public string DefaultModel => _settingsManager.Get<OpenAISettings>().DefaultModel;
+
    public string Name => NAME;
    public string Description => DESCRIPTION;
    public IFeatureCollection Features => new FeatureCollection();
 
-   private readonly HttpClient _client;
+   private HttpClient _client;
    private readonly JsonSerializerOptions _serializerOptions;
 
-   public OpenAIConnector(ILogger<OpenAIConnector> logger, OpenAISettings settings, IPluginStorage pluginStorage)
+   public OpenAIConnector(ILogger<OpenAIConnector> logger, IPluginSettingsManager settingsManager)
    {
       _logger = logger;
-      _settings = settings;
+      _settingsManager = settingsManager;
 
       _client = CreateHttpClient();
       _serializerOptions = new JsonSerializerOptions()
       {
          DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
       };
+
+      _settingsManager.OnSettingsUpdated += OnSettingsUpdated;
+   }
+
+   // if the settings are updated, we need to update the client
+   private void OnSettingsUpdated(object? sender, Type settingType)
+   {
+      if (settingType == typeof(OpenAISettings))
+      {
+         // we can't modify a HttpClient once it's created, so we need to dispose it and create a new one
+         _client?.Dispose();
+         _client = CreateHttpClient();
+      }
    }
 
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
@@ -49,7 +67,7 @@ public class OpenAIConnector : IConversationalConnector
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
       var sw = Stopwatch.StartNew();
 
-      using HttpResponseMessage response = await _client.PostAsJsonAsync(_settings.EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
+      using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
 
       _logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
 
@@ -82,7 +100,7 @@ public class OpenAIConnector : IConversationalConnector
 
       var sw = Stopwatch.StartNew();
 
-      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, _settings.EndPoint)
+      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
       {
          Content = JsonContent.Create(apiRequest, null, _serializerOptions)
       };
@@ -138,10 +156,10 @@ public class OpenAIConnector : IConversationalConnector
    {
       var client = new HttpClient
       {
-         Timeout = TimeSpan.FromMilliseconds(_settings.Timeout)
+         Timeout = TimeSpan.FromMilliseconds(Timeout)
       };
 
-      client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _settings.ApiKey);
+      client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ApiKey);
 
       return client;
    }
@@ -161,7 +179,7 @@ public class OpenAIConnector : IConversationalConnector
          Name = m.Name,
          Role = MapRole(m.Role)
       }).ToList(),
-      Model = request.ModelId ?? _settings.DefaultModel,
+      Model = request.ModelId ?? DefaultModel,
       PresencePenalty = request.RepetitionPenality,
       N = request.CompletionResults,
       Stop = request.StopSequences,
@@ -179,11 +197,8 @@ public class OpenAIConnector : IConversationalConnector
       _ => throw new NotImplementedException()
    };
 
-   public IConversationalConnectorSettings GetSettings() => _settings;
-
-   Task SetSettings(IConversationalConnectorSettings settings)
+   public void Dispose()
    {
-      _settings = settings;
-      _plu
+      _settingsManager.OnSettingsUpdated -= OnSettingsUpdated;
    }
 }

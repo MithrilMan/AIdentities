@@ -1,10 +1,11 @@
 ﻿namespace AIdentities.Connector.OpenAI.Services;
 
-public class OpenAISettings : IConversationalConnectorSettings<OpenAIConnector>
+public class OpenAISettings : IPluginSettings
 {
-   const bool DEFAULT_ENABLED = false;
-   const string DEFAULT_MODEL = "gpt-3.5-turbo";
-   const int DEFAULT_TIMEOUT = 15000;
+   public const bool DEFAULT_ENABLED = true;
+   public const string DEFAULT_MODEL = "gpt-3.5-turbo";
+   public const string DEFAULT_ENDPOINT = "https://api.openai.com/v1/chat/completions";
+   public const int DEFAULT_TIMEOUT = 30000;
 
    /// <summary>
    /// Enable or disable the OpenAI API.
@@ -14,13 +15,12 @@ public class OpenAISettings : IConversationalConnectorSettings<OpenAIConnector>
    /// <summary>
    /// OpenAI API Endpoint.
    /// </summary>
-   public Uri EndPoint { get; set; } = default!;
-
+   public Uri EndPoint { get; set; } = new Uri(DEFAULT_ENDPOINT);
 
    /// <summary>
    /// OpenAI API Key.
    /// </summary>
-   public string ApiKey { get; set; } = default!;
+   public string? ApiKey { get; set; } = default!;
 
    /// <summary>
    /// The default model to use if no model has been specified in the request.

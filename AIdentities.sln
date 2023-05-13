@@ -46,9 +46,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Deploy", "Deploy", "{743425
 		deploy\build-win.bat = deploy\build-win.bat
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BrainWittle", "BrainWittle", "{7DA9A28F-97DF-428A-8037-F6F70E4783B9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "BrainButler", "BrainButler", "{7DA9A28F-97DF-428A-8037-F6F70E4783B9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.BrainWittle", "src\Plugins\AIdentities.BrainWittle\AIdentities.BrainWittle.csproj", "{1878DF73-9049-40BC-94F2-D40FCBCDC50D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.BrainButler", "src\Plugins\AIdentities.BrainButler\AIdentities.BrainButler.csproj", "{1878DF73-9049-40BC-94F2-D40FCBCDC50D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Connectors", "Connectors", "{7614D485-300B-4D1F-B9F8-70D0B753F7BC}"
 EndProject

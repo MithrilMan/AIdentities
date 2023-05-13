@@ -1,11 +1,13 @@
 ﻿@page "/settings"
 
-<MudTabs Outlined="true" Position="Position.Start" Rounded="true" Border="true"
-         ApplyEffectsToContainer="true" Class="flex-grow-1" PanelClass="pa-3">
+<MudTabs Class="flex-h-fix flex-grow-1" PanelClass="d-flex flex-column flex-h-fix flex-grow-1" TabPanelClass="px-0" MinimumTabWidth="120px"
+         Elevation="4" Rounded="false" Color="@Color.Primary" SliderColor="Color.Tertiary"
+         KeepPanelsAlive="true">
    <MudTabPanel Text="Plugins">
-      <PluginsSettings />
+      <PluginManagementTab />
    </MudTabPanel>
-   <MudTabPanel Text="Connectors">
-      <ConnectorsSettings />
-   </MudTabPanel>
+   @foreach (var pluginSettings in PluginSettingRegistration)
+   {
+      <PluginSettingsTab PluginSettingRegistration="pluginSettings" />
+   }
 </MudTabs>

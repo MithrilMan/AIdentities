@@ -12,7 +12,7 @@ namespace AIdentities.Shared.Plugins;
 public abstract class BaseDebuggableModule<TPluginEntry> : IDebuggableModule
    where TPluginEntry : IPluginEntry, new()
 {
-   public abstract string Name { get; }
+   public virtual string Name => GetType().Namespace!;
    public virtual string Description { get; } = $"Debuggable module for {typeof(TPluginEntry).Name}";
    public virtual string Version { get; } = "0.0.1-debuggableModule";
    public virtual string Author { get; } = "Debuggable Module Creator";

@@ -35,6 +35,11 @@ public partial class Chat
       /// </summary>
       public IConversationalConnector? Connector { get; set; }
 
+      /// <summary>
+      /// The cancellation token source used to cancel the message generation.
+      /// </summary>
+      public CancellationTokenSource MessageGenerationCancellationTokenSource { get; set; } = new CancellationTokenSource();
+
       public void Initialize(Func<IEnumerable<ChatMessage>, ValueTask<IEnumerable<ChatMessage>>> messageFilter)
       {
          MessageSearchText = null;
