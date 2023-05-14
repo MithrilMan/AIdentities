@@ -1,7 +1,7 @@
 {
    "executable": "AIdentities.UI",
    "splashscreen": {
-      "imageFile": ""
+      "imageFile": "wwwroot/splash.ico"
    },
    "name": "AIdentities.UI",
    "author": "",
@@ -17,6 +17,9 @@
       "compression": "maximum",
       "directories": {
          "output": "../../../../../bin/Desktop"
+      },
+      "win": {
+         "icon": "../../../build/wwwroot/splash.ico"
       },
       "extraResources": [
          {
