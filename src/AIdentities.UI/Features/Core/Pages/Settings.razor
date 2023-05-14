@@ -11,3 +11,10 @@
       <PluginSettingsTab PluginSettingRegistration="pluginSettings" />
    }
 </MudTabs>
+
+@code {
+   /// <summary>
+   /// The list of all the Plugin Settings section registered by plugins.
+   /// </summary>
+   [Inject] IEnumerable<PluginSettingRegistration> PluginSettingRegistration { get; set; } = null!;
+}
