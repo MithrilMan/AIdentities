@@ -6,15 +6,20 @@ namespace AIdentities.UI.Features.Core.Pages;
 public partial class MainLayout
 {
    [Inject] private ILocalStorageService LocalStorageService { get; set; } = default!;
+   [Inject] private IThemeManager ThemeManager { get; set; } = default!;
 
    private MudThemeProvider _mudThemeProvider = default!;
-   private MudTheme _theme = default!;
 
    protected override void OnInitialized()
    {
       base.OnInitialized();
-      _theme = CreateTheme();
-      // _theme = new MudTheme();
+      ThemeManager.ThemeChanged += OnThemeChanged;
+      ThemeManager.SetTheme(CreateTheme());
+   }
+
+   private async void OnThemeChanged(object? sender, EventArgs e)
+   {
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
    }
 
    protected override async Task OnAfterRenderAsync(bool firstRender)

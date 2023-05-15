@@ -1,7 +1,8 @@
-﻿namespace AIdentities.Shared.Plugins.Connectors.Conversational;
+﻿namespace AIdentities.Shared.Plugins.Connectors.Completion;
 
-public class ConversationalStreamedResponse : IConversationalStreamedResponse
+public class CompletionStreamedResponse : ICompletionStreamedResponse
 {
+   public string? ModelId { get; init; }
    public string? GeneratedMessage { get; init; }
    public int? PromptTokens { get; set; }
    public int? CumulativeCompletionTokens { get; init; }

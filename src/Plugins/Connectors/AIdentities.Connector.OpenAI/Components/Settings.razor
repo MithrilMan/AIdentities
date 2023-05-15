@@ -6,13 +6,19 @@
          <MudSwitchM3 @bind-Checked="_state.Enabled" Label="Enabled" For="()=>_state.Enabled" />
       </MudCard>
       <MudCard>
-         <MudTextField @bind-Value="_state.ChatEndPoint" Label="Chat Completion Endpoint" Variant="Variant.Text" For="()=>_state.ChatEndPoint" />
+         <MudTextField @bind-Value="_state.ChatEndPoint" Label="Chat Endpoint" Variant="Variant.Text" For="()=>_state.ChatEndPoint" />
+      </MudCard>
+      <MudCard>
+         <MudTextField @bind-Value="_state.DefaultChatModel" Label="Default Model" Variant="Variant.Text" For="()=>_state.DefaultChatModel" />
+      </MudCard>
+      <MudCard>
+         <MudTextField @bind-Value="_state.CompletionEndPoint" Label="Completion Endpoint" Variant="Variant.Text" For="()=>_state.CompletionEndPoint" />
+      </MudCard>
+      <MudCard>
+         <MudTextField @bind-Value="_state.DefaultCompletionModel" Label="Default Model" Variant="Variant.Text" For="()=>_state.DefaultCompletionModel" />
       </MudCard>
       <MudCard>
          <MudPasswordField @bind-Value="_state.ApiKey" Label="API Key" Variant="Variant.Text" For="()=>_state.ApiKey" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.DefaultModel" Label="Default Model" Variant="Variant.Text" For="()=>_state.DefaultModel" />
       </MudCard>
       <MudCard>
          <MudNumericField @bind-Value="_state.Timeout" Label="Timeout" Variant="Variant.Text" For="()=>_state.Timeout" />

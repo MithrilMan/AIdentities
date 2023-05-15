@@ -19,5 +19,6 @@ public static class DebuggableModulesRegistration
       services.AddSingleton<IDebuggableModule, BooruAIdentityImporter.DebuggableModule>();
       services.AddSingleton<IDebuggableModule, Connector.OpenAI.DebuggableModule>();
       services.AddSingleton<IDebuggableModule, Connector.TextGeneration.DebuggableModule>();
+      services.AddSingleton<IDebuggableModule, BrainButler.DebuggableModule>();
    }
 }

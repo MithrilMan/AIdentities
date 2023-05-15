@@ -18,9 +18,10 @@ public partial class Settings : BasePluginSettingsTab<OpenAISettings, Settings.S
       return Task.FromResult(new OpenAISettings()
       {
          ApiKey = _state.ApiKey,
-         DefaultModel = _state.DefaultModel ?? OpenAISettings.DEFAULT_MODEL,
+         DefaultChatModel = _state.DefaultChatModel ?? OpenAISettings.DEFAULT_CHAT_MODEL,
          Enabled = _state.Enabled ?? OpenAISettings.DEFAULT_ENABLED,
          ChatEndPoint = new Uri(_state.ChatEndPoint!),
+         CompletionEndPoint = new Uri(_state.CompletionEndPoint!),
          Timeout = _state.Timeout ?? OpenAISettings.DEFAULT_TIMEOUT
       });
    }

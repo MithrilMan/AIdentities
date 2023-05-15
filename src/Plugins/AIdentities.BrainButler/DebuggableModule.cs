@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
-namespace AIdentities.BrainWittle;
+namespace AIdentities.BrainButler;
 
 public sealed class DebuggableModule : BaseDebuggableModule<PluginEntry>
 {

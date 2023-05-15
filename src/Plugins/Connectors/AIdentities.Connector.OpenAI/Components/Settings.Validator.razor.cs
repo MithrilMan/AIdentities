@@ -14,9 +14,13 @@ public partial class Settings
             .Must(BeAValidUri)
             .WithMessage("You must provide a valid URI.");
 
+         RuleFor(x => x.CompletionEndPoint)
+            .Must(BeAValidUri)
+            .WithMessage("You must provide a valid URI.");
+
          RuleFor(x => x.ApiKey).NotEmpty();
 
-         RuleFor(x => x.DefaultModel).NotEmpty();
+         RuleFor(x => x.DefaultChatModel).NotEmpty();
 
          RuleFor(x => x.Timeout).NotNull();
       }

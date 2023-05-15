@@ -20,6 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AIdentities.Shared\AIdentities.Shared.csproj" />
+    <ProjectReference Include="..\Plugins\AIdentities.BrainButler\AIdentities.BrainButler.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Plugins\AIdentities.Chat\AIdentities.Chat.csproj" />

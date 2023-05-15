@@ -4,20 +4,22 @@ using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Services;
+using AIdentities.Shared.Plugins.Connectors.Completion;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Connector.OpenAI.Services;
-public class OpenAIConnector : IConversationalConnector, IDisposable
+
+public class OpenAICompletionConnector : ICompletionConnector, IDisposable
 {
-   const string NAME = nameof(OpenAIConnector);
-   const string DESCRIPTION = "OpenAI Chat Connector that uses ChatCompletion API.";
+   const string NAME = nameof(OpenAICompletionConnector);
+   const string DESCRIPTION = "OpenAI Completion Connector that uses Completion API.";
    /// <summary>
    /// marker of the starting streamed data.
    /// </summary>
    const string STREAM_DATA_MARKER = "data: ";
    static readonly int _streamDataMarkerLength = STREAM_DATA_MARKER.Length;
 
-   readonly ILogger<OpenAIConnector> _logger;
+   readonly ILogger<OpenAICompletionConnector> _logger;
    readonly IPluginSettingsManager _settingsManager;
 
    public bool Enabled => _settingsManager.Get<OpenAISettings>().Enabled;
@@ -25,14 +27,13 @@ public class OpenAIConnector : IConversationalConnector, IDisposable
    public string Description => DESCRIPTION;
    public IFeatureCollection Features => new FeatureCollection();
 
-   protected Uri ChatEndPoint => _settingsManager.Get<OpenAISettings>().ChatEndPoint;
-
-   protected string DefaultModel => _settingsManager.Get<OpenAISettings>().DefaultModel;
+   protected Uri EndPoint => _settingsManager.Get<OpenAISettings>().CompletionEndPoint;
+   protected string DefaultModel => _settingsManager.Get<OpenAISettings>().DefaultCompletionModel;
 
    private HttpClient _client = default!;
    private readonly JsonSerializerOptions _serializerOptions;
 
-   public OpenAIConnector(ILogger<OpenAIConnector> logger, IPluginSettingsManager settingsManager)
+   public OpenAICompletionConnector(ILogger<OpenAICompletionConnector> logger, IPluginSettingsManager settingsManager)
    {
       _logger = logger;
       _settingsManager = settingsManager;
@@ -73,30 +74,58 @@ public class OpenAIConnector : IConversationalConnector, IDisposable
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request)
+   /// <summary>
+   /// Builds a <see cref="CompletionRequest"/> from a <see cref="ICompletionRequest"/>.
+   /// </summary>
+   /// <param name="request">The <see cref="CompletionRequest"/> to build from.</param>
+   /// <returns>The built <see cref="CompletionRequest"/>.</returns>
+   private CreateCompletionRequest BuildCreateCompletionRequest(ICompletionRequest request, bool requireStream) => new CreateCompletionRequest
    {
-      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
+      FrequencyPenalty = request.RepetitionPenalityRange,
+      MaxTokens = request.MaxGeneratedTokens,
+      Prompt = request.Prompt,
+      Suffix = request.Suffix,
+      Model = request.ModelId ?? DefaultModel,
+      PresencePenalty = request.RepetitionPenality,
+      N = request.CompletionResults,
+      Stop = request.StopSequences,
+      Stream = requireStream,
+      Temperature = request.Temperature,
+      TopP = request.TopPSamplings,
+      User = request.UserId,
+   };
 
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
+   public void Dispose()
+   {
+      _settingsManager.OnSettingsUpdated -= OnSettingsUpdated;
+   }
+
+   public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request)
+   {
+      var apiRequest = BuildCreateCompletionRequest(request, false);
+
+      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
       var sw = Stopwatch.StartNew();
 
-      using HttpResponseMessage response = await _client.PostAsJsonAsync(ChatEndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
+      using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
 
       _logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
 
       if (response.IsSuccessStatusCode)
       {
          _logger.LogDebug("Request succeeded: {ResponseContent}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
-         var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
+         var responseData = await response.Content.ReadFromJsonAsync<CreateCompletionResponse>().ConfigureAwait(false);
 
          sw.Stop();
-         return new ConversationalResponse
+         return new CompletionResponse
          {
-            GeneratedMessage = responseData?.Choices.FirstOrDefault()?.Message?.Content,
+            ModelId = responseData?.Model,
+            GeneratedMessage = responseData?.Choices.FirstOrDefault()?.Text,
             PromptTokens = responseData?.Usage?.PromptTokens,
             TotalTokens = responseData?.Usage?.TotalTokens,
             CompletionTokens = responseData?.Usage?.CompletionTokens,
-            ResponseTime = sw.Elapsed
+            ResponseTime = sw.Elapsed,
+            FinishReason = responseData?.Choices?.FirstOrDefault()?.FinishReason
          };
       }
       else
@@ -106,14 +135,14 @@ public class OpenAIConnector : IConversationalConnector, IDisposable
       }
    }
 
-   public async IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public async IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, true);
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
+      CreateCompletionRequest apiRequest = BuildCreateCompletionRequest(request, true);
+      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
 
       var sw = Stopwatch.StartNew();
 
-      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, ChatEndPoint)
+      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
       {
          Content = JsonContent.Create(apiRequest, null, _serializerOptions)
       };
@@ -136,10 +165,10 @@ public class OpenAIConnector : IConversationalConnector, IDisposable
 
          if (line == "[DONE]") break;
 
-         ChatCompletionResponse? streamedResponse = null;
+         CreateCompletionResponse? streamedResponse = null;
          try
          {
-            streamedResponse = JsonSerializer.Deserialize<ChatCompletionResponse>(line);
+            streamedResponse = JsonSerializer.Deserialize<CreateCompletionResponse>(line);
          }
          catch (Exception)
          {
@@ -153,53 +182,17 @@ public class OpenAIConnector : IConversationalConnector, IDisposable
 
          if (streamedResponse is not null)
          {
-            yield return new ConversationalStreamedResponse
+            yield return new CompletionStreamedResponse
             {
-               GeneratedMessage = streamedResponse?.Choices.FirstOrDefault()?.Message?.Content,
+               ModelId = streamedResponse?.Model,
+               GeneratedMessage = streamedResponse?.Choices.FirstOrDefault()?.Text,
                PromptTokens = streamedResponse?.Usage?.PromptTokens,
                CumulativeTotalTokens = streamedResponse?.Usage?.TotalTokens,
                CumulativeCompletionTokens = streamedResponse?.Usage?.CompletionTokens,
-               CumulativeResponseTime = sw.Elapsed
+               CumulativeResponseTime = sw.Elapsed,
+               FinishReason = streamedResponse?.Choices.FirstOrDefault()?.FinishReason
             };
          }
       }
-   }
-
-   /// <summary>
-   /// Builds a <see cref="ChatCompletionRequest"/> from a <see cref="ChatApiRequest"/>.
-   /// </summary>
-   /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
-   /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream) => new ChatCompletionRequest
-   {
-      FrequencyPenalty = request.RepetitionPenalityRange,
-      MaxTokens = request.MaxGeneratedTokens,
-      Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
-      {
-         Content = m.Content,
-         Name = m.Name,
-         Role = MapRole(m.Role)
-      }).ToList(),
-      Model = request.ModelId ?? DefaultModel,
-      PresencePenalty = request.RepetitionPenality,
-      N = request.CompletionResults,
-      Stop = request.StopSequences,
-      Stream = requireStream,
-      Temperature = request.Temperature,
-      TopP = request.TopPSamplings,
-      User = request.UserId,
-   };
-
-   private static ChatCompletionRoleEnum? MapRole(ConversationalRole role) => role switch
-   {
-      ConversationalRole.User => ChatCompletionRoleEnum.User,
-      ConversationalRole.Assistant => ChatCompletionRoleEnum.Assistant,
-      ConversationalRole.System => ChatCompletionRoleEnum.System,
-      _ => throw new NotImplementedException()
-   };
-
-   public void Dispose()
-   {
-      _settingsManager.OnSettingsUpdated -= OnSettingsUpdated;
    }
 }

@@ -1,6 +1,6 @@
 namespace AIdentities.Connector.OpenAI.Models.API;
 
-public record ChatCompletionResponse
+public record CreateCompletionResponse
 {
    /// <summary>
    /// Gets or Sets Id
@@ -35,11 +35,11 @@ public record ChatCompletionResponse
    /// </summary>
    [Required]
    [JsonPropertyName("choices")]
-   public List<ChatCompletionResponseChoices> Choices { get; set; } = new();
+   public List<CreateCompletionResponseChoices> Choices { get; set; } = new();
 
    /// <summary>
    /// Gets or Sets Usage
    /// </summary>
    [JsonPropertyName("usage")]
-   public ChatCompletionResponseUsage? Usage { get; set; }
+   public CreateCompletionResponseUsage? Usage { get; set; }
 }

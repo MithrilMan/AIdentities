@@ -1,8 +1,9 @@
-﻿namespace AIdentities.Shared.Plugins.Connectors.Conversational;
-public class ConversationalRequest : IConversationalRequest
+﻿namespace AIdentities.Shared.Plugins.Connectors.Completion;
+public class CompletionRequest : ICompletionRequest
 {
    public string? ModelId { get; init; }
-   public IEnumerable<IConversationalMessage> Messages { get; init; } = new List<ConversationalMessage>();
+   public string Prompt { get; init; } = "";
+   public string? Suffix { get; init; }
    public int? CompletionResults { get; init; }
    public IList<string>? StopSequences { get; init; }
    public string? UserId { get; init; }

@@ -3,7 +3,7 @@ namespace AIdentities.Connector.OpenAI.Models.API;
 /// <summary>
 /// 
 /// </summary>
-public record ChatCompletionResponseUsage
+public record CreateCompletionResponseUsage
 {
    /// <summary>
    /// Gets or Sets PromptTokens

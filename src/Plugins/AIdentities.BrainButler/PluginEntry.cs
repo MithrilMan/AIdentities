@@ -1,11 +1,19 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
-namespace AIdentities.BrainWittle;
+namespace AIdentities.BrainButler;
 public class PluginEntry : BasePluginEntry
 {
    public override void RegisterServices(IServiceCollection services)
    {
+      services.AddScoped<IBrainButlerCommandManager, BrainButlerCommandManager>();
+      services.AddScoped<IPromptGenerator, PromptGenerator>();
 
+      RegisterAvailableCommands(services);
+   }
+
+   private void RegisterAvailableCommands(IServiceCollection services)
+   {
+      services
+         .AddScoped<IBrainButlerCommand, ChangeTheme>();
    }
 }

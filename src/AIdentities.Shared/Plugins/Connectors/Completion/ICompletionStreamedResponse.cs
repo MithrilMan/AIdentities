@@ -1,12 +1,17 @@
-﻿namespace AIdentities.Shared.Plugins.Connectors.Conversational;
+﻿namespace AIdentities.Shared.Plugins.Connectors.Completion;
 
 /// <summary>
 /// A response from a conversational endpoint.
 /// The only expected result from all the required property is <see cref="GeneratedMessage"/>.
-/// Other properties are optional and depend on the <see cref="IConversationalConnector"/> capabilities.
+/// Other properties are optional and depend on the <see cref="ICompletionConnector"/> capabilities.
 /// </summary>
-public interface IConversationalStreamedResponse
+public interface ICompletionStreamedResponse
 {
+   /// <summary>
+   /// The model id used to generate the response.
+   /// </summary>
+   string? ModelId { get; init; }
+
    /// <summary>
    /// The generated response.
    /// This is the only expected property that should be filled by any Conversational Connector.

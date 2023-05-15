@@ -55,6 +55,7 @@ public static class DependencyInjection
       services.AddMudMarkdownServices();
       services.AddBlazoredLocalStorage();
       services.AddHotKeys2();
+      services.AddScoped<IThemeManager, ThemeManager>();
 
       services.AddScoped<IPageDefinitionProvider, PageDefinitionProvider>();
       services.AddScoped<INotificationService, NotificationService>();
