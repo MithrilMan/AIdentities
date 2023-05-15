@@ -43,5 +43,5 @@ public record ChatMessage : Entity
    /// <summary>
    /// Custom user defined data that can be attached to a message.
    /// </summary>
-   public Dictionary<string, string> Metadata { get; set; } = new();
+   public Dictionary<string, object> Metadata { get; set; } = new();
 }

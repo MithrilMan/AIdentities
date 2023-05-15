@@ -56,10 +56,24 @@ public class PluginStorage : IPluginStorage
       return await File.ReadAllTextAsync(path).ConfigureAwait(false);
    }
 
+   public async ValueTask<string[]?> ReadAllLinesAsync(string fileName)
+   {
+      var path = Path.Combine(_pluginStorageRoot, fileName);
+      if (!File.Exists(path)) return null;
+
+      return await File.ReadAllLinesAsync(path).ConfigureAwait(false);
+   }
+
    public async ValueTask WriteAsync(string fileName, string? content)
    {
       var path = Path.Combine(_pluginStorageRoot, fileName);
       await File.WriteAllTextAsync(path, content).ConfigureAwait(false);
+   }
+
+   public async ValueTask WriteAllLinesAsync(string fileName, IEnumerable<string> lines)
+   {
+      var path = Path.Combine(_pluginStorageRoot, fileName);
+      await File.WriteAllLinesAsync(path, lines).ConfigureAwait(false);
    }
 
    public async ValueTask AppendAsync(string fileName, string? content)

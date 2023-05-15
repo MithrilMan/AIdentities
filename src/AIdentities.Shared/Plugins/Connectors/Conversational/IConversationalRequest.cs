@@ -129,10 +129,4 @@ public interface IConversationalRequest
    /// values like -100 or 100 should result in a ban or exclusive selection of the relevant token. 
    /// </summary>
    public object? LogitBias { get; init; }
-
-   /// <summary>
-   /// A unique identifier representing your end-user, which can help OpenAI to monitor and detect abuse.
-   /// [Learn more](/docs/guides/safety-best-practices/end-user-ids). 
-   /// </summary>
-   public string? User { get; init; }
 }

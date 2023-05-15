@@ -116,38 +116,47 @@ public class ChatStorage : IChatStorage
       return true;
    }
 
+   public static void RemoveLineFromFile(string filePath, int lineIndexToRemove)
+   {
+      string[] lines = File.ReadAllLines(filePath);
+
+      if (lineIndexToRemove < 0 || lineIndexToRemove >= lines.Length)
+      {
+         throw new ArgumentOutOfRangeException(nameof(lineIndexToRemove));
+      }
+   }
+
    public async ValueTask<bool> DeleteMessageAsync(ConversationMetadata conversationMetadata, ChatMessage message)
    {
       var fileName = $"{conversationMetadata.ConversationId}{CONVERSATION_POSTFIX}";
       conversationMetadata.UpdatedAt = DateTimeOffset.UtcNow;
 
       var messagesFileName = GetConversationMessagesFileName(conversationMetadata.ConversationId);
-      var messages = await _pluginStorage.ReadAsync(messagesFileName).ConfigureAwait(false);
 
-      var newMessages = new StringBuilder();
+      var originalMessages = (await _pluginStorage.ReadAllLinesAsync(messagesFileName).ConfigureAwait(false))?.ToList();
+      if (originalMessages is not { Count: > 0 }) return false;
+
       var textToFind = message.Id.ToString();
-      int messageDeleted = 0;
-      foreach (var line in messages!.Split('\n'))
-      {
-         if (line.Contains(textToFind))
-         {
-            messageDeleted++;
-            continue;
-         }
-         newMessages.AppendLine(line);
-      }
+      // compact the file removing the found line and empty lines
+      var remainingLines = originalMessages.Where(line => !line.Contains(textToFind) && !string.IsNullOrWhiteSpace(line));
 
-      if (messageDeleted > 0)
-      {
-         //we found the message id to delete, we rewrite whole file (we need a better storage, maybe sqlite)
-         await _pluginStorage.WriteAsync(messagesFileName, newMessages.ToString()).ConfigureAwait(false);
+      await _pluginStorage.WriteAllLinesAsync(
+         messagesFileName,
+         remainingLines
+         ).ConfigureAwait(false);
 
-         //update the metadata too
-         conversationMetadata.MessageCount -= messageDeleted;
+      //we rewrite whole file (we need a better storage, maybe sqlite)
+      var messageCount = remainingLines.Count();
+      int deletedMessage = conversationMetadata.MessageCount - messageCount;
+
+      //se il numero di messaggi non è uguale, aggiorniamo il file di metadati
+      if (deletedMessage != 0)
+      {
+         conversationMetadata.MessageCount = messageCount;
          await _pluginStorage.WriteAsJsonAsync(fileName, conversationMetadata).ConfigureAwait(false);
       }
 
-      return messageDeleted > 0;
+      return deletedMessage > 0;
    }
 
    public ValueTask StartConversationAsync(Conversation conversation)

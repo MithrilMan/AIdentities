@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
+using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Http.Features;
 
@@ -20,16 +21,15 @@ public class OpenAIConnector : IConversationalConnector, IDisposable
    readonly IPluginSettingsManager _settingsManager;
 
    public bool Enabled => _settingsManager.Get<OpenAISettings>().Enabled;
-   public Uri EndPoint => _settingsManager.Get<OpenAISettings>().EndPoint;
-   public int Timeout => _settingsManager.Get<OpenAISettings>().Timeout;
-   public string? ApiKey => _settingsManager.Get<OpenAISettings>().ApiKey;
-   public string DefaultModel => _settingsManager.Get<OpenAISettings>().DefaultModel;
-
    public string Name => NAME;
    public string Description => DESCRIPTION;
    public IFeatureCollection Features => new FeatureCollection();
 
-   private HttpClient _client;
+   protected Uri ChatEndPoint => _settingsManager.Get<OpenAISettings>().ChatEndPoint;
+
+   protected string DefaultModel => _settingsManager.Get<OpenAISettings>().DefaultModel;
+
+   private HttpClient _client = default!;
    private readonly JsonSerializerOptions _serializerOptions;
 
    public OpenAIConnector(ILogger<OpenAIConnector> logger, IPluginSettingsManager settingsManager)
@@ -37,24 +37,37 @@ public class OpenAIConnector : IConversationalConnector, IDisposable
       _logger = logger;
       _settingsManager = settingsManager;
 
-      _client = CreateHttpClient();
       _serializerOptions = new JsonSerializerOptions()
       {
          DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
       };
 
       _settingsManager.OnSettingsUpdated += OnSettingsUpdated;
+      ApplySettings();
    }
 
-   // if the settings are updated, we need to update the client
+   /// <summary>
+   /// If the settings are updated, we need to update the client.
+   /// </summary>
+   /// <param name="sender"></param>
+   /// <param name="settingType"></param>
    private void OnSettingsUpdated(object? sender, Type settingType)
    {
       if (settingType == typeof(OpenAISettings))
       {
-         // we can't modify a HttpClient once it's created, so we need to dispose it and create a new one
-         _client?.Dispose();
-         _client = CreateHttpClient();
+         ApplySettings();
       }
+   }
+
+   private void ApplySettings()
+   {
+      // we can't modify a HttpClient once it's created, so we need to dispose it and create a new one
+      _client?.Dispose();
+      _client = new HttpClient
+      {
+         Timeout = TimeSpan.FromMilliseconds(_settingsManager.Get<OpenAISettings>().Timeout)
+      };
+      _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _settingsManager.Get<OpenAISettings>().ApiKey);
    }
 
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
@@ -67,7 +80,7 @@ public class OpenAIConnector : IConversationalConnector, IDisposable
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
       var sw = Stopwatch.StartNew();
 
-      using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
+      using HttpResponseMessage response = await _client.PostAsJsonAsync(ChatEndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
 
       _logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
 
@@ -100,7 +113,7 @@ public class OpenAIConnector : IConversationalConnector, IDisposable
 
       var sw = Stopwatch.StartNew();
 
-      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
+      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, ChatEndPoint)
       {
          Content = JsonContent.Create(apiRequest, null, _serializerOptions)
       };
@@ -150,18 +163,6 @@ public class OpenAIConnector : IConversationalConnector, IDisposable
             };
          }
       }
-   }
-
-   private HttpClient CreateHttpClient()
-   {
-      var client = new HttpClient
-      {
-         Timeout = TimeSpan.FromMilliseconds(Timeout)
-      };
-
-      client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", ApiKey);
-
-      return client;
    }
 
    /// <summary>

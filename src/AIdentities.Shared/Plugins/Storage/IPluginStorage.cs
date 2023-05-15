@@ -23,11 +23,25 @@ public interface IPluginStorage
    ValueTask<string?> ReadAsync(string fileName);
 
    /// <summary>
+   /// Read the content of a file from the plugin's folder.
+   /// </summary>
+   /// <param name="fileName">The name of the file to read.</param>
+   /// <returns>The content of the file.</returns>
+   ValueTask<string[]?> ReadAllLinesAsync(string fileName);
+
+   /// <summary>
    /// Store the content of a file in the plugin's folder.
    /// </summary>
    /// <param name="fileName">The name of the file to store.</param>
    /// <param name="content">The content of the file to store.</param>
    ValueTask WriteAsync(string fileName, string? content);
+
+   /// <summary>
+   /// Store lines of text in a file in the plugin's folder.
+   /// </summary>
+   /// <param name="fileName">The name of the file to store.</param>
+   /// <param name="lines">The lines to store.</param>
+   ValueTask WriteAllLinesAsync(string fileName, IEnumerable<string> lines);
 
    /// <summary>
    /// Append the content of a file in the plugin's folder.

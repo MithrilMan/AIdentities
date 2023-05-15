@@ -18,5 +18,7 @@ public class PluginEntry : BasePluginEntry
       RegisterAIdentityFeature<AIdentityChatFeature, TabAIdentityFeatureChat>("Chat");
 
       RegisterAIdentitySafetyChecker<ChatAIdentitySafetyChecker>();
+
+      RegisterPluginSettings<ChatSettings, Settings>("Chat");
    }
 }

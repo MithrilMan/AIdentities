@@ -1,5 +1,5 @@
 ﻿namespace AIdentities.Shared.Plugins.Connectors.Completion;
-public interface ICompletionConnector : IEndpointConnector
+public interface ICompletionConnector : IConnector
 {
 
 }

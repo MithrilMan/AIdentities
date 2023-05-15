@@ -1,4 +1,4 @@
-﻿using AIdentities.Connector.OpenAI.Services;
+﻿using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Components;
 using MudBlazor;
 
@@ -20,7 +20,7 @@ public partial class Settings : BasePluginSettingsTab<OpenAISettings, Settings.S
          ApiKey = _state.ApiKey,
          DefaultModel = _state.DefaultModel ?? OpenAISettings.DEFAULT_MODEL,
          Enabled = _state.Enabled ?? OpenAISettings.DEFAULT_ENABLED,
-         EndPoint = new Uri(_state.EndPoint!),
+         ChatEndPoint = new Uri(_state.ChatEndPoint!),
          Timeout = _state.Timeout ?? OpenAISettings.DEFAULT_TIMEOUT
       });
    }

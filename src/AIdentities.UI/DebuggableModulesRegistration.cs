@@ -18,5 +18,6 @@ public static class DebuggableModulesRegistration
       services.AddSingleton<IDebuggableModule, Chat.DebuggableModule>();
       services.AddSingleton<IDebuggableModule, BooruAIdentityImporter.DebuggableModule>();
       services.AddSingleton<IDebuggableModule, Connector.OpenAI.DebuggableModule>();
+      services.AddSingleton<IDebuggableModule, Connector.TextGeneration.DebuggableModule>();
    }
 }

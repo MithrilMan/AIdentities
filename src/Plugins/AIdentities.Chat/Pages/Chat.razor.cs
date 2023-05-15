@@ -1,4 +1,4 @@
-﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
+﻿using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Toolbelt.Blazor.HotKeys2;
 
@@ -19,6 +19,7 @@ public partial class Chat : AppPage<Chat>
    [Inject] private IScrollService ScrollService { get; set; } = null!;
    [Inject] private IChatPromptGenerator ChatPromptGenerator { get; set; } = null!;
    [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
+   [Inject] private IPluginSettingsManager PluginSettingsManager { get; set; } = null!;
 
 
    MudTextFieldExtended<string?> _messageTextField = default!;
@@ -27,7 +28,9 @@ public partial class Chat : AppPage<Chat>
    {
       base.OnInitialized();
       _state.Initialize(Filter);
-      _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled);
+
+      var settings = PluginSettingsManager.Get<ChatSettings>();
+      _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled && c.Name == settings.DefaultConnector);
    }
 
    protected override void ConfigureHotKeys(HotKeysContext hotKeysContext)
@@ -131,10 +134,12 @@ public partial class Chat : AppPage<Chat>
             IsGenerated = true,
             AIDentityId = _state.SelectedConversation?.AIdentityId
          };
+         _state.StreamedResponse.Metadata.Add("Request", request);
 
          var completions = _state.Connector.RequestChatCompletionAsStreamAsync(request, _state.MessageGenerationCancellationTokenSource.Token)
             .WithCancellation(_state.MessageGenerationCancellationTokenSource.Token)
             .ConfigureAwait(false);
+
          await foreach (var completion in completions)
          {
             _state.StreamedResponse.Message += completion.GeneratedMessage;
@@ -189,11 +194,9 @@ public partial class Chat : AppPage<Chat>
       {
          conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation.ConversationId).ConfigureAwait(false);
          ChatPromptGenerator.InitializeConversation(conversation);
-         if (conversation.Messages?.LastOrDefault()?.IsGenerated == false)
-         {
-            // if the last message is not generated, we need to generate a reply so we enable the "resend" button
-            _state.HasMessageGenerationFailed = true;
-         }
+
+         // if the last message is not generated, we need to generate a reply so we enable the "resend" button
+         _state.HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsGenerated == false;
       }
       catch (Exception ex)
       {

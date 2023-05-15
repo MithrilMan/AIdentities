@@ -1,10 +1,10 @@
-﻿namespace AIdentities.Connector.OpenAI.Services;
+﻿namespace AIdentities.Connector.OpenAI.Models;
 
 public class OpenAISettings : IPluginSettings
 {
    public const bool DEFAULT_ENABLED = true;
    public const string DEFAULT_MODEL = "gpt-3.5-turbo";
-   public const string DEFAULT_ENDPOINT = "https://api.openai.com/v1/chat/completions";
+   public const string DEFAULT_CHAT_ENDPOINT = "https://api.openai.com/v1/chat/completions";
    public const int DEFAULT_TIMEOUT = 30000;
 
    /// <summary>
@@ -15,7 +15,7 @@ public class OpenAISettings : IPluginSettings
    /// <summary>
    /// OpenAI API Endpoint.
    /// </summary>
-   public Uri EndPoint { get; set; } = new Uri(DEFAULT_ENDPOINT);
+   public Uri ChatEndPoint { get; set; } = new Uri(DEFAULT_CHAT_ENDPOINT);
 
    /// <summary>
    /// OpenAI API Key.

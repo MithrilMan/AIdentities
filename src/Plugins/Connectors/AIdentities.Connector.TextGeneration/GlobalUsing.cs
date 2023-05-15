@@ -1,0 +1,13 @@
+﻿global using System.ComponentModel.DataAnnotations;
+global using System.Text.Json;
+global using System.Text.Json.Serialization;
+global using AIdentities.Connector.TextGeneration.Components;
+global using AIdentities.Connector.TextGeneration.Models;
+global using AIdentities.Connector.TextGeneration.Models.API;
+global using AIdentities.Connector.TextGeneration.Services;
+global using AIdentities.Shared.Features.Core.Abstracts;
+global using AIdentities.Shared.Plugins;
+global using AIdentities.Shared.Plugins.Connectors.Conversational;
+global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.Hosting;
+global using Microsoft.Extensions.Logging;

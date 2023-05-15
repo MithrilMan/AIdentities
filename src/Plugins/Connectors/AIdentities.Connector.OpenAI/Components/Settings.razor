@@ -6,7 +6,7 @@
          <MudSwitchM3 @bind-Checked="_state.Enabled" Label="Enabled" For="()=>_state.Enabled" />
       </MudCard>
       <MudCard>
-         <MudTextField @bind-Value="_state.EndPoint" Label="Endpoint" Variant="Variant.Text" For="()=>_state.EndPoint" />
+         <MudTextField @bind-Value="_state.ChatEndPoint" Label="Chat Completion Endpoint" Variant="Variant.Text" For="()=>_state.ChatEndPoint" />
       </MudCard>
       <MudCard>
          <MudPasswordField @bind-Value="_state.ApiKey" Label="API Key" Variant="Variant.Text" For="()=>_state.ApiKey" />

@@ -1,4 +1,5 @@
 ﻿using AIdentities.Connector.OpenAI.Components;
+using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Connector.OpenAI.Services;
 
 namespace AIdentities.Connector.OpenAI;
@@ -9,6 +10,6 @@ public class PluginEntry : BasePluginEntry
    {
       services.AddScoped<IConversationalConnector, OpenAIConnector>();
 
-      RegisterPluginSettings<OpenAISettings, Settings>("OpenAi Settings");
+      RegisterPluginSettings<OpenAISettings, Settings>("OpenAi");
    }
 }

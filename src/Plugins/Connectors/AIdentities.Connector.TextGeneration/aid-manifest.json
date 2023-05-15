@@ -1,0 +1,14 @@
+{
+   "Signature": {
+      "Name": "TextGenerationConnector",
+      "Version": "1.0.0-alpha",
+      "Author": "Mithril Man",
+      "Entry": "lib/net7.0/AIdentities.Connector.TextGeneration.dll"
+   },
+   "Description": "Allows to connect to TextGeneration Conversational API",
+   "Website": "",
+   "Email": "",
+   "License": "MIT",
+   "LicenseUrl": "",
+   "Icon": "icon.png"
+}

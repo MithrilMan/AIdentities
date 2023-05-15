@@ -1,7 +1,7 @@
 ﻿using AIdentities.Shared.Validation;
 using FluentValidation;
 
-namespace AIdentities.Connector.OpenAI.Components;
+namespace AIdentities.Connector.TextGeneration.Components;
 public partial class Settings
 {
    class Validator : BaseValidator<State>
@@ -14,9 +14,10 @@ public partial class Settings
             .Must(BeAValidUri)
             .WithMessage("You must provide a valid URI.");
 
-         RuleFor(x => x.ApiKey).NotEmpty();
+         RuleFor(x => x.StreamedChatEndPoint)
+            .Must(BeAValidUri)
+            .WithMessage("You must provide a valid URI.");
 
-         RuleFor(x => x.DefaultModel).NotEmpty();
 
          RuleFor(x => x.Timeout).NotNull();
       }
