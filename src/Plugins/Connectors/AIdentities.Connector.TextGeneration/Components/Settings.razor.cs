@@ -18,8 +18,8 @@ public partial class Settings : BasePluginSettingsTab<TextGenerationSettings, Se
       {
          DefaultModel = _state.DefaultModel ?? TextGenerationSettings.DEFAULT_MODEL,
          Enabled = _state.Enabled ?? TextGenerationSettings.DEFAULT_ENABLED,
-         ChatEndPoint = new Uri(_state.ChatEndPoint!),
-         StreamedChatEndPoint = new Uri(_state.StreamedChatEndPoint!),
+         CompletionEndPoint = new Uri(_state.CompletionEndPoint!),
+         StreamedCompletionEndPoint = new Uri(_state.StreamedCompletionEndPoint!),
          Timeout = _state.Timeout ?? TextGenerationSettings.DEFAULT_TIMEOUT
       });
    }

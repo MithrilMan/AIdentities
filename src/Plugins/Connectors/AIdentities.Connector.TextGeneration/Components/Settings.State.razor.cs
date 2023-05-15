@@ -5,8 +5,8 @@ public partial class Settings
    public class State : BaseState
    {
       public bool? Enabled { get; set; }
-      public string? ChatEndPoint { get; set; } = default!;
-      public string? StreamedChatEndPoint { get; set; } = default!;
+      public string? CompletionEndPoint { get; set; } = default!;
+      public string? StreamedCompletionEndPoint { get; set; } = default!;
       public string? DefaultModel { get; set; }
       public int? Timeout { get; set; }
 
@@ -19,8 +19,8 @@ public partial class Settings
          pluginSettings ??= new();
          Enabled = pluginSettings.Enabled;
          DefaultModel = pluginSettings.DefaultModel;
-         ChatEndPoint = pluginSettings.ChatEndPoint?.ToString();
-         StreamedChatEndPoint = pluginSettings.StreamedChatEndPoint?.ToString();
+         CompletionEndPoint = pluginSettings.CompletionEndPoint?.ToString();
+         StreamedCompletionEndPoint = pluginSettings.StreamedCompletionEndPoint?.ToString();
          Timeout = pluginSettings.Timeout;
       }
    }

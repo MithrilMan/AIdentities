@@ -1,6 +1,6 @@
 ﻿namespace AIdentities.Connector.TextGeneration.Models.API;
 
-public class ChatCompletionRequest
+public class CompletionRequest
 {
    [JsonPropertyName("prompt")]
    public string Prompt { get; set; }
@@ -65,7 +65,7 @@ public class ChatCompletionRequest
    [JsonPropertyName("stopping_strings")]
    public IList<string> StoppingStrings { get; set; } = new List<string>();
 
-   public ChatCompletionRequest(string prompt, TextGenerationParameters parameters)
+   public CompletionRequest(string prompt, TextGenerationParameters parameters)
    {
       Prompt = prompt;
       //map parameters value to these properties

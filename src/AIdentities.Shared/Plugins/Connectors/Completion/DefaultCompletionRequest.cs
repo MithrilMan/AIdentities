@@ -1,5 +1,5 @@
 ﻿namespace AIdentities.Shared.Plugins.Connectors.Completion;
-public class CompletionRequest : ICompletionRequest
+public class DefaultCompletionRequest : ICompletionRequest
 {
    public string? ModelId { get; init; }
    public string Prompt { get; init; } = "";

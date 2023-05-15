@@ -1,6 +1,6 @@
 ﻿namespace AIdentities.Shared.Plugins.Connectors.Completion;
 
-public class CompletionStreamedResponse : ICompletionStreamedResponse
+public class DefaultCompletionStreamedResponse : ICompletionStreamedResponse
 {
    public string? ModelId { get; init; }
    public string? GeneratedMessage { get; init; }

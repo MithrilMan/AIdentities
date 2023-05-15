@@ -4,8 +4,8 @@ public class TextGenerationSettings : IPluginSettings
 {
    public const bool DEFAULT_ENABLED = true;
    public const string DEFAULT_MODEL = "";
-   public const string DEFAULT_CHAT_ENDPOINT = "http://localhost:5000/api/v1/generate";
-   public const string DEFAULT_CHAT_STREAMED_ENDPOINT = "ws://localhost:5005/api/v1/stream";
+   public const string DEFAULT_COMPLETION_ENDPOINT = "http://localhost:5000/api/v1/generate";
+   public const string DEFAULT_STREAMED_COMPLETION_ENDPOINT = "ws://localhost:5005/api/v1/stream";
    public const int DEFAULT_TIMEOUT = 30000;
 
    /// <summary>
@@ -16,12 +16,12 @@ public class TextGenerationSettings : IPluginSettings
    /// <summary>
    /// TextGeneration API Endpoint.
    /// </summary>
-   public Uri ChatEndPoint { get; set; } = new Uri(DEFAULT_CHAT_ENDPOINT);
+   public Uri CompletionEndPoint { get; set; } = new Uri(DEFAULT_COMPLETION_ENDPOINT);
    
    /// <summary>
    /// TextGeneration API Endpoint.
    /// </summary>
-   public Uri StreamedChatEndPoint { get; set; } = new Uri(DEFAULT_CHAT_STREAMED_ENDPOINT);
+   public Uri StreamedCompletionEndPoint { get; set; } = new Uri(DEFAULT_STREAMED_COMPLETION_ENDPOINT);
    
    /// <summary>
    /// TextGeneration API Key.

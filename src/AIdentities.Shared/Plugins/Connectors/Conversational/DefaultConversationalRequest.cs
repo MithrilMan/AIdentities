@@ -1,8 +1,8 @@
 ﻿namespace AIdentities.Shared.Plugins.Connectors.Conversational;
-public class ConversationalRequest : IConversationalRequest
+public class DefaultConversationalRequest : IConversationalRequest
 {
    public string? ModelId { get; init; }
-   public IEnumerable<IConversationalMessage> Messages { get; init; } = new List<ConversationalMessage>();
+   public IEnumerable<IConversationalMessage> Messages { get; init; } = new List<DefaultConversationalMessage>();
    public int? CompletionResults { get; init; }
    public IList<string>? StopSequences { get; init; }
    public string? UserId { get; init; }

@@ -12,7 +12,7 @@ public class TextGenerationParameters
    private const float DEFAULT_TEMPERATURE = 0.5f;
    private const float DEFAULT_TOP_P = 1;
    private const float DEFAULT_TYPICAL_P = 1;
-   private const float DEFAULT_REPETITION_PENALTY = 1.1f;
+   private const float DEFAULT_REPETITION_PENALTY = 1.18f;
    private const float DEFAULT_ENCODER_REPETITION_PENALTY = 1;
    private const int DEFAULT_TOP_K = 0;
    private const int DEFAULT_MIN_LENGTH = 0;

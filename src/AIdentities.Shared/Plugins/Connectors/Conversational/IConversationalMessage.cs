@@ -9,7 +9,7 @@ public interface IConversationalMessage
    /// <summary>
    /// The role of the author of this message.
    /// </summary>
-   ConversationalRole Role { get; init; }
+   DefaultConversationalRole Role { get; init; }
 
    /// <summary>
    /// The contents of the message

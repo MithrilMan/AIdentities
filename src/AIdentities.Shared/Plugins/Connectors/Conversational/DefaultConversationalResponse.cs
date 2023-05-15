@@ -1,6 +1,6 @@
 ﻿namespace AIdentities.Shared.Plugins.Connectors.Conversational;
 
-public record ConversationalResponse : IConversationalResponse
+public record DefaultConversationalResponse : IConversationalResponse
 {
    public string? GeneratedMessage { get; init; }
    public int? PromptTokens { get; set; }

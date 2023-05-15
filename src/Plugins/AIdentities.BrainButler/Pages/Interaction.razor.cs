@@ -97,7 +97,6 @@ public partial class Interaction : AppPage<Interaction>
 
       _state.IsWaitingReply = true;
       await ScrollToEndOfMessageList().ConfigureAwait(false);
-      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
 
       try
       {
@@ -108,9 +107,9 @@ public partial class Interaction : AppPage<Interaction>
          {
             Message = "Thinking..."
          });
-         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+         await ScrollToEndOfMessageList().ConfigureAwait(false);
 
-         var response = await _state.Connector.RequestCompletionAsync(new CompletionRequest
+         var response = await _state.Connector.RequestCompletionAsync(new DefaultCompletionRequest
          {
             Prompt = prompt,
          }).ConfigureAwait(false);
@@ -123,7 +122,7 @@ public partial class Interaction : AppPage<Interaction>
             {
                Message = "Sorry, I didn't understand your request"
             });
-            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+            await ScrollToEndOfMessageList().ConfigureAwait(false);
             return;
          }
 
@@ -131,10 +130,10 @@ public partial class Interaction : AppPage<Interaction>
          {
             Message = $"Ok, so it seems you want me to call {detectedCommand}, let's do it..."
          });
-         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+         await ScrollToEndOfMessageList().ConfigureAwait(false);
 
          prompt = PromptGenerator.GenerateCommandExtraction(detectedCommand, userRequest, out var commandToExecute);
-         response = await _state.Connector.RequestCompletionAsync(new CompletionRequest
+         response = await _state.Connector.RequestCompletionAsync(new DefaultCompletionRequest
          {
             Prompt = prompt,
             MaxGeneratedTokens = 500
@@ -146,7 +145,7 @@ public partial class Interaction : AppPage<Interaction>
             {
                Message = "Sorry, I didn't understand your request"
             });
-            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+            await ScrollToEndOfMessageList().ConfigureAwait(false);
             return;
          }
 
@@ -154,7 +153,7 @@ public partial class Interaction : AppPage<Interaction>
          {
             Message = $"{response.GeneratedMessage}"
          });
-         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+         await ScrollToEndOfMessageList().ConfigureAwait(false);
 
          var commandResult = await commandToExecute.ExecuteAsync(
             userPrompt: userRequest,
@@ -165,7 +164,7 @@ public partial class Interaction : AppPage<Interaction>
          {
             Message = $"{commandResult}"
          });
-         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+         await ScrollToEndOfMessageList().ConfigureAwait(false);
 
          //_state.StreamedResponse = new AIResponse()
          //{

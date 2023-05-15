@@ -10,11 +10,11 @@ public partial class Settings
       {
          RuleFor(x => x.Enabled).NotNull();
 
-         RuleFor(x => x.ChatEndPoint)
+         RuleFor(x => x.CompletionEndPoint)
             .Must(BeAValidUri)
             .WithMessage("You must provide a valid URI.");
 
-         RuleFor(x => x.StreamedChatEndPoint)
+         RuleFor(x => x.StreamedCompletionEndPoint)
             .Must(BeAValidUri)
             .WithMessage("You must provide a valid URI.");
 

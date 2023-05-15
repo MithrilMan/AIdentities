@@ -4,12 +4,13 @@ using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Text;
 using AIdentities.Shared.Features.Core.Services;
+using AIdentities.Shared.Plugins.Connectors.Completion;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Connector.TextGeneration.Services;
-public class TextGenerationConnector : IConversationalConnector, IDisposable
+public class TextGenerationCompletionConnector : ICompletionConnector, IDisposable
 {
-   const string NAME = nameof(TextGenerationConnector);
+   const string NAME = nameof(TextGenerationChatConnector);
    const string DESCRIPTION = "TextGeneration Chat Connector that uses ChatCompletion API.";
    const string ASSISTANT_ROLE_PREFIX = "\nAssistant: ";
 
@@ -19,12 +20,12 @@ public class TextGenerationConnector : IConversationalConnector, IDisposable
    const string STREAM_DATA_MARKER = "data: ";
    static readonly int _streamDataMarkerLength = STREAM_DATA_MARKER.Length;
 
-   readonly ILogger<TextGenerationConnector> _logger;
+   readonly ILogger<TextGenerationChatConnector> _logger;
    readonly IPluginSettingsManager _settingsManager;
 
    public bool Enabled => _settingsManager.Get<TextGenerationSettings>().Enabled;
-   protected Uri ChatEndPoint => _settingsManager.Get<TextGenerationSettings>().ChatEndPoint;
-   protected Uri ChatStreamedEndPoint => _settingsManager.Get<TextGenerationSettings>().StreamedChatEndPoint;
+   protected Uri EndPoint => _settingsManager.Get<TextGenerationSettings>().CompletionEndPoint;
+   protected Uri StreamedEndPoint => _settingsManager.Get<TextGenerationSettings>().StreamedCompletionEndPoint;
    public string DefaultModel => _settingsManager.Get<TextGenerationSettings>().DefaultModel;
    public TextGenerationParameters DefaultParameters => _settingsManager.Get<TextGenerationSettings>().DefaultParameters;
 
@@ -36,7 +37,7 @@ public class TextGenerationConnector : IConversationalConnector, IDisposable
    private HttpClient _client = default!;
    private readonly JsonSerializerOptions _serializerOptions;
 
-   public TextGenerationConnector(ILogger<TextGenerationConnector> logger, IPluginSettingsManager settingsManager)
+   public TextGenerationCompletionConnector(ILogger<TextGenerationChatConnector> logger, IPluginSettingsManager settingsManager)
    {
       _logger = logger;
       _settingsManager = settingsManager;
@@ -76,9 +77,9 @@ public class TextGenerationConnector : IConversationalConnector, IDisposable
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request)
+   public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request)
    {
-      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
+      var apiRequest = BuildCompletionRequest(request, false);
 
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
       var sw = Stopwatch.StartNew();
@@ -88,7 +89,7 @@ public class TextGenerationConnector : IConversationalConnector, IDisposable
          JsonContent content = JsonContent.Create(apiRequest, mediaType: null, null);
          // oobabooga TextGeneration API implementation requires content-lenght
          await content.LoadIntoBufferAsync().ConfigureAwait(false);
-         using HttpResponseMessage response = await _client.PostAsync(ChatEndPoint, content, CancellationToken.None).ConfigureAwait(false);
+         using HttpResponseMessage response = await _client.PostAsync(EndPoint, content, CancellationToken.None).ConfigureAwait(false);
          _logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
 
          if (response.IsSuccessStatusCode)
@@ -97,7 +98,7 @@ public class TextGenerationConnector : IConversationalConnector, IDisposable
             var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
 
             sw.Stop();
-            return new ConversationalResponse
+            return new DefaultCompletionResponse
             {
                GeneratedMessage = CleanUpResponse(responseData),
                PromptTokens = default,
@@ -134,10 +135,10 @@ public class TextGenerationConnector : IConversationalConnector, IDisposable
       return response;
    }
 
-   public async IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public async IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, CancellationToken cancellationToken)
    {
       // stream is not supported yet, fallback to normal request
-      var response = await RequestChatCompletionAsync(request).ConfigureAwait(false);
+      var response = await RequestCompletionAsync(request).ConfigureAwait(false);
 
       //using (ClientWebSocket webSocket = new ClientWebSocket())
       //{
@@ -157,7 +158,7 @@ public class TextGenerationConnector : IConversationalConnector, IDisposable
 
       if (response is null) yield break;
 
-      yield return new ConversationalStreamedResponse
+      yield return new DefaultCompletionStreamedResponse
       {
          GeneratedMessage = response.GeneratedMessage,
          PromptTokens = response.PromptTokens,
@@ -228,22 +229,22 @@ public class TextGenerationConnector : IConversationalConnector, IDisposable
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream)
+   private CompletionRequest BuildCompletionRequest(ICompletionRequest request, bool requireStream)
    {
       var defaultParameters = DefaultParameters;
 
-      var chatRequest = new ChatCompletionRequest(defaultParameters);
+      var completionRequest = new CompletionRequest(request.Prompt, defaultParameters);
 
       //TopASamplings ignored
       //if(request.TopASamplings != null) { }
-      if (request.MaxGeneratedTokens != null) { chatRequest.MaxNewTokens = request.MaxGeneratedTokens; }
-      if (request.RepetitionPenality != null) { chatRequest.RepetitionPenalty = (double?)request.RepetitionPenality; }
-      if (request.RepetitionPenalityRange != null) { chatRequest.EncoderRepetitionPenalty = (double?)request.RepetitionPenalityRange; }
-      if (request.StopSequences != null) { chatRequest.StoppingStrings = request.StopSequences; }
-      if (request.Temperature != null) { chatRequest.Temperature = (double?)request.Temperature; }
-      if (request.TopKSamplings != null) { chatRequest.TopK = (int?)request.TopKSamplings; }
-      if (request.TopPSamplings != null) { chatRequest.TopP = (double?)request.TopPSamplings; }
-      if (request.TypicalSampling != null) { chatRequest.TypicalP = (double?)request.TypicalSampling; }
+      if (request.MaxGeneratedTokens != null) { completionRequest.MaxNewTokens = request.MaxGeneratedTokens; }
+      if (request.RepetitionPenality != null) { completionRequest.RepetitionPenalty = (double?)request.RepetitionPenality; }
+      if (request.RepetitionPenalityRange != null) { completionRequest.EncoderRepetitionPenalty = (double?)request.RepetitionPenalityRange; }
+      if (request.StopSequences != null) { completionRequest.StoppingStrings = request.StopSequences; }
+      if (request.Temperature != null) { completionRequest.Temperature = (double?)request.Temperature; }
+      if (request.TopKSamplings != null) { completionRequest.TopK = (int?)request.TopKSamplings; }
+      if (request.TopPSamplings != null) { completionRequest.TopP = (double?)request.TopPSamplings; }
+      if (request.TypicalSampling != null) { completionRequest.TypicalP = (double?)request.TypicalSampling; }
       // ignored properties by TextGeneration API
       // request.CompletionResults
       // request.ContextSize
@@ -253,17 +254,7 @@ public class TextGenerationConnector : IConversationalConnector, IDisposable
       // request.TopASamplings
       // request.UserId
 
-      // we need now to build the prompt since textgeneration api has just a single prompt field, not a list of messages with roles
-      var sb = new StringBuilder();
-      foreach (var message in request.Messages)
-      {
-         sb.AppendLine($"\n{message.Role}: {message.Content}"); // we add a new line to space more the messages belonging to different roles, not sure if it's needed
-      }
-      sb.AppendLine(ASSISTANT_ROLE_PREFIX); //append already the assistant role, so the completion will start from here and we can remove it later
-
-      chatRequest.Prompt = sb.ToString();
-
-      return chatRequest;
+      return completionRequest;
    }
 
    public void Dispose()

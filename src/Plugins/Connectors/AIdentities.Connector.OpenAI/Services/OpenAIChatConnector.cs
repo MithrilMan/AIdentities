@@ -90,7 +90,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
          var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
 
          sw.Stop();
-         return new ConversationalResponse
+         return new DefaultConversationalResponse
          {
             GeneratedMessage = responseData?.Choices.FirstOrDefault()?.Message?.Content,
             PromptTokens = responseData?.Usage?.PromptTokens,
@@ -153,7 +153,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
 
          if (streamedResponse is not null)
          {
-            yield return new ConversationalStreamedResponse
+            yield return new DefaultConversationalStreamedResponse
             {
                GeneratedMessage = streamedResponse?.Choices.FirstOrDefault()?.Message?.Content,
                PromptTokens = streamedResponse?.Usage?.PromptTokens,
@@ -190,11 +190,11 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       User = request.UserId,
    };
 
-   private static ChatCompletionRoleEnum? MapRole(ConversationalRole role) => role switch
+   private static ChatCompletionRoleEnum? MapRole(DefaultConversationalRole role) => role switch
    {
-      ConversationalRole.User => ChatCompletionRoleEnum.User,
-      ConversationalRole.Assistant => ChatCompletionRoleEnum.Assistant,
-      ConversationalRole.System => ChatCompletionRoleEnum.System,
+      DefaultConversationalRole.User => ChatCompletionRoleEnum.User,
+      DefaultConversationalRole.Assistant => ChatCompletionRoleEnum.Assistant,
+      DefaultConversationalRole.System => ChatCompletionRoleEnum.System,
       _ => throw new NotImplementedException()
    };
 

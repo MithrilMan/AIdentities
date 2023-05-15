@@ -75,10 +75,10 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
    /// <summary>
-   /// Builds a <see cref="CompletionRequest"/> from a <see cref="ICompletionRequest"/>.
+   /// Builds a <see cref="DefaultCompletionRequest"/> from a <see cref="ICompletionRequest"/>.
    /// </summary>
-   /// <param name="request">The <see cref="CompletionRequest"/> to build from.</param>
-   /// <returns>The built <see cref="CompletionRequest"/>.</returns>
+   /// <param name="request">The <see cref="DefaultCompletionRequest"/> to build from.</param>
+   /// <returns>The built <see cref="DefaultCompletionRequest"/>.</returns>
    private CreateCompletionRequest BuildCreateCompletionRequest(ICompletionRequest request, bool requireStream) => new CreateCompletionRequest
    {
       FrequencyPenalty = request.RepetitionPenalityRange,
@@ -117,7 +117,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
          var responseData = await response.Content.ReadFromJsonAsync<CreateCompletionResponse>().ConfigureAwait(false);
 
          sw.Stop();
-         return new CompletionResponse
+         return new DefaultCompletionResponse
          {
             ModelId = responseData?.Model,
             GeneratedMessage = responseData?.Choices.FirstOrDefault()?.Text,
@@ -182,7 +182,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
 
          if (streamedResponse is not null)
          {
-            yield return new CompletionStreamedResponse
+            yield return new DefaultCompletionStreamedResponse
             {
                ModelId = streamedResponse?.Model,
                GeneratedMessage = streamedResponse?.Choices.FirstOrDefault()?.Text,
