@@ -1,5 +1,4 @@
-﻿using AIdentities.BrainButler.Models;
-using Microsoft.JSInterop;
+﻿using Microsoft.JSInterop;
 
 namespace AIdentities.BrainButler.Components;
 
@@ -10,12 +9,9 @@ public partial class Message : ComponentBase
 
    [Parameter] public ConversationPiece ChatMessage { get; set; } = default!;
    [Parameter] public bool IsSelected { get; set; } = default!;
-   [Parameter] public EventCallback<ConversationPiece> OnDelete { get; set; }
 
    private async Task CopyToClipboard()
    {
       await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", ChatMessage.Message).ConfigureAwait(false);
    }
-
-   Task Delete() => OnDelete.InvokeAsync(ChatMessage);
 }

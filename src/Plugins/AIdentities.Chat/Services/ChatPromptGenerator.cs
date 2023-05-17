@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using AIdentities.Shared.Plugins.Connectors.Conversational;
 
 namespace AIdentities.Chat.Services;
 public class ChatPromptGenerator : IChatPromptGenerator

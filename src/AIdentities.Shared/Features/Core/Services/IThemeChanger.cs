@@ -22,5 +22,11 @@ public interface IThemeManager
    /// Gets the current theme.
    /// </summary>
    /// <returns>The current theme.</returns>
-   MudTheme? GetTheme();
+   MudTheme GetTheme();
+
+   /// <summary>
+   /// Gets the dark mode.
+   /// True for dark mode, false for light mode.
+   /// </summary>
+   public bool IsDarkMode { get; set; }
 }

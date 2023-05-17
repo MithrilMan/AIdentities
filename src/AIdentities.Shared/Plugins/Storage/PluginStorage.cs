@@ -1,18 +1,18 @@
 ﻿using AIdentities.Shared.Features.Core.Abstracts;
-using Microsoft.Extensions.Options;
 
 namespace AIdentities.Shared.Plugins.Storage;
 
-public class PluginStorage : IPluginStorage
+public class PluginStorage<TPluginEntry> : IPluginStorage<TPluginEntry>
+   where TPluginEntry : IPluginEntry
 {
-   readonly ILogger<PluginStorage> _logger;
+   readonly ILogger<PluginStorage<TPluginEntry>> _logger;
    readonly PluginManifest _pluginManifest;
    readonly string _pluginStorageRoot;
    private readonly string _pluginSettingsFolder;
 
    public PluginSignature Signature => _pluginManifest.Signature;
 
-   public PluginStorage(ILogger<PluginStorage> logger, PluginManifest pluginManifest, string pluginStorageRoot)
+   public PluginStorage(ILogger<PluginStorage<TPluginEntry>> logger, PluginManifest pluginManifest, string pluginStorageRoot)
    {
       _logger = logger;
       _pluginManifest = pluginManifest;
@@ -116,7 +116,6 @@ public class PluginStorage : IPluginStorage
       }
    }
 
-   private string GetSettingsFileName<TSettings>() where TSettings : class => Path.Combine(_pluginSettingsFolder, $"{typeof(TSettings).Name}.json");
    private string GetSettingsFileName(Type settingsType) => Path.Combine(_pluginSettingsFolder, $"{settingsType.Name}.json");
 
    public async ValueTask SaveSettingsAsync(IPluginSettings settings)
@@ -137,5 +136,20 @@ public class PluginStorage : IPluginStorage
          _logger.LogError(ex, "Failed to save settings to {settingsFile}", settingsFile);
          throw new Exception($"Failed to save settings to {settingsFile}: {ex.Message}");
       }
+   }
+
+   public ValueTask<bool> BackupFileAsync(string fileName, string backupFileName)
+   {
+      var originalPath = Path.Combine(_pluginStorageRoot, fileName);
+      var backupPath = Path.Combine(_pluginStorageRoot, backupFileName);
+
+      if (!File.Exists(originalPath))
+      {
+         _logger.LogWarning("Failed to backup file {originalPath} to {backupPath} because the original file does not exist", originalPath, backupPath);
+         return new ValueTask<bool>(false);
+      }
+
+      File.Copy(originalPath, backupPath, true);
+      return new ValueTask<bool>();
    }
 }

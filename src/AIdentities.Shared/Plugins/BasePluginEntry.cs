@@ -11,17 +11,25 @@ namespace AIdentities.Shared.Plugins;
 /// It has to be implemented by the plugin and it is used to register the plugin services and declare its capabilities.
 /// Contains some helper methods to register features.
 /// </summary>
-public abstract class BasePluginEntry : IPluginEntry
+public abstract class BasePluginEntry<TPluginEntry> : IPluginEntry
+   where TPluginEntry : BasePluginEntry<TPluginEntry>
 {
    protected PluginManifest _manifest = default!;
-   protected IPluginStorage _storage = default!;
    private IServiceCollection _services = default!;
 
-   void IPluginEntry.Initialize(PluginManifest manifest, IServiceCollection services, IPluginStorage pluginStorage)
+   void IPluginEntry.Initialize(PluginManifest manifest, IServiceCollection services)
    {
       _manifest = manifest;
-      _storage = pluginStorage;
       _services = services;
+
+
+      // automatically register the plugin storage for the instance that extends this class.
+      services.AddScoped<IPluginStorage<TPluginEntry>>(sp =>
+         {
+            var factory = sp.GetRequiredService<IPluginStorageFactory>();
+            var pluginStorage = factory.CreatePluginStorage<TPluginEntry>(manifest);
+            return pluginStorage;
+         });
 
       RegisterServices(services);
    }
@@ -57,7 +65,21 @@ public abstract class BasePluginEntry : IPluginEntry
       if (_services == null) throw new InvalidOperationException("Cannot register a feature before the plugin is initialized.");
 
       // Register the AIdentity feature to expose an editor in the AIdentity management page.
-      _services.AddSingleton(new PluginSettingRegistration(_storage, typeof(TPluginSettings), typeof(TPluginSettingsTab), uiTitle));
+      _services.AddScoped(sp => new PluginSettingRegistration(sp.GetRequiredService<IPluginStorage<TPluginEntry>>(), typeof(TPluginSettings), typeof(TPluginSettingsTab), uiTitle));
+   }
+
+   /// <summary>
+   /// Registers a plugin startup service.
+   /// A plugin startup service is used to perform some startup operations.
+   /// The registered service has to implement <see cref="IPluginStartup"/>.
+   /// </summary>
+   /// <typeparam name="TIPluginStartup">The plugin startup service Type.</typeparam>
+   /// <exception cref="InvalidOperationException">Thrown if the plugin is not initialized.</exception>
+   protected void RegisterPluginStartup<TIPluginStartup>()
+      where TIPluginStartup : class, IPluginStartup
+   {
+      if (_services == null) throw new InvalidOperationException("Cannot register a startup service before the plugin is initialized.");
+      _services.AddScoped<IPluginStartup, TIPluginStartup>();
    }
 
    /// <summary>

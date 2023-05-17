@@ -2,14 +2,11 @@
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AIdentities.Chat;
-public class PluginEntry : BasePluginEntry
+public class PluginEntry : BasePluginEntry<PluginEntry>
 {
    public override void RegisterServices(IServiceCollection services)
    {
-      services.AddScoped<IChatStorage>(sp => new ChatStorage(
-         logger: sp.GetRequiredService<ILogger<ChatStorage>>(),
-         pluginStorage: _storage
-         ));
+      services.AddScoped<IChatStorage,ChatStorage>();
 
       services
          .AddTransient<IChatPromptGenerator, ChatPromptGenerator>();

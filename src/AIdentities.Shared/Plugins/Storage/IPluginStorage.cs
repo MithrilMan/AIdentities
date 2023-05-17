@@ -7,6 +7,18 @@ namespace AIdentities.Shared.Plugins.Storage;
 /// Allow a default mechanism for plugins to store data on their specific folder.
 /// Ideally a plugin should use this interface to store data, in order to have a standardized
 /// way to store data. Doing so, it's easy for users to backup and restore their data.
+/// This interface is the one that gets registered in the DI container to have a single
+/// instance for each plugin that can be resolved by the container.
+/// </summary>
+/// <typeparam name="TPluginEntry">The type of the plugin entry.</typeparam>
+public interface IPluginStorage<TPluginEntry> : IPluginStorage
+where TPluginEntry : IPluginEntry
+{ }
+
+/// <summary>
+/// Allow a default mechanism for plugins to store data on their specific folder.
+/// Ideally a plugin should use this interface to store data, in order to have a standardized
+/// way to store data. Doing so, it's easy for users to backup and restore their data.
 /// </summary>
 public interface IPluginStorage
 {
@@ -103,4 +115,12 @@ public interface IPluginStorage
    /// <typeparam name="TSettings">The type of the settings to store.</typeparam>
    /// <param name="settings">The settings to store.</param>
    ValueTask SaveSettingsAsync(IPluginSettings settings);
+
+   /// <summary>
+   /// Create a copy of a file in the plugin's folder.
+   /// </summary>
+   /// <param name="fileName">Name of the file to backup</param>
+   /// <param name="backupFileName">Name of the backup file. If the file exists, it will be overwritten.</param>
+   /// <returns>True if the file was backed up, false otherwise.</returns>
+   ValueTask<bool> BackupFileAsync(string fileName, string backupFileName);
 }

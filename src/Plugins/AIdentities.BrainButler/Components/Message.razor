@@ -7,7 +7,6 @@
          <MudItem xs="11">
             <MudStack Row="true">
                <MudAvatar Color="Color.Tertiary" Size="Size.Medium">
-                  @*<MudImage Src="@GetAIdentityImage(ChatMessage)" />*@
                   <MudImage Src="/_content/AIdentities.BrainButler/brain-wittle.jpg" />
                </MudAvatar>
                <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@MessageStyle">
@@ -17,13 +16,9 @@
             </MudStack>
          </MudItem>
          <MudItem xs="1">
-            @if (IsSelected)
-            {
-               <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Class="px-2 pb-1">
-                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
-                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="Delete" />
-               </MudStack>
-            }
+            <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Class="px-2 pb-1">
+               <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
+            </MudStack>
          </MudItem>
       </MudStack>
    }
@@ -31,13 +26,9 @@
    {
       <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
          <MudItem xs="1">
-            @if (IsSelected)
-            {
-               <MudStack Row="true" Spacing="1" Justify="Justify.FlexStart" Class="px-2 pb-1">
-                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="Delete" />
-                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
-               </MudStack>
-            }
+            <MudStack Row="true" Spacing="1" Justify="Justify.FlexStart" Class="px-2 pb-1">
+               <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
+            </MudStack>
          </MudItem>
          <MudItem xs="11">
             <MudStack Row="true">

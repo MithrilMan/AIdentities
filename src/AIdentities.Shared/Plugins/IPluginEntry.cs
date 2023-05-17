@@ -19,6 +19,5 @@ public interface IPluginEntry
    /// </summary>
    /// <param name="manifest">The plugin manifest used to load the plugin.</param>
    /// <param name="services">The service collection to use to register the plugin services.</param>
-   /// <param name="pluginStorage">The plugin storage to use to deal with files.</param>
-   void Initialize(PluginManifest manifest, IServiceCollection services, IPluginStorage pluginStorage);
+   void Initialize(PluginManifest manifest, IServiceCollection services);
 }

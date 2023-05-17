@@ -2,7 +2,6 @@
 global using System.Text.Json.Serialization;
 global using AIdentities.Shared.Features.AIdentities.Abstracts;
 global using AIdentities.Shared.Features.AIdentities.Models;
-global using AIdentities.Shared.Plugins.Connectors.Completion;
 global using AIdentities.Shared.Plugins.Pages;
 global using AIdentities.Shared.Serialization.Converters;
 global using AIdentities.Shared.Utils;

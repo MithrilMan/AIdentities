@@ -1,5 +1,4 @@
 ﻿using AIdentities.Shared.Features.Core.Abstracts;
-using ElectronNET.API.Entities;
 using Microsoft.AspNetCore.Components;
 
 namespace AIdentities.UI.Features.Core.Components;
@@ -38,7 +37,7 @@ public partial class PluginSettingsTab
 
       _state.SetCurrentPluginSettings(updatedPluginSettings);
 
-      NotificationService.ShowSuccess("Plugin Settings updated successfully!");
+      NotificationService.ShowSuccess($"Plugin Settings {updatedPluginSettings.GetType().Name} updated successfully!");
    }
 
    public async Task UndoChangesAsync()

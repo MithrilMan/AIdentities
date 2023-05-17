@@ -19,5 +19,5 @@ public abstract class CommandDefinition : IBrainButlerCommand
       Examples = examples;
    }
 
-   public abstract ValueTask<string?> ExecuteAsync(string userPrompt, string? inputPrompt);
+   public abstract IAsyncEnumerable<CommandExecutionStreamedFragment> ExecuteAsync(string userPrompt, string? inputPrompt, CancellationToken cancellationToken = default);
 }

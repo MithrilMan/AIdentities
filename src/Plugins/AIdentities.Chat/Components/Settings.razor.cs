@@ -32,8 +32,6 @@ public partial class Settings : BasePluginSettingsTab<ChatSettings, Settings.Sta
       if (connectorName == null) return true;
 
       var connector = ConversationalConnectors.FirstOrDefault(x => x.Name == connectorName);
-      if (connector == null) return true;
-
-      return !connector.Enabled;
+      return connector == null ? true : !connector.Enabled;
    }
 }

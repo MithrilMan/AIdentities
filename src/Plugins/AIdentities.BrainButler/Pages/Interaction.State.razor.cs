@@ -1,6 +1,4 @@
-﻿using AIdentities.BrainButler.Models;
-
-namespace AIdentities.BrainButler.Pages;
+﻿namespace AIdentities.BrainButler.Pages;
 
 public partial class Interaction
 {
@@ -18,12 +16,7 @@ public partial class Interaction
       /// </summary>
       public bool IsWaitingReply { get; set; }
 
-      /// <summary>
-      /// The AI is thinking about what to do next.
-      /// </summary>
-      public bool IsThinking { get; set; }
-
-      public bool CanSendMessage => Connector != null && !IsWaitingReply;
+      public bool CanSendMessage => CompletionConnector != null && !IsWaitingReply;
 
       public bool HasMessageGenerationFailed { get; internal set; }
 
@@ -36,9 +29,15 @@ public partial class Interaction
 
       /// <summary>
       /// Holds the reference to the current Conversational Connector.
-      /// If null, no chat message can be sent.
+      /// This connector is used to try to understand user commands and to execute them.
       /// </summary>
-      public ICompletionConnector? Connector { get; set; }
+      public ICompletionConnector? CompletionConnector { get; set; }
+
+      /// <summary>
+      /// Holds the reference to the current Conversational Connector.
+      /// This connector is used to communicate with the user whenever the user input doesn't refers to a command.
+      /// </summary>
+      public IConversationalConnector? ConversationalConnector { get; set; }
 
       /// <summary>
       /// The cancellation token source used to cancel the message generation.

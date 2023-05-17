@@ -18,11 +18,17 @@ public record CommandArgumentDefinition
    /// </summary>
    public bool IsRequired { get; }
 
+   /// <summary>
+   /// The type of the argument.
+   /// </summary>
+   public Type Type { get; }
+
    // This is a positional argument
-   public CommandArgumentDefinition(string name, string description, bool isRequired)
+   public CommandArgumentDefinition(string name, string description, bool isRequired, Type type = null)
    {
       Name = name;
       Description = description;
       IsRequired = isRequired;
+      Type = type;
    }
 }

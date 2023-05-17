@@ -44,7 +44,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       };
 
       _settingsManager.OnSettingsUpdated += OnSettingsUpdated;
-      ApplySettings();
+      ApplySettings(_settingsManager.Get<OpenAISettings>());
    }
 
    /// <summary>
@@ -52,23 +52,23 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
    /// </summary>
    /// <param name="sender"></param>
    /// <param name="settingType"></param>
-   private void OnSettingsUpdated(object? sender, Type settingType)
+   private void OnSettingsUpdated(object? sender, IPluginSettings pluginSettings)
    {
-      if (settingType == typeof(OpenAISettings))
-      {
-         ApplySettings();
-      }
+      if (pluginSettings is not OpenAISettings settings) return;
+
+      _logger.LogDebug("Settings updated, applying new settings");
+      ApplySettings(settings);
    }
 
-   private void ApplySettings()
+   private void ApplySettings(OpenAISettings settings)
    {
       // we can't modify a HttpClient once it's created, so we need to dispose it and create a new one
       _client?.Dispose();
       _client = new HttpClient
       {
-         Timeout = TimeSpan.FromMilliseconds(_settingsManager.Get<OpenAISettings>().Timeout)
+         Timeout = TimeSpan.FromMilliseconds(settings.Timeout)
       };
-      _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _settingsManager.Get<OpenAISettings>().ApiKey);
+      _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", settings.ApiKey);
    }
 
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
@@ -109,11 +109,10 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
 
       using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
 
-      _logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
+      _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
 
       if (response.IsSuccessStatusCode)
       {
-         _logger.LogDebug("Request succeeded: {ResponseContent}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
          var responseData = await response.Content.ReadFromJsonAsync<CreateCompletionResponse>().ConfigureAwait(false);
 
          sw.Stop();
@@ -184,13 +183,13 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
          {
             yield return new DefaultCompletionStreamedResponse
             {
-               ModelId = streamedResponse?.Model,
-               GeneratedMessage = streamedResponse?.Choices.FirstOrDefault()?.Text,
-               PromptTokens = streamedResponse?.Usage?.PromptTokens,
-               CumulativeTotalTokens = streamedResponse?.Usage?.TotalTokens,
-               CumulativeCompletionTokens = streamedResponse?.Usage?.CompletionTokens,
+               ModelId = streamedResponse.Model,
+               GeneratedMessage = streamedResponse.Choices?.FirstOrDefault()?.Text,
+               PromptTokens = streamedResponse.Usage?.PromptTokens,
+               CumulativeTotalTokens = streamedResponse.Usage?.TotalTokens,
+               CumulativeCompletionTokens = streamedResponse.Usage?.CompletionTokens,
                CumulativeResponseTime = sw.Elapsed,
-               FinishReason = streamedResponse?.Choices.FirstOrDefault()?.FinishReason
+               FinishReason = streamedResponse.Choices?.FirstOrDefault()?.FinishReason
             };
          }
       }

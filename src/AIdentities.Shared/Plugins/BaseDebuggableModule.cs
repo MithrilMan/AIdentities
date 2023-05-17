@@ -1,5 +1,4 @@
-﻿using AIdentities.Shared.Plugins.Storage;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 namespace AIdentities.Shared.Plugins;
@@ -32,11 +31,11 @@ public abstract class BaseDebuggableModule<TPluginEntry> : IDebuggableModule
          Description = Description,
       };
 
-      var sp = services.BuildServiceProvider();
-      var pluginStorageFactory = sp.GetRequiredService<IPluginStorageFactory>();
-      var pluginStorage = pluginStorageFactory.CreatePluginStorage(manifest);
+      //var sp = services.BuildServiceProvider();
+      //var pluginStorageFactory = sp.GetRequiredService<IPluginStorageFactory>();
+      //var pluginStorage = pluginStorageFactory.CreatePluginStorage<TPluginEntry>(manifest);
 
-      plugin.Initialize(manifest, services, pluginStorage);
+      plugin.Initialize(manifest, services);
 
       // important, to expose the plugin assembly when referencing this plugin directly in the AIdentities project.
       services.AddSingleton(typeof(IDebuggableModule), GetType());

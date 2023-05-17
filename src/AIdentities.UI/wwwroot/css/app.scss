@@ -8,6 +8,10 @@
    min-height: 0;
 }
 
+.flex-w-fix {
+   min-width: 0;
+}
+
 @for $i from 1 through 5 {
    .line-clamp-#{$i} {
       overflow: hidden;

@@ -1,15 +1,14 @@
-﻿using System.Text;
+﻿namespace AIdentities.Chat.Services;
 
-namespace AIdentities.Chat.Services;
 public class ChatStorage : IChatStorage
 {
    const string CONVERSATION_POSTFIX = ".conv.json";
    const string CONVERSATION_MESSAGES_POSTFIX = ".conv.messages";
 
    readonly ILogger<ChatStorage> _logger;
-   readonly IPluginStorage _pluginStorage;
+   readonly IPluginStorage<PluginEntry> _pluginStorage;
 
-   public ChatStorage(ILogger<ChatStorage> logger, IPluginStorage pluginStorage)
+   public ChatStorage(ILogger<ChatStorage> logger, IPluginStorage<PluginEntry> pluginStorage)
    {
       _logger = logger;
       _pluginStorage = pluginStorage;

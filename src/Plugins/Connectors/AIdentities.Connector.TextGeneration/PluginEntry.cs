@@ -2,7 +2,7 @@
 
 namespace AIdentities.Connector.TextGeneration;
 
-public class PluginEntry : BasePluginEntry
+public class PluginEntry : BasePluginEntry<PluginEntry>
 {
    public override void RegisterServices(IServiceCollection services)
    {

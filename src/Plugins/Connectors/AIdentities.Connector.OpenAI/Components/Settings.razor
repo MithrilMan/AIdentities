@@ -1,6 +1,6 @@
 @inherits BasePluginSettingsTab<OpenAISettings, Settings.State>
 
-<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix gap-2">
+<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix overflow-y-auto gap-2">
    <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-2">
       <MudCard>
          <MudSwitchM3 @bind-Checked="_state.Enabled" Label="Enabled" For="()=>_state.Enabled" />

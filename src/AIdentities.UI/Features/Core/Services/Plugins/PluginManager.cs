@@ -248,7 +248,9 @@ public class PluginManager : IPluginManager
             var content = await File.ReadAllTextAsync(enabledPluginFilePath).ConfigureAwait(false);
             enabledPlugins = JsonSerializer.Deserialize<IEnumerable<string>>(content)?.ToHashSet();
             if (enabledPlugins != null)
+            {
                _logger.LogInformation("Enabled plugins: {EnabledPlugins}", string.Join(", ", enabledPlugins));
+            }
          }
          else
          {
@@ -377,7 +379,7 @@ public class PluginManager : IPluginManager
          try
          {
             var pluginEntryInstance = Activator.CreateInstance(pluginEntry) as IPluginEntry;
-            pluginEntryInstance?.Initialize(manifest, services, _pluginStorageFactory.CreatePluginStorage(manifest));
+            pluginEntryInstance?.Initialize(manifest, services);
          }
          catch (Exception ex)
          {

@@ -4,7 +4,6 @@ using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Services;
-using AIdentities.Shared.Plugins.Connectors.Completion;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Connector.OpenAI.Services;
@@ -43,7 +42,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       };
 
       _settingsManager.OnSettingsUpdated += OnSettingsUpdated;
-      ApplySettings();
+      ApplySettings(_settingsManager.Get<OpenAISettings>());
    }
 
    /// <summary>
@@ -51,23 +50,23 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    /// </summary>
    /// <param name="sender"></param>
    /// <param name="settingType"></param>
-   private void OnSettingsUpdated(object? sender, Type settingType)
+   private void OnSettingsUpdated(object? sender, IPluginSettings pluginSettings)
    {
-      if (settingType == typeof(OpenAISettings))
-      {
-         ApplySettings();
-      }
+      if (pluginSettings is not OpenAISettings settings) return;
+
+      _logger.LogDebug("Settings updated, applying new settings");
+      ApplySettings(settings);
    }
 
-   private void ApplySettings()
+   private void ApplySettings(OpenAISettings settings)
    {
       // we can't modify a HttpClient once it's created, so we need to dispose it and create a new one
       _client?.Dispose();
       _client = new HttpClient
       {
-         Timeout = TimeSpan.FromMilliseconds(_settingsManager.Get<OpenAISettings>().Timeout)
+         Timeout = TimeSpan.FromMilliseconds(settings.Timeout)
       };
-      _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _settingsManager.Get<OpenAISettings>().ApiKey);
+      _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", settings.ApiKey);
    }
 
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
@@ -82,11 +81,10 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
 
       using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
 
-      _logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
+      _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
 
       if (response.IsSuccessStatusCode)
       {
-         _logger.LogDebug("Request succeeded: {ResponseContent}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
          var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
 
          sw.Stop();

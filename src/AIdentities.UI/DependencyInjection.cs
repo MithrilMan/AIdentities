@@ -49,6 +49,8 @@ public static class DependencyInjection
          .AddOptions<AppOptions>()
          .BindConfiguration(AppOptions.SECTION_NAME);
 
+      services.AddScoped<PluginStartupService>();
+
       // add external services
       services.AddMudServices();
       services.AddMudExtensions();

@@ -1,6 +1,4 @@
-﻿using AIdentities.BrainButler.Models;
-
-namespace AIdentities.BrainButler.Services;
+﻿namespace AIdentities.BrainButler.Services;
 
 public class BrainButlerCommandManager : IBrainButlerCommandManager
 {

@@ -1,4 +1,5 @@
 ﻿using AIdentities.Shared.Features.Core.Abstracts;
+using AIdentities.Shared.Plugins.Storage;
 
 namespace AIdentities.Shared.Features.Core.Services;
 
@@ -14,7 +15,7 @@ public class PluginSettingsManager : IPluginSettingsManager
       _pluginSettingsRegistrations = pluginSettingsRegistrations.ToDictionary(r => r.PluginSettingType, r => r);
    }
 
-   public event EventHandler<Type>? OnSettingsUpdated;
+   public event EventHandler<IPluginSettings>? OnSettingsUpdated;
 
    public TPluginSettings Get<TPluginSettings>()
       where TPluginSettings : class, IPluginSettings, new()
@@ -62,6 +63,6 @@ public class PluginSettingsManager : IPluginSettingsManager
 
       await registration.PluginStorage.SaveSettingsAsync(pluginSettings).ConfigureAwait(false);
 
-      OnSettingsUpdated?.Invoke(this, pluginSettingsType);
+      OnSettingsUpdated?.Invoke(this, pluginSettings);
    }
 }

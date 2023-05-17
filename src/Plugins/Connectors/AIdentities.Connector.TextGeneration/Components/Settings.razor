@@ -1,7 +1,7 @@
 @inherits BasePluginSettingsTab<TextGenerationSettings, Settings.State>
 
-<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix gap-2">
-   <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-2">
+<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix overflow-y-auto gap-2">
+   <MudPaper Class="d-flex flex-column flex-grow-1 pa-2">
       <MudCard>
          <MudSwitchM3 @bind-Checked="_state.Enabled" Label="Enabled" For="()=>_state.Enabled" />
       </MudCard>
@@ -18,7 +18,7 @@
          <MudNumericField @bind-Value="_state.Timeout" Label="Timeout" Variant="Variant.Text" For="()=>_state.Timeout" />
       </MudCard>
    </MudPaper>
-   <MudPaper Elevation="2" Class="pa-4">
+   <MudPaper Elevation="2" Class="pa-4 flex-grow-1">
       <MudTextField @bind-Value="_state.Parameters.MaxNewTokens" Label="Max New Tokens" />
       <MudSwitch @bind-Checked="_state.Parameters.DoSample" Label="Do Sample" />
       <MudSlider T="float" @bind-Value="_state.Parameters.Temperature" Label="Temperature" Min="0.01f" Max="1.99f" Step="0.01f" />
@@ -40,7 +40,7 @@
       <MudSwitch @bind-Checked="_state.Parameters.SkipSpecialTokens" Label="Skip Special Tokens" />
 
       <!-- Assuming StoppingStrings is a list of strings -->
-      <MudChipField T="string" @bind-Values="_state.Parameters.StoppingStrings" Delimiter="@(' ')"
+      <MudChipField T="string" @bind-Values="_state.Parameters.StoppingStrings" Delimiter="@(' ')" WrapChips="true"
                     ChipColor="Color.Primary" ChipVariant="Variant.Filled" Closeable="true" Variant="Variant.Text" Label="Stopping Strings" />
    </MudPaper>
 </MudForm>

@@ -10,7 +10,7 @@ public interface IPluginSettingsManager
    /// <summary>
    /// This event is raised when the settings are updated.
    /// </summary>
-   event EventHandler<Type> OnSettingsUpdated;
+   event EventHandler<IPluginSettings> OnSettingsUpdated;
 
    /// <summary>
    /// Retrieve the specified plugin settings.

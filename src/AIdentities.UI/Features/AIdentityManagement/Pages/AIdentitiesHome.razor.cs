@@ -2,7 +2,6 @@
 using AIdentities.UI.Features.AIdentityManagement.Components;
 using AIdentities.UI.Features.Core.Extensions;
 using Microsoft.AspNetCore.Components;
-using Microsoft.JSInterop;
 
 namespace AIdentities.UI.Features.AIdentityManagement.Pages;
 

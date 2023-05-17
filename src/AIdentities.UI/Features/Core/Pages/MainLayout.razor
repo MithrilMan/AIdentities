@@ -2,7 +2,7 @@
 
 <PageTitle>@AppConstants.APP_TITLE</PageTitle>
 
-<MudThemeProvider @bind-IsDarkMode="@_state.IsDarkMode" Theme="ThemeManager.GetTheme()" @ref="_mudThemeProvider" />
+<MudThemeProvider @bind-IsDarkMode="@_state.IsDarkMode" Theme="ThemeManager.GetTheme()!" @ref="_mudThemeProvider" @bind-IsDarkMode:after="OnDarkModeChanged"/>
 <MudDialogProvider />
 <MudSnackbarProvider />
 

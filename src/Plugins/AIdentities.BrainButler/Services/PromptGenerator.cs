@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using AIdentities.BrainButler.Commands.ChangeTheme;
 
 namespace AIdentities.BrainButler.Services;
 public class PromptGenerator : IPromptGenerator
@@ -27,7 +28,7 @@ public class PromptGenerator : IPromptGenerator
          sb.AppendLine($"    when: {command.ActivationContext}");
       }
 
-      sb.Append("""
+      sb.Append($"""
          ```
 
          Find the command that best matches the user prompt.
@@ -36,13 +37,13 @@ public class PromptGenerator : IPromptGenerator
 
          <START Examples>
          UserRequest: I don't like the color of the background, I'd like it to be blue
-         Command: ChangeTheme
+         Command: {ChangeThemeCommand.NAME}
 
          UserRequest: I want to know the weather in Rome
          Command: DUNNO
 
          UserRequest: I'd like a colorful theme for the application
-         Command: ChangeTheme
+         Command: {ChangeThemeCommand.NAME}
          <END Examples>
 
          """);

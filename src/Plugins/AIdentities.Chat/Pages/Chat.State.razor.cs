@@ -1,6 +1,4 @@
-﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
-
-namespace AIdentities.Chat.Pages;
+﻿namespace AIdentities.Chat.Pages;
 
 public partial class Chat
 {

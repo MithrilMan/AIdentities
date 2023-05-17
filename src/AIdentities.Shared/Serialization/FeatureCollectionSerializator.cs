@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.Http.Features;
+﻿using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Shared.Serialization;
 

@@ -1,8 +1,5 @@
 ﻿using System.Diagnostics;
 using System.Net.Http.Json;
-using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
-using System.Text;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors.Completion;
 using Microsoft.AspNetCore.Http.Features;
@@ -48,16 +45,16 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       };
 
       _settingsManager.OnSettingsUpdated += OnSettingsUpdated;
-      ApplySettings();
+      ApplySettings(_settingsManager.Get<TextGenerationSettings>());
    }
 
-   private void ApplySettings()
+   private void ApplySettings(TextGenerationSettings settings)
    {
       // we can't modify a HttpClient once it's created, so we need to dispose it and create a new one
       _client?.Dispose();
       _client = new HttpClient
       {
-         Timeout = TimeSpan.FromMilliseconds(_settingsManager.Get<TextGenerationSettings>().Timeout)
+         Timeout = TimeSpan.FromMilliseconds(settings.Timeout)
       };
    }
 
@@ -66,12 +63,12 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
    /// </summary>
    /// <param name="sender"></param>
    /// <param name="settingType"></param>
-   private void OnSettingsUpdated(object? sender, Type settingType)
+   private void OnSettingsUpdated(object? sender, IPluginSettings pluginSettings)
    {
-      if (settingType == typeof(TextGenerationSettings))
-      {
-         ApplySettings();
-      }
+      if (pluginSettings is not TextGenerationSettings settings) return;
+
+      _logger.LogDebug("Settings updated, applying new settings");
+      ApplySettings(settings);
    }
 
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
@@ -90,11 +87,10 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
          // oobabooga TextGeneration API implementation requires content-lenght
          await content.LoadIntoBufferAsync().ConfigureAwait(false);
          using HttpResponseMessage response = await _client.PostAsync(EndPoint, content, CancellationToken.None).ConfigureAwait(false);
-         _logger.LogDebug("Request completed: {Request}", await response.RequestMessage!.Content!.ReadAsStringAsync().ConfigureAwait(false));
+         _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
 
          if (response.IsSuccessStatusCode)
          {
-            _logger.LogDebug("Request succeeded: {ResponseContent}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
             var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
 
             sw.Stop();
