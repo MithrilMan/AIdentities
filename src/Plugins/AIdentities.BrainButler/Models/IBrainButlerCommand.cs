@@ -1,4 +1,6 @@
-﻿namespace AIdentities.BrainButler.Models;
+﻿using AIdentities.BrainButler.Commands;
+
+namespace AIdentities.BrainButler.Models;
 
 public interface IBrainButlerCommand
 {

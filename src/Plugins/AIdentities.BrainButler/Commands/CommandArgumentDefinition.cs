@@ -1,4 +1,4 @@
-﻿namespace AIdentities.BrainButler.Models;
+﻿namespace AIdentities.BrainButler.Commands;
 
 public record CommandArgumentDefinition
 {

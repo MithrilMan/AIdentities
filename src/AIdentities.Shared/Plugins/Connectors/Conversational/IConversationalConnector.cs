@@ -11,7 +11,7 @@ public interface IConversationalConnector : IConnector
    /// </summary>
    /// <param name="request">The request to perform.</param>
    /// <returns>The response from the chat API.</returns>
-   Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request);
+   Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request, CancellationToken cancellationToken);
 
    /// <summary>
    /// Perform a request to the conversational endpoint.

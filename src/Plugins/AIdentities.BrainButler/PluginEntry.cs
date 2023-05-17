@@ -1,4 +1,5 @@
 ﻿using AIdentities.BrainButler.Commands.ChangeTheme;
+using AIdentities.BrainButler.Commands.WhatTimeIsIt;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AIdentities.BrainButler;
@@ -19,6 +20,7 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
    private void RegisterAvailableCommands(IServiceCollection services)
    {
       services
-         .AddScoped<IBrainButlerCommand, ChangeThemeCommand>();
+         .AddScoped<IBrainButlerCommand, ChangeTheme>()
+         .AddScoped<IBrainButlerCommand, WhatTimeIsIt>();
    }
 }

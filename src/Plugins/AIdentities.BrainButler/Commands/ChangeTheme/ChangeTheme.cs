@@ -1,21 +1,51 @@
-﻿using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 
 namespace AIdentities.BrainButler.Commands.ChangeTheme;
 
-public partial class ChangeThemeCommand : CommandDefinition
+public class ChangeTheme : CommandDefinition
 {
-   public const string NAME = nameof(ChangeThemeCommand);
+   public const string NAME = nameof(ChangeTheme);
    const string ACTIVATION_CONTEXT = "The user wants to change the application theme";
    const string RETURN_DESCRIPTION = "What has been changed";
    const string ARGUMENT_WHAT_TO_CHANGE = "WhatToChange";
    const string ARGUMENT_IS_DARK_PALETTE = "IsDarkPalette";
    const string EXAMPLES = $$"""
       UserRequest: I don't like the color of the background, I want a dark theme and I want it to be blue
+      Reasoning: The user is asking to change the background of the dark palette to blue, {{ARGUMENT_IS_DARK_PALETTE}} is dark.
       JSON: { "{{ARGUMENT_WHAT_TO_CHANGE}}": "Change the background of the dark palette to blue", "{{ARGUMENT_IS_DARK_PALETTE}}": true }
       
       UserRequest: I'd like a colorful theme for the application
+      Reasoning: The user is asking to create a colorful palette, usually dark palettes aren't dark but I can't be sure: {{ARGUMENT_IS_DARK_PALETTE}} is null.
       JSON: { "{{ARGUMENT_WHAT_TO_CHANGE}}": "Set the theme color to a colorful one", "{{ARGUMENT_IS_DARK_PALETTE}}": false }
+      """;
+
+   const string DARK_PALETTE_INSTRUCTION = """
+      Understand Color Theory: Know the basics of hue, saturation, and brightness. This knowledge will guide your color choices.
+      Ensure Contrast: Maintain high contrast between your background and foreground elements to ensure legibility. Use tools like the Web Content Accessibility Guidelines (WCAG) to check your contrast levels.
+      Select Your Color Scheme: Monochromatic and analogous color schemes often work well for dark mode. Choose a scheme that complements your design.
+      Manage Color Temperature: Remember, warmer colors appear to advance and cooler colors seem to recede in dark mode. Use this to guide users' attention in your interface.
+      Desaturate Colors: Colors appear more saturated against a dark background. Counteract this by desaturating your colors in dark mode.
+      Use Semantic Colors: Colors can convey meaning, so be mindful of this when designing. Make sure your color choices don't confuse or misinterpret.
+      Sparingly Use Brand Colors: Use your brand colors sparingly and ensure they have enough contrast when used in dark mode.
+      Apply Transparency: Use transparency to create depth and hierarchy in your UI. But be careful to maintain legibility.
+      Test Your Design: Test your dark mode design under various conditions to ensure it's effective for all users. Make adjustments based on feedback and observations.
+      Remember, creating an effective dark theme requires a balance of aesthetics and functionality. Always keep your users' needs in mind.
+      """;
+
+   const string LIGHT_PALETTE_INSTRUCTION = """
+      Understand Color Theory: Just as with dark themes, understanding the basics of color theory is crucial for light themes. Understanding how different colors interact with each other can guide your color choices.
+      Ensure Readability: Light themes can sometimes strain the eyes, especially when there's not enough contrast between text and background. Make sure that your text is easily readable against your background colors.
+      Choose Your Color Scheme Wisely: In light themes, you have a wider color palette to work with. However, be sure to choose colors that complement each other and the overall design. 
+      Manage Color Temperature: In light mode, cooler colors can provide a calming effect, while warmer colors may add vibrancy and energy. 
+      Avoid Over-Saturation: Overly bright and saturated colors can cause visual fatigue. Opt for softer, less saturated colors to avoid overwhelming the user.
+      Use Semantic Colors: Color can convey meaning, so be sure to use colors that are consistent with the rest of your design and the meanings they're meant to convey.
+      Balanced Use of Brand Colors: While it's important to incorporate your brand colors, don't let them dominate the interface. Balance them with neutral tones to create a harmonious design.
+      Use Shadows for Depth: Unlike dark themes, where transparency can be used for depth, light themes often benefit from the use of shadows. This can help to create hierarchy and depth in your design.
+      Consider Dark Text: For light themes, dark text tends to be more readable than light text. However, the specific color should depend on the background color to maintain good contrast.
+      Test Your Design: As always, testing is vital. Make sure to test your light theme under various conditions, with different users, and adjust based on feedback.
+      Just like with dark themes, the key to creating an effective light theme is to balance aesthetics and functionality, keeping the needs of your users in mind.
+      
       """;
 
    static readonly JsonSerializerOptions _jsonOptionExample = new() { WriteIndented = true };
@@ -25,20 +55,20 @@ public partial class ChangeThemeCommand : CommandDefinition
       new CommandArgumentDefinition(ARGUMENT_WHAT_TO_CHANGE, "What the user wants to change in general about the theme.", true),
       new CommandArgumentDefinition(ARGUMENT_IS_DARK_PALETTE, "Nullable boolean value that specifies if the user want to create a dark palette or not. If you aren't sure, don't set the argument.", false),
    };
-   readonly ILogger<ChangeThemeCommand> _logger;
-   readonly IEnumerable<ICompletionConnector> _conversationalConnectors;
+   readonly ILogger<ChangeTheme> _logger;
+   readonly IConnectorsManager _connectorsManager;
    readonly ThemeUpdater _themeUpdater;
    readonly IPluginStorage<PluginEntry> _pluginStorage;
 
-   public ChangeThemeCommand(ILogger<ChangeThemeCommand> logger,
-                             IEnumerable<ICompletionConnector> conversationalConnectors,
+   public ChangeTheme(ILogger<ChangeTheme> logger,
+                             IConnectorsManager connectorsManager,
                              IPluginStorage<PluginEntry> pluginStorage,
                              ThemeUpdater themeUpdater
                              )
       : base(NAME, ACTIVATION_CONTEXT, RETURN_DESCRIPTION, EXAMPLES)
    {
       _logger = logger;
-      _conversationalConnectors = conversationalConnectors;
+      _connectorsManager = connectorsManager;
       _pluginStorage = pluginStorage;
       _themeUpdater = themeUpdater;
 
@@ -49,8 +79,8 @@ public partial class ChangeThemeCommand : CommandDefinition
                                                                 string? inputPrompt,
                                                                 [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      var connector = _conversationalConnectors.FirstOrDefault(c => c.Enabled)
-         ?? throw new InvalidOperationException("No conversational connector is enabled");
+      var connector = _connectorsManager.GetCompletionConnector()
+         ?? throw new InvalidOperationException("No completion connector is enabled");
 
       if (string.IsNullOrWhiteSpace(inputPrompt))
       {
@@ -58,8 +88,7 @@ public partial class ChangeThemeCommand : CommandDefinition
          yield break;
       }
 
-      var args = JsonSerializer.Deserialize<Args>(inputPrompt);
-      if (args == null)
+      if (!TryExtractJson<Args>(inputPrompt, out var args))
       {
          yield return new CommandExecutionStreamedFragment($"I couldn't properly execute the command because I haven't generated a valid JSON out of my thoughts: {inputPrompt}");
          yield break;
@@ -121,7 +150,12 @@ public partial class ChangeThemeCommand : CommandDefinition
 
    private string GeneratePromptToHaveNewJsonPalette(string userPrompt, Args args)
    {
-      var paletteType = args.IsDarkPalette ?? _themeUpdater.IsDarkMode ? "dark" : "light";
+      bool isDarkPalette = args.IsDarkPalette ?? _themeUpdater.IsDarkMode;
+      var paletteType = isDarkPalette ? "dark" : "light";
+
+      var theme_instruction = isDarkPalette
+         ? DARK_PALETTE_INSTRUCTION
+         : LIGHT_PALETTE_INSTRUCTION;
 
       var sb = new StringBuilder($"""
          This is the definition of a {paletteType} palette
@@ -130,18 +164,9 @@ public partial class ChangeThemeCommand : CommandDefinition
          ```
          
          I want you to write a json representation of this palette, where the color is specified as a hex value (e.g. #FF9800).
-         When you change the palette, adapt all the colors to the new palette and follow this rules for an effective dark mode:
+         When you change the palette, adapt all the colors to the new palette and follow this rules for an effective theme:
          
-         Understand Color Theory: Know the basics of hue, saturation, and brightness. This knowledge will guide your color choices.
-         Ensure Contrast: Maintain high contrast between your background and foreground elements to ensure legibility. Use tools like the Web Content Accessibility Guidelines (WCAG) to check your contrast levels.
-         Select Your Color Scheme: Monochromatic and analogous color schemes often work well for dark mode. Choose a scheme that complements your design.
-         Manage Color Temperature: Remember, warmer colors appear to advance and cooler colors seem to recede in dark mode. Use this to guide users' attention in your interface.
-         Desaturate Colors: Colors appear more saturated against a dark background. Counteract this by desaturating your colors in dark mode.
-         Use Semantic Colors: Colors can convey meaning, so be mindful of this when designing. Make sure your color choices don't confuse or misinterpret.
-         Sparingly Use Brand Colors: Use your brand colors sparingly and ensure they have enough contrast when used in dark mode.
-         Apply Transparency: Use transparency to create depth and hierarchy in your UI. But be careful to maintain legibility.
-         Test Your Design: Test your dark mode design under various conditions to ensure it's effective for all users. Make adjustments based on feedback and observations.
-         Remember, creating an effective dark theme requires a balance of aesthetics and functionality. Always keep your users' needs in mind.
+         {theme_instruction}
 
          """);
 
@@ -158,9 +183,14 @@ public partial class ChangeThemeCommand : CommandDefinition
       return sb.ToString();
    }
 
-   private bool ApplyThemeChanges(string response, bool? isDarkPalette, out string proposedPalette)
+   private bool ApplyThemeChanges(string response, bool? isDarkPalette, [MaybeNullWhen(false)] out string proposedPalette)
    {
-      proposedPalette = ExtractJson().Match(response).Value;
+
+      if (!TryExtractJson(response, out proposedPalette))
+      {
+         return false;
+      }
+
       _logger.LogDebug("The generated palette is: {generatedPalette}", proposedPalette);
 
       try
@@ -224,7 +254,4 @@ public partial class ChangeThemeCommand : CommandDefinition
 
       return JsonSerializer.Serialize(paletteReference, _jsonOptionExample);
    }
-
-   [GeneratedRegex("\\{(.|\\s)*\\}", RegexOptions.Multiline)]
-   private static partial Regex ExtractJson();
 }

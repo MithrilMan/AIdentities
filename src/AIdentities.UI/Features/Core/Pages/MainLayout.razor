@@ -2,12 +2,12 @@
 
 <PageTitle>@AppConstants.APP_TITLE</PageTitle>
 
-<MudThemeProvider @bind-IsDarkMode="@_state.IsDarkMode" Theme="ThemeManager.GetTheme()!" @ref="_mudThemeProvider" @bind-IsDarkMode:after="OnDarkModeChanged"/>
+<MudThemeProvider @bind-IsDarkMode="@_state.IsDarkMode" Theme="ThemeManager.GetTheme()!" @ref="_mudThemeProvider" @bind-IsDarkMode:after="OnDarkModeChanged" />
 <MudDialogProvider />
 <MudSnackbarProvider />
 
 <MudLayout Class="d-flex flex-column">
-   <MudAppBar Elevation="1" DisableGutters="true" Dense="true" Color="Color.Primary">
+   <MudAppBar Elevation="1" DisableGutters="true" Dense="true">
       <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="px-7" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
       <MudText Typo="Typo.h5">@AppConstants.APP_TITLE</MudText>
       <MudSpacer />
@@ -31,7 +31,7 @@
 
    <MudHidden Breakpoint="Breakpoint.MdAndDown">
       <MudDrawer @bind-Open="@_state.IsDrawerOpen" ClipMode="DrawerClipMode.Always" Style="height:calc(100% - 96px)"
-                 Anchor="Anchor.Left"
+                 Anchor="Anchor.Left" Color="Color.Surface"
                  Elevation="2" Variant="@DrawerVariant.Mini">
          <MudNavMenu Bordered="true" Margin="Margin.Dense" Color="Color.Secondary" Class="mud-height-full d-flex flex-column">
             <AIdentities.UI.Features.Core.Components.AvailablePages />
@@ -43,10 +43,11 @@
 
    <MudMainContent Class="d-flex flex-grow-1 overflow-hidden" Style="padding-bottom: 48px; height: 100vh;">@Body</MudMainContent>
 
-   <MudAppBar Bottom="true" DisableGutters="true" Elevation="3" Dense="true" Color="Color.Primary" Style="top: auto; bottom: 0" ToolBarClass="d-flex flex-row mud-width-full px-3">
+   <MudAppBar Bottom="true" DisableGutters="true" Elevation="3" Dense="true" Class="mud-theme-dark"
+              Style="top: auto; bottom: 0" ToolBarClass="d-flex flex-row mud-width-full px-3">
       <MudText Typo="Typo.body2">&copy; Mithril Man 2023</MudText>
       <MudSpacer />
-      <MudLink Href="https://github.com/MithrilMan/AIdentities/" Target="_blank" Class="mud-theme-primary"><MudIcon Icon="@Icons.Custom.Brands.GitHub" /></MudLink>
+      <a href="https://github.com/MithrilMan/AIdentities/" target="_blank" class="mud-theme-dark"><MudIcon Icon="@Icons.Custom.Brands.GitHub" /></a>
    </MudAppBar>
 
 </MudLayout>

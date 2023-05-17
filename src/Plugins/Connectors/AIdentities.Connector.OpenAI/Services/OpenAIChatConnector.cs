@@ -72,20 +72,20 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request)
+   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request, CancellationToken cancellationToken)
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
       var sw = Stopwatch.StartNew();
 
-      using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
+      using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-      _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+      _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
       if (response.IsSuccessStatusCode)
       {
-         var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
+         var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
          sw.Stop();
          return new DefaultConversationalResponse
@@ -99,7 +99,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       }
       else
       {
-         _logger.LogError("Request failed: {Error}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+         _logger.LogError("Request failed: {Error}", response.StatusCode);
          throw new Exception($"Request failed with status code {response.StatusCode}");
       }
    }

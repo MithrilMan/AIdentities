@@ -100,20 +100,20 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       _settingsManager.OnSettingsUpdated -= OnSettingsUpdated;
    }
 
-   public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request)
+   public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request, CancellationToken cancellationToken)
    {
       var apiRequest = BuildCreateCompletionRequest(request, false);
 
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
       var sw = Stopwatch.StartNew();
 
-      using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
+      using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-      _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+      _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
       if (response.IsSuccessStatusCode)
       {
-         var responseData = await response.Content.ReadFromJsonAsync<CreateCompletionResponse>().ConfigureAwait(false);
+         var responseData = await response.Content.ReadFromJsonAsync<CreateCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
          sw.Stop();
          return new DefaultCompletionResponse
@@ -129,7 +129,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       }
       else
       {
-         _logger.LogError("Request failed: {Error}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+         _logger.LogError("Request failed: {Error}", response.StatusCode);
          throw new Exception($"Request failed with status code {response.StatusCode}");
       }
    }
