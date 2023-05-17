@@ -10,19 +10,4 @@ public partial class ExportAIdentity
    }
 
    private readonly State _state = new();
-
-   class Validator : BaseValidator<State>
-   {
-      public Validator()
-      {
-         RuleFor(x => x.FileName)
-            .NotEmpty()
-            .Must(filename => PathUtils.IsValidFileName(filename!)).WithMessage("Invalid file name");
-
-         RuleFor(x => x.SelectedExporter)
-            .NotEmpty();
-      }
-   }
-
-   private readonly Validator _validator = new();
 }

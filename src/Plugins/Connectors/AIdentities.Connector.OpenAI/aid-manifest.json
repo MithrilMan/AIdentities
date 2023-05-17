@@ -1,0 +1,14 @@
+{
+   "Signature": {
+      "Name": "OpenAIConnector",
+      "Version": "1.0.0-alpha",
+      "Author": "Mithril Man",
+      "Entry": "lib/net7.0/AIdentities.Connector.OpenAI.dll"
+   },
+   "Description": "Allows to connect to OpenAI Conversational API",
+   "Website": "",
+   "Email": "",
+   "License": "MIT",
+   "LicenseUrl": "",
+   "Icon": "icon.png"
+}

@@ -1,5 +1,4 @@
-﻿using MudBlazor.Extensions;
-using static AIdentities.Shared.Features.AIdentities.Models.AIdentityPluginActivity;
+﻿using static AIdentities.Shared.Features.AIdentities.Models.AIdentityPluginActivity;
 
 namespace AIdentities.BooruAIdentityImporter;
 public class BooruAIdentitySafetyChecker : IAIdentitySafetyChecker

@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using AIdentities.Shared.Plugins.Connectors.Conversational;
 
 namespace AIdentities.Chat.Services;
 public class ChatPromptGenerator : IChatPromptGenerator
@@ -92,8 +91,8 @@ Craft your responses to be consistent with {TOKEN_AIDENTITY_NAME}'s personality!
 
       _history.AddRange(conversation.Messages.Select(message =>
       {
-         var role = message.AIDentityId == null ? ConversationalRole.User : ConversationalRole.Assistant;
-         return new ConversationalMessage(message.AIDentityId == null ? ConversationalRole.User : ConversationalRole.Assistant, message.Message!, null);
+         var role = message.AIDentityId == null ? DefaultConversationalRole.User : DefaultConversationalRole.Assistant;
+         return new DefaultConversationalMessage(message.AIDentityId == null ? DefaultConversationalRole.User : DefaultConversationalRole.Assistant, message.Message!, null);
       }));
    }
 
@@ -102,7 +101,7 @@ Craft your responses to be consistent with {TOKEN_AIDENTITY_NAME}'s personality!
    /// It has to take into account the used AIdentity.
    /// </summary>
    /// <returns>The system instruction to start the conversation.</returns>
-   private ConversationalMessage GenerateInstruction()
+   private DefaultConversationalMessage GenerateInstruction()
    {
       if (_conversationMetadata == null) { throw new ArgumentNullException(nameof(_conversationMetadata)); }
       if (_currentAIdentity == null) { throw new ArgumentNullException(nameof(_currentAIdentity)); }
@@ -124,7 +123,7 @@ You are {TOKEN_AIDENTITY_NAME}.
          ReplaceTokens(systemPrompt);
       }
 
-      var instruction = new ConversationalMessage(ConversationalRole.System, systemPrompt.ToString(), null);
+      var instruction = new DefaultConversationalMessage(DefaultConversationalRole.System, systemPrompt.ToString(), null);
 
       return instruction;
    }
@@ -141,7 +140,7 @@ You are {TOKEN_AIDENTITY_NAME}.
 
       ReplaceTokens(guardrail);
 
-      return new ConversationalMessage(ConversationalRole.System, guardrail.ToString(), null);
+      return new DefaultConversationalMessage(DefaultConversationalRole.System, guardrail.ToString(), null);
    }
 
 
@@ -156,8 +155,8 @@ You are {TOKEN_AIDENTITY_NAME}.
    {
       if (_conversationMetadata == null) { throw new ArgumentNullException(nameof(_conversationMetadata)); }
 
-      var role = message.AIDentityId == null ? ConversationalRole.User : ConversationalRole.Assistant;
-      var chatMessage = new ConversationalMessage(role, message.Message!, null);
+      var role = message.AIDentityId == null ? DefaultConversationalRole.User : DefaultConversationalRole.Assistant;
+      var chatMessage = new DefaultConversationalMessage(role, message.Message!, null);
 
       _history.Add(chatMessage);
 
@@ -166,7 +165,7 @@ You are {TOKEN_AIDENTITY_NAME}.
 
    public Task<IConversationalRequest> GenerateApiRequest()
    {
-      IConversationalRequest request = new ConversationalRequest()
+      IConversationalRequest request = new DefaultConversationalRequest()
       {
          Messages = BuildRequestMessages().ToList(),
          MaxGeneratedTokens = 500

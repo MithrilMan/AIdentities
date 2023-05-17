@@ -19,6 +19,7 @@
 @code {
    [Inject] IPluginManager PluginManager { get; set; } = default!;
    [Inject] IDebuggablePagesManager DebuggablePagesManager { get; set; } = default!;
+   [Inject] PluginStartupService PluginStartupService { get; set; } = default!;
    //[Inject] IPluginStaticResourceProvider PluginStaticResourceProvider { get; set; } = default!;
    //[Inject] IWebHostEnvironment WebHostEnvironment { get; set; } = default!;
 
@@ -31,5 +32,10 @@
    {
       base.OnInitialized();
       //WebHostEnvironment.WebRootFileProvider = new CompositeFileProvider(new[] { PluginStaticResourceProvider, WebHostEnvironment.WebRootFileProvider });
+   }
+
+   protected override async Task OnInitializedAsync()
+   {
+      await PluginStartupService.StartupPlugins().ConfigureAwait(false);
    }
 }

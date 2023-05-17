@@ -1,0 +1,89 @@
+﻿@inherits AppPage<Interaction>
+
+<HeadContent>
+   <link href="_content/AIdentities.BrainButler/AIdentities.BrainButler.bundle.scp.css" rel="stylesheet">
+</HeadContent>
+
+<MudGrid Class="flex-grow-1" Spacing="1" Justify="Justify.SpaceBetween">
+   <MudItem xs="12" Class="mud-height-full d-flex flex-column gap-1">
+      <div class="d-flex flex-column flex-grow-1 overflow-y-auto" id="@LIST_ID">
+         <MudPaper Class="d-flex flex-column flex-grow-1 pa-2 gap-1" Outlined="true">
+            <MudList Class="list d-flex flex-column flex-grow-1" DisablePadding="true" DisableGutters="true" Dense="true"
+                     Clickable="true" SelectedItemChanged="OnSelectedMessageChanged">
+               <MudSpacer />
+               @foreach (var message in _state.ConversationPieces)
+               {
+                  <MudListItem Class="flex-shrink-0" @key="message" Value="message">
+                     <Message ChatMessage="message" IsSelected="@(_state.SelectedMessage == message)" />
+                  </MudListItem>
+               }
+               @if (_state.IsWaitingReply)
+               {
+                  if (_state.StreamedResponse is { Message.Length: > 0 })
+                  {
+                     <MudListItem Class="flex-shrink-0" Value="_state.StreamedResponse">
+                        <Message ChatMessage="_state.StreamedResponse" IsSelected="@(_state.SelectedMessage == _state.StreamedResponse)" />
+                     </MudListItem>
+                  }
+                  else
+                  {
+                     <MudStack Row="true" Class="mud-width-full">
+                        <MudItem xs="11">
+                           <MudCard Class="flex-grow-1" Elevation="0">
+                              <MudCardHeader Class="py-1 px-0">
+                                 <CardHeaderAvatar>
+                                    <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Height="40px" Width="40px" />
+                                 </CardHeaderAvatar>
+                                 <CardHeaderContent>
+                                    <MudSkeleton Animation="Animation.Wave" Height="40px" SkeletonType="SkeletonType.Rectangle" />
+                                 </CardHeaderContent>
+                              </MudCardHeader>
+                           </MudCard>
+                        </MudItem>
+                        <MudItem xs="1"></MudItem>
+                     </MudStack>
+                  }
+               }
+            </MudList>
+         </MudPaper>
+      </div>
+
+      <MudPaper Class="flex-shrink-0 d-flex flex-row pa-0 gap-1 align-center px-1" Elevation="3">
+         @if (_state.CompletionConnector is null)
+         {
+            <MudAlert Severity="MudBlazor.Severity.Error" Class="mud-width-full"
+                   ContentAlignment="HorizontalAlignment.Center">No conversational connector avaiable. Update your Brain Butler Settings and chose an enabled connector.</MudAlert>
+         }
+         else
+         {
+            @if (_state.HasMessageGenerationFailed)
+            {
+               <MudButton StartIcon="@Icons.Material.Filled.Refresh" Color="Color.Error" ButtonType="ButtonType.Button" Size="Size.Large" Variant="Variant.Filled"
+                    OnClick="Resend" Disabled="@(_state.IsWaitingReply)">Resend</MudButton>
+            }
+            <div class="pa-0 d-flex flex-1 ma-0 overflow-y-auto" style="max-height:300px">
+               <MudTextFieldExtended Variant="Variant.Outlined" Lines="2" @ref="_messageTextField"
+                                  Placeholder="Enter your message..." Immediate="true" Margin="Margin.Dense"
+                                  Class="pa-0 ma-0" AutoSize="true" AutoFocus="true"
+                                  OnKeyDown="OnKeyDown"
+                                  @bind-Value="_state.UserRequest" />
+            </div>
+            @if (_state.IsWaitingReply)
+            {
+               <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" ButtonType="ButtonType.Button" Size="Size.Medium"
+                        Title="Stop generation"
+                        OnClick="StopMessageGeneration" />
+            }
+            else
+            {
+               <MudIconButton Icon="@Icons.Material.Filled.Send" Color="Color.Secondary" ButtonType="ButtonType.Button" Size="Size.Medium"
+                        OnClick="SendMessageAsync" Disabled="@(!_state.CanSendMessage)" />
+            }
+         }
+      </MudPaper>
+   </MudItem>
+</MudGrid>
+
+@code {
+   void OnSelectedMessageChanged(MudListItem item) => _state.SelectedMessage = item.Value as AIResponse;
+}

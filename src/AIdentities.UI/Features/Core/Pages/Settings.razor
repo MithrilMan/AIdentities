@@ -1,8 +1,20 @@
 ﻿@page "/settings"
 
-<MudTabs Outlined="true" Position="Position.Start" Rounded="true" Border="true"
-         ApplyEffectsToContainer="true" Class="flex-grow-1" PanelClass="pa-3">
+<MudTabs Class="flex-h-fix flex-grow-1 mud-width-full" PanelClass="d-flex flex-column flex-h-fix flex-grow-1" TabPanelClass="px-1" MinimumTabWidth="120px"
+         Elevation="4" Rounded="false" Color="@Color.Primary" SliderColor="Color.Tertiary"
+         KeepPanelsAlive="true">
    <MudTabPanel Text="Plugins">
-      <Plugins />
+      <PluginManagementTab />
    </MudTabPanel>
+   @foreach (var pluginSettings in PluginSettingRegistration)
+   {
+      <PluginSettingsTab PluginSettingRegistration="pluginSettings" />
+   }
 </MudTabs>
+
+@code {
+   /// <summary>
+   /// The list of all the Plugin Settings section registered by plugins.
+   /// </summary>
+   [Inject] IEnumerable<PluginSettingRegistration> PluginSettingRegistration { get; set; } = null!;
+}

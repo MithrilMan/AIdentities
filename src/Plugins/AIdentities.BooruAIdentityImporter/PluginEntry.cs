@@ -3,7 +3,7 @@ using AIdentities.BooruAIdentityImporter.Services.FormatDetector.Formats;
 
 namespace AIdentities.BooruAIdentityImporter;
 
-public class PluginEntry : BasePluginEntry
+public class PluginEntry : BasePluginEntry<PluginEntry>
 {
    public override void RegisterServices(IServiceCollection services)
    {

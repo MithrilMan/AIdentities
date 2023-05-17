@@ -9,6 +9,4 @@ public interface IPackageInspector
    /// <param name="pluginAssembly"></param>
    /// <returns></returns>
    IReadOnlyList<PageDefinition> FindPageDefinitions(Assembly pluginAssembly);
-
-   IReadOnlyList<IConnector> FindConnectors(Assembly pluginAssembly);
 }

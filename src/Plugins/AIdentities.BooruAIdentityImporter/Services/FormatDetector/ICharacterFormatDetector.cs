@@ -1,6 +1,4 @@
-﻿using AIdentities.BooruAIdentityImporter.Models;
-
-namespace AIdentities.BooruAIdentityImporter.Services.FormatDetector;
+﻿namespace AIdentities.BooruAIdentityImporter.Services.FormatDetector;
 public interface ICharacterFormatDetector
 {
    string Format { get; }

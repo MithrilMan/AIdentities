@@ -1,6 +1,4 @@
-﻿using AIdentities.Shared.Plugins.Connectors.Conversational;
-
-namespace AIdentities.Chat.Services;
+﻿namespace AIdentities.Chat.Services;
 public interface IChatPromptGenerator
 {
    /// <summary>

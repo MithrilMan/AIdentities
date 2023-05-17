@@ -1,5 +1,6 @@
 ﻿using AIdentities.Shared.Services;
 using Microsoft.AspNetCore.Components;
+using Toolbelt.Blazor.HotKeys2;
 
 namespace AIdentities.Shared.Plugins.Pages;
 
@@ -11,6 +12,7 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
    [Inject] protected ILogger<TAppComponent> Logger { get; set; } = default!;
    [Inject] protected IAppComponentSettingsManager ComponentSettingsManager { get; set; } = default!;
    [Inject] protected INotificationService NotificationService { get; set; } = default!;
+   [Inject] private HotKeys Hotkeys { get; set; } = default!;
 
    [Parameter] public string SettingsKey { get; set; } = typeof(TAppPageSettings).Name;
 
@@ -19,6 +21,8 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
    protected TAppPageSettings _settings = null;
    protected static bool HasConfiguration => typeof(EmptyAppPageSettings).IsAssignableFrom(typeof(TAppPageSettings)) == false;
    protected bool SettingsLoaded { get; set; } = false;
+
+   private HotKeysContext? _hotKeysContext;
 
    /// <summary>
    /// Gets the reference to the cancellation token used to signal that the component has been disposed.
@@ -30,6 +34,9 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
    {
       Logger.LogTrace(nameof(OnInitialized));
       base.OnInitialized();
+
+      _hotKeysContext = Hotkeys.CreateContext();
+      ConfigureHotKeys(_hotKeysContext);
 
       if (LoadSettings())
       {
@@ -67,6 +74,12 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
       Logger.LogTrace(nameof(OnParametersSetAsync));
       return base.OnParametersSetAsync();
    }
+
+   /// <summary>
+   /// Override this method to configure custom hotkeys.
+   /// </summary>
+   /// <param name="hotKeysContext"></param>
+   protected virtual void ConfigureHotKeys(HotKeysContext hotKeysContext) { }
 
    Task IAppComponent.SignalComponentStateHasChanged() => InvokeAsync(StateHasChanged);
 
@@ -176,6 +189,8 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
       Logger.LogTrace("Disposing component");
       _cts.Cancel();
       _cts.Dispose();
+
+      _hotKeysContext?.Dispose();
 
       Logger.LogTrace("Component disposed");
    }

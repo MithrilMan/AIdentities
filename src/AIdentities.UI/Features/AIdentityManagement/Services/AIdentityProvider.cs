@@ -1,6 +1,5 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Options;
-using Microsoft.JSInterop;
 
 namespace AIdentities.UI.Features.AIdentityManagement.Services;
 

@@ -20,6 +20,11 @@ public interface IConnector
    string Description { get; }
 
    /// <summary>
+   /// True if the connector is enabled, false otherwise.
+   /// </summary>
+   public bool Enabled { get; }
+
+   /// <summary>
    /// Additional features the connector can have.
    /// Plugin developers can use this to add and manage custom features to their connectors or access other plugins' features.
    /// </summary>

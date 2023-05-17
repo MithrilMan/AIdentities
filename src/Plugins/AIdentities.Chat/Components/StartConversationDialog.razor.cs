@@ -1,6 +1,4 @@
-﻿using MudBlazor;
-
-namespace AIdentities.Chat.Components;
+﻿namespace AIdentities.Chat.Components;
 
 public partial class StartConversationDialog : ComponentBase
 {

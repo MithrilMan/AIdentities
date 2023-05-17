@@ -30,8 +30,9 @@ public class PluginStorageFactory : IPluginStorageFactory
    private string GetPluginStoragePath()
       => Path.Combine(PathUtils.GetAbsolutePath(_options.Value.PackageFolder, _hostEnvironment.ContentRootPath), AppConstants.SpecialFolders.STORAGE);
 
-   public PluginStorage CreatePluginStorage(PluginManifest pluginManifest)
+   public PluginStorage<TPluginEntry> CreatePluginStorage<TPluginEntry>(PluginManifest pluginManifest)
+       where TPluginEntry : IPluginEntry
    {
-      return new PluginStorage(_loggerFactory.CreateLogger<PluginStorage>(), pluginManifest, _pluginStorageRoot);
+      return new PluginStorage<TPluginEntry>(_loggerFactory.CreateLogger<PluginStorage<TPluginEntry>>(), pluginManifest, _pluginStorageRoot);
    }
 }

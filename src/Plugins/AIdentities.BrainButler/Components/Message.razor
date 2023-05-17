@@ -1,0 +1,48 @@
+﻿@if (ChatMessage is null) return;
+
+<div class="">
+   @if (ChatMessage is AIResponse aIResponse)
+   {
+      <MudStack Row="true" Justify="Justify.FlexStart" AlignItems="AlignItems.End">
+         <MudItem xs="11">
+            <MudStack Row="true">
+               <MudAvatar Color="Color.Tertiary" Size="Size.Medium">
+                  <MudImage Src="/_content/AIdentities.BrainButler/brain-wittle.jpg" />
+               </MudAvatar>
+               <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@MessageStyle">
+                  <MudMarkdown Value="@ChatMessage.Message" />
+               </MudPaper>
+               <MudSpacer />
+            </MudStack>
+         </MudItem>
+         <MudItem xs="1">
+            <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Class="px-2 pb-1">
+               <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
+            </MudStack>
+         </MudItem>
+      </MudStack>
+   }
+   else
+   {
+      <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
+         <MudItem xs="1">
+            <MudStack Row="true" Spacing="1" Justify="Justify.FlexStart" Class="px-2 pb-1">
+               <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
+            </MudStack>
+         </MudItem>
+         <MudItem xs="11">
+            <MudStack Row="true">
+               <MudSpacer />
+               <MudPaper Class="pa-1 overflow-x-auto mud-theme-primary" Elevation="2" Style="@MessageStyle">
+                  <MudMarkdown Value="@ChatMessage.Message" />
+               </MudPaper>
+               <MudAvatar Color="Color.Secondary" Size="Size.Medium">ME</MudAvatar>
+            </MudStack>
+         </MudItem>
+      </MudStack>
+   }
+</div>
+
+@code {
+   string MessageStyle => IsSelected ? "user-select:text" : "";
+}

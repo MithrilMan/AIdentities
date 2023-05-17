@@ -36,5 +36,5 @@ public interface IConversationalStreamedResponse
    /// <summary>
    /// The finish reason of the response.
    /// </summary>
-   public string? FinishReadon { get; init; }
+   public string? FinishReason { get; init; }
 }

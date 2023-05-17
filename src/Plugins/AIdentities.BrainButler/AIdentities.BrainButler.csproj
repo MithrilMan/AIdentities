@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk.Razor">
+
+   <PropertyGroup>
+      <TargetFramework>net7.0</TargetFramework>
+      <Nullable>enable</Nullable>
+      <ImplicitUsings>enable</ImplicitUsings>
+
+      <Version>1.0.0-alpha</Version>
+   </PropertyGroup>
+
+
+   <ItemGroup>
+      <SupportedPlatform Include="browser" />
+   </ItemGroup>
+
+   <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.5" />
+      <PackageReference Include="LibSassBuilder" Version="3.0.0" />
+   </ItemGroup>
+
+   <ItemGroup>
+      <ProjectReference Include="..\..\AIdentities.Shared\AIdentities.Shared.csproj" />
+   </ItemGroup>
+
+
+</Project>

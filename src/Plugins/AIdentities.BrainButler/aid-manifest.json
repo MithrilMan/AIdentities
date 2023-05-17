@@ -1,0 +1,14 @@
+{
+   "Signature": {
+      "Name": "BrainButler",
+      "Version": "1.0.0-alpha",
+      "Author": "Mithril Man",
+      "Entry": "lib/net7.0/AIdentities.BrainButler.dll"
+   },
+   "Description": "Allows the user to interact with BrainButler, the personalized assistant.",
+   "Website": "",
+   "Email": "",
+   "License": "MIT",
+   "LicenseUrl": "",
+   "Icon": "icon.png"
+}

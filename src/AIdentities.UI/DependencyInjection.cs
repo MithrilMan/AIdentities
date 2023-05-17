@@ -1,4 +1,5 @@
-﻿using AIdentities.Shared.Plugins.Storage;
+﻿using AIdentities.Chat.Services;
+using AIdentities.Shared.Plugins.Storage;
 using AIdentities.UI.Features.AIdentityManagement.Services;
 using AIdentities.UI.Features.Core.Services.PageManager;
 using AIdentities.UI.Features.Core.Services.Plugins;
@@ -6,6 +7,7 @@ using AIdentities.UI.Features.Core.Services.PluginStaticResources;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using MudExtensions.Services;
+using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 namespace AIdentities.UI;
 
@@ -47,26 +49,37 @@ public static class DependencyInjection
          .AddOptions<AppOptions>()
          .BindConfiguration(AppOptions.SECTION_NAME);
 
+      services.AddScoped<PluginStartupService>();
+
+      // add external services
       services.AddMudServices();
       services.AddMudExtensions();
       services.AddMudMarkdownServices();
       services.AddBlazoredLocalStorage();
+      services.AddHotKeys2();
+      services.AddScoped<IThemeManager, ThemeManager>();
 
       services.AddScoped<IPageDefinitionProvider, PageDefinitionProvider>();
       services.AddScoped<INotificationService, NotificationService>();
       services.AddScoped<IAppComponentSettingsManager, AppComponentSettingsManager>();
+
+      services.AddScoped<IPluginSettingsManager, PluginSettingsManager>();
 
       services
          .AddScoped<EventAggregator.Blazor.IEventAggregator, EventAggregator.Blazor.EventAggregator>()
          .AddScoped<IEventBus, EventBus>();
 
       services
-         .AddSingleton<IAIdentityProvider, AIdentityProvider>()
-         .AddSingleton<AIdentityProviderSerializationSettings>();
+         .AddScoped<IAIdentityProvider, AIdentityProvider>()
+         .AddScoped<AIdentityProviderSerializationSettings>();
 
-      //services.AddSingleton<>
+      // JS Interop services
+      services
+         .AddScoped<IScrollService, ScrollService>()
+         .AddScoped<IDownloadService, DownloadService>();
 
-      services.AddScoped<IScrollService, ScrollService>();
+      services
+         .AddScoped<IConversationExporter, ConversationExporter>();
 
       startupLogger = RegisterPlugins(services, webHostEnvironment, out pluginStaticWebProvider);
 
@@ -75,13 +88,13 @@ public static class DependencyInjection
 
    private static ILogger RegisterPlugins(IServiceCollection services, IWebHostEnvironment webHostEnvironment, out IFileProvider pluginStaticWebProvider)
    {
-      services.AddSingleton<IPluginStorageFactory, PluginStorageFactory>();
-      services.AddSingleton<IPluginFoldersProvider, PluginFoldersProvider>();
-      services.AddSingleton<IPackageInspector, PackageInspector>();
+      services.AddScoped<IPluginStorageFactory, PluginStorageFactory>();
+      services.AddScoped<IPluginFoldersProvider, PluginFoldersProvider>();
+      services.AddScoped<IPackageInspector, PackageInspector>();
 
       // this is used by debuggable modules to register their services.
       // since we need to build a temporary service provider to deal with plugins, we register this service now to not have to build another one later.
-      services.AddSingleton<IDebuggablePagesManager, DebuggablePagesManager>();
+      services.AddScoped<IDebuggablePagesManager, DebuggablePagesManager>();
 
 
       // in order to let plugins register their services, we need to load packages before we can build the service provider.
@@ -95,11 +108,11 @@ public static class DependencyInjection
       }
 
       // we add the PluginManager to the temporary service collection so we can load plugins.
-      temporaryServices.AddSingleton<PluginManager>();
+      temporaryServices.AddScoped<PluginManager>();
       // we add the PluginStaticResourceProvider to the temporary service collection so we can load plugins.
-      temporaryServices.AddSingleton<PluginStaticResourceProvider>();
+      temporaryServices.AddScoped<PluginStaticResourceProvider>();
       // we add the AppOptionsValidator to the temporary service collection so we can validate the AppOptions explicitly before registering plugins.
-      temporaryServices.AddSingleton<AppOptionsValidator>();
+      temporaryServices.AddScoped<AppOptionsValidator>();
       // Register debuggable module services.
       DebuggableModulesRegistration.RegisterDebuggableModules(temporaryServices);
 
@@ -119,7 +132,7 @@ public static class DependencyInjection
       // - one that loads packages at startup from disk and allow to get the list of loaded packages and their status
       // - one that take the result of the first and manage their lifecycle
       services
-         .AddSingleton<IPluginManager, PluginManager>(sp =>
+         .AddScoped<IPluginManager, PluginManager>(sp =>
          {
             pluginManager.SwapDependencies(
                logger: sp.GetRequiredService<ILogger<PluginManager>>(),
@@ -136,7 +149,7 @@ public static class DependencyInjection
       PluginStaticResourceProvider pluginStaticResourceProvider = temporaryServiceProvider.GetRequiredService<PluginStaticResourceProvider>();
       pluginStaticResourceProvider.Initialize(pluginManager.LoadedPackages);
       services
-         .AddSingleton<IPluginStaticResourceProvider, PluginStaticResourceProvider>(sp =>
+         .AddScoped<IPluginStaticResourceProvider, PluginStaticResourceProvider>(sp =>
          {
             pluginStaticResourceProvider.InjectDependencies(
                logger: sp.GetRequiredService<ILogger<IPluginStaticResourceProvider>>(),

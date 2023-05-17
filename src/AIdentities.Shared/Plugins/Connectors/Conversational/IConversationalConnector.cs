@@ -2,9 +2,9 @@
 
 /// <summary>
 /// To be used for endpoints that support conversations.
-/// E.g. OpenAI Chat, Oobabooga, etc.
+/// E.g. OpenAI Chat APIs, TextGeneration, etc.
 /// </summary>
-public interface IConversationalConnector : IEndpointConnector
+public interface IConversationalConnector : IConnector
 {
    /// <summary>
    /// Perform a request to the conversational endpoint.

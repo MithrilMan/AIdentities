@@ -37,10 +37,4 @@ public class PackageInspector : IPackageInspector
 
       return pageDefinitions;
    }
-
-   public IReadOnlyList<IConnector> FindConnectors(Assembly pluginAssembly)
-   {
-      //TODO
-      return new List<IConnector>();
-   }
 }
