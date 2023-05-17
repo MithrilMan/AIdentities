@@ -46,9 +46,9 @@ public partial class StartConversationDialog : ComponentBase
       conversation.Metadata = new()
       {
          ConversationId = conversation.Id,
-         AIdentityId = _state.SelectedAIdentity!.Id,
          Title = "New Conversation"
       };
+      conversation.Metadata.AIdentityIds.Add(_state.SelectedAIdentity!.Id);
 
       MudDialog.Close(DialogResult.Ok(conversation));
    }

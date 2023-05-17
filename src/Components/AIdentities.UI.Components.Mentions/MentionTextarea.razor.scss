@@ -1,0 +1,39 @@
+.editor-container {
+   border-color: var(--mud-palette-grey-light);
+   border-radius: var(--mud-default-borderradius);
+   border-style: solid;
+   border-width: 1px;
+   overflow: hidden;
+   padding: 10px;
+
+   &:focus-within {
+      border-color: var(--mud-palette-primary);
+      border-width: 2px;
+   }
+
+   .editor {
+      display: block;
+      min-height: 60px;
+      width: 100%;
+      outline: none;
+      user-select: text;
+      white-space: pre-wrap;
+      overflow-wrap: break-word;
+
+      &.editor-typo {
+         font-family: var(--mud-typography-subtitle1-family);
+         font-size: var(--mud-typography-subtitle1-size);
+         font-weight: var(--mud-typography-subtitle1-weight);
+         line-height: var(--mud-typography-subtitle1-lineheight);
+         letter-spacing: var(--mud-typography-subtitle1-letterspacing);
+         text-transform: var(--mud-typography-subtitle1-text-transform);
+      }
+   }
+
+   .editor[data-mentiontextareaempty]::before {
+      content: attr(data-mentionplaceholder);
+      position: absolute;
+      top: 7px; /* FIXME: this magic number is to proper align the placeholder */
+      color: #888888;
+   }
+}

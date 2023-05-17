@@ -45,7 +45,7 @@ public class ChatStorage : IChatStorage
 
          //search if file contains the AIdentity id
          var conversation = await _pluginStorage.ReadAsJsonAsync<ConversationMetadata>(file).ConfigureAwait(false);
-         if (conversation?.AIdentityId == aIdentity.Id)
+         if (conversation!.AIdentityIds.Contains(aIdentity.Id))
          {
             conversations.Add(conversation);
          }

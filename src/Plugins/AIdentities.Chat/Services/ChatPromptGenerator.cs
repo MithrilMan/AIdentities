@@ -75,7 +75,7 @@ Craft your responses to be consistent with {TOKEN_AIDENTITY_NAME}'s personality!
       }
 
       _conversationMetadata = conversation.Metadata with { };
-      _currentAIdentity = _aIdentityProvider.Get(_conversationMetadata.AIdentityId ?? Guid.Empty);
+      _currentAIdentity = _aIdentityProvider.Get(_conversationMetadata.AIdentityIds.FirstOrDefault()); //TODO: multiple chat has to be implemented
       _chatFeature = _currentAIdentity?.Features.Get<AIdentityChatFeature>();
 
       _coreInstructions = GenerateInstruction();

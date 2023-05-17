@@ -12,17 +12,22 @@
          {
             bool isSelected = _state.SelectedConversation == conversation;
             bool isEditingThisConversation = _state.IsEditingConversation && isSelected;
-            var aIdentity = AIdentityProvider.Get(conversation.AIdentityId ?? Guid.Empty);
             <MudListItem Value="conversation" @key="conversation" Class="ma-0 pa-0" Inset="false">
                <MudCard Class="@(isSelected ? "mud-theme-primary" : "conversation-list")">
                   <MudCardHeader>
                      <CardHeaderAvatar>
                         <MudBadge Origin="Origin.TopLeft" Content="@conversation.MessageCount" Color="Color.Secondary" Overlap="true">
-                           <MudTooltip Text="@aIdentity?.Name" Arrow="true" Placement="Placement.Left">
-                              <MudAvatar Size="Size.Medium" Elevation="3" Variant="Variant.Outlined">
-                                 <MudImage Src="@aIdentity?.Image" />
-                              </MudAvatar>
-                           </MudTooltip>
+                           <MudAvatarGroup Max="5" Spacing="4" MaxColor="Color.Primary">
+                              @foreach (var aidentityId in conversation.AIdentityIds)
+                              {
+                                 var aIdentity = AIdentityProvider.Get(aidentityId);
+                                 <MudTooltip Text="@aIdentity?.Name" Arrow="true" Placement="Placement.Left">
+                                    <MudAvatar Size="Size.Medium" Elevation="3" Variant="Variant.Outlined">
+                                       <MudImage Src="@aIdentity?.Image" />
+                                    </MudAvatar>
+                                 </MudTooltip>
+                              }
+                           </MudAvatarGroup>
                         </MudBadge>
                      </CardHeaderAvatar>
                      <CardHeaderContent>

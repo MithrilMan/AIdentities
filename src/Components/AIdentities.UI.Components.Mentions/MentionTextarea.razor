@@ -1,0 +1,61 @@
+<MudOverlay @bind-Visible="_showMentionPopover" AutoClose></MudOverlay>
+
+<div class="absolute" id="@_mentionContainerId">
+   <MudPopover Open="@_showMentionPopover">
+      <MudList Clickable Dense @bind-SelectedValue="SelectedSuggestionIndex">
+         @if (_suggestions is not null)
+         {
+            @if (_suggestions.Count() == 0 && CurrentWord is not null)
+            {
+               <MudListItem>
+                  <MudText Typo="Typo.subtitle2">
+                     Member with username <b>@(CurrentWord[1..])</b> not found.
+                  </MudText>
+               </MudListItem>
+            }
+            else
+            {
+               @foreach (var (item, index) in _suggestions.Select((item, index) => (item, index)))
+               {
+                  <MudListItem Value="@index" OnClick="@(() => OnItemSelected(item))">
+                     @if (SuggestionContentItem is not null)
+                     {
+                        @SuggestionContentItem(item)
+                     }
+                     else
+                     {
+                        <span>@item.Text</span>
+                     }
+                  </MudListItem>
+               }
+            }
+         }
+         else
+         {
+            <MudListItem>
+               <MudText Typo="Typo.subtitle2">
+                  Type at least one letter to start the search
+               </MudText>
+            </MudListItem>
+         }
+      </MudList>
+   </MudPopover>
+
+   <MudPopover Open="@_showMentionTooltip">
+      @if (TooltipContent is not null && _currentTooltipMention is not null)
+      {
+         @TooltipContent(_currentTooltipMention)
+      }
+   </MudPopover>
+</div>
+
+<div class="relative editor-container @Class">
+   <div class="editor editor-typo"
+        contenteditable
+        data-editor
+        data-mentionplaceholder="@Placeholder"
+        @onkeydown="CheckKey">
+      @* start the editor with an empty line *@
+      <div data-line><br></div>
+   </div>
+</div>

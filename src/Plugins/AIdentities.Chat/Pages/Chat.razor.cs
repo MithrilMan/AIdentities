@@ -20,6 +20,7 @@ public partial class Chat : AppPage<Chat>
    [Inject] private IChatPromptGenerator ChatPromptGenerator { get; set; } = null!;
    [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
    [Inject] private IPluginSettingsManager PluginSettingsManager { get; set; } = null!;
+   [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
 
 
    MudTextFieldExtended<string?> _messageTextField = default!;
@@ -132,7 +133,7 @@ public partial class Chat : AppPage<Chat>
          _state.StreamedResponse = new ChatMessage()
          {
             IsGenerated = true,
-            AIDentityId = _state.SelectedConversation?.AIdentityId
+            AIDentityId = _state.SelectedConversation?.AIdentityIds.FirstOrDefault() //TODO handle multiple AIdentities
          };
          _state.StreamedResponse.Metadata.Add("Request", request);
 

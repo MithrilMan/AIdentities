@@ -1,0 +1,1 @@
+This component is an adaptation of https://github.com/drocha87/blazorServerMentions
