@@ -18,4 +18,3 @@ global using Microsoft.AspNetCore.Components;
 global using Microsoft.Extensions.Logging;
 global using MudBlazor;
 global using MudExtensions;
-global using AIdentities.UI.Components.Mentions;

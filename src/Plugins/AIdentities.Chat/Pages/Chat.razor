@@ -6,17 +6,27 @@
 
 <MudGrid Class="flex-grow-1" Spacing="1" Justify="Justify.SpaceBetween">
    <MudItem xs="9" Class="mud-height-full d-flex flex-column gap-1">
-      <MudStack Row="true" AlignItems="AlignItems.Center" Class="mud-elevation-3 px-1">
-         @if (_state.SelectedConversation is not null)
-         {
-            <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" Size="Size.Medium" Color="Color.Secondary" Variant="Variant.Filled" OnClick="CloseConversation" />
-         }
-         <MudText Class="flex-1 text-ellipsis" Typo="Typo.h6">@GetConversationTitle()</MudText>
-         <MudTextField T="string" Placeholder="Search Message..." @bind-Value="_state.MessageSearchText" @bind-Value:after="@ApplyFilter"
-                       Variant="Variant.Filled" DebounceInterval="250" Class="flex-1 ma-0" Margin="Margin.Dense"
-                       Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true"
-                       AdornmentColor="Color.Secondary" Disabled="@(_state.SelectedConversation == null)" />
-      </MudStack>
+      <MudPaper Elevation="25">
+         <MudToolBar Dense="true">
+            @if (_state.SelectedConversation is not null)
+            {
+               <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" Size="Size.Medium" Color="Color.Secondary" Variant="Variant.Filled" OnClick="CloseConversation" />
+            }
+            <MudText Class="flex-1 text-ellipsis" Typo="Typo.h6">@GetConversationTitle()</MudText>
+            <MudSpacer />
+            <MudTextField T="string" Placeholder="Search Message..." @bind-Value="_state.MessageSearchText" @bind-Value:after="@ApplyFilter"
+                          Variant="Variant.Filled" DebounceInterval="250" Class="flex-1 ma-0" Margin="Margin.Dense"
+                          Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true"
+                          AdornmentColor="Color.Secondary" Disabled="@(_state.SelectedConversation == null)" />
+            <MudIconButton Icon="@Icons.Material.Filled.PeopleAlt" />
+            <MudIconButton Icon="@Icons.Material.Filled.Add" />
+            <MudMenu Icon="@Icons.Material.Filled.MoreVert">
+               <MudMenuItem>Profile</MudMenuItem>
+               <MudMenuItem>My account</MudMenuItem>
+               <MudMenuItem>Logout</MudMenuItem>
+            </MudMenu>
+         </MudToolBar>
+      </MudPaper>
 
       <div class="d-flex flex-column flex-grow-1 overflow-y-auto" id="@LIST_ID">
          <MudPaper Class="d-flex flex-column flex-grow-1 pa-2 gap-1" Outlined="true">
@@ -79,53 +89,7 @@
                                   Class="pa-0 ma-0" AutoSize="true" AutoFocus="true"
                                   OnKeyDown="OnKeyDown" Disabled="@(_state.SelectedConversation == null)"
                                   @bind-Value="_state.Message" />
-
-               <MentionTextarea @ref="_mention" Markers="@("@#")" SearchFunc="SearchItems" TextChanged="(text => _state.Message = text)" Class="">
-                  <SuggestionContentItem>
-                     <MudStack Row AlignItems="AlignItems.Center">
-                     @if (!string.IsNullOrEmpty(context.Avatar))
-                        {
-                           <MudAvatar Image="@context.Avatar" Size="Size.Small"></MudAvatar>
-                        }
-                        else
-                        {
-                           @if (context.Marker == '@')
-                           {
-                              <MudAvatar Size="Size.Small">
-                                 <MudIcon Icon="@Icons.Material.Filled.Image" Size="Size.Small" />
-                              </MudAvatar>
-                           }
-                        }
-
-                        <MudText Typo="Typo.body1">
-                           @context.Text
-                        </MudText>
-
-                        <MudSpacer></MudSpacer>
-                        @if (!string.IsNullOrEmpty(context.Description))
-                        {
-                           <MudText Typo="Typo.caption">
-                              @context.Description
-                           </MudText>
-                        }
-                     </MudStack>
-                  </SuggestionContentItem>
-
-                  <TooltipContent>
-                     <MudStack Row Class="pa-4" AlignItems="AlignItems.Center">
-                     <MudAvatar Image="@context.Avatar" Size="Size.Medium"></MudAvatar>
-                     <MudStack Spacing="0">
-                        <MudText Typo="Typo.body1">
-                           @context.Text
-                        </MudText>
-                        <MudText Typo="Typo.caption">
-                           @@@context.Value
-                        </MudText>
-                     </MudStack>
-                     </MudStack>
-                  </TooltipContent>
-                  </MentionTextarea>
-               </div>
+            </div>
             @if (_state.IsWaitingReply)
             {
                <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" ButtonType="ButtonType.Button" Size="Size.Medium"
@@ -149,7 +113,6 @@
 </MudGrid>
 
 @code {
-   MentionTextarea _mention;
    string GetConversationTitle()
    {
       if (_state.SelectedConversation == null)
@@ -161,17 +124,7 @@
 
    void OnSelectedMessageChanged(MudListItem item) => _state.SelectedMessage = item.Value as ChatMessage;
 
-   private Task<IEnumerable<IMention>> SearchItems(char marker, string query)
-   {
-      return Task.FromResult(marker switch
-      {
-         '@' => GetMentionableAIdentities().Where(m => m.Text.Contains(query, StringComparison.InvariantCultureIgnoreCase)),
-         //'#' => await TagSvc.GetTags(query, limit: 5),
-         _ => Enumerable.Empty<IMention>(),
-      });
-   }
-
-   public record Mention : IMention
+   public record Mention
    {
       public char Marker { get; set; }
       public string Text { get; set; }
@@ -180,11 +133,11 @@
       public string Avatar { get; set; }
    }
 
-   IEnumerable<IMention> GetMentionableAIdentities()
+   IEnumerable<Mention> GetMentionableAIdentities()
    {
       if (_state.SelectedConversation is null)
       {
-         return Enumerable.Empty<IMention>();
+         return Enumerable.Empty<Mention>();
       }
 
       return _state.SelectedConversation.AIdentityIds
@@ -199,31 +152,5 @@
                Avatar = $"/api/AIdentity/Image/{a.Id}"
             });
    }
-   public string? Content { get; set; }
-   private async Task GetContent()
-   {
-      if (_mention is not null)
-      {
-         Content = await _mention.GetContent();
-      }
-   }
 }
 
-<style>
-   /* to customize all mentions */
-   span[data-mention] {
-      padding: 0 2px;
-      border-radius: 4px;
-      cursor: pointer;
-   }
-
-   /* to customize the mention with the marker @@ */
-   span[data-mention="@@"] {
-      background-color: var(--mud-palette-primary);
-   }
-
-   /* to customize the mention with the marker # */
-   span[data-mention="#"] {
-      background-color: var(--mud-palette-secondary);
-   }
-</style>
