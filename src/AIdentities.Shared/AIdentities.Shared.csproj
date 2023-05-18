@@ -22,8 +22,4 @@
       <PackageReference Include="System.Linq.Async" Version="6.0.1" />
       <PackageReference Include="Toolbelt.Blazor.HotKeys2" Version="1.0.0" />
    </ItemGroup>
-
-   <ItemGroup>
-     <ProjectReference Include="..\Components\AIdentities.UI.Components.Mentions\AIdentities.UI.Components.Mentions.csproj" />
-   </ItemGroup>
 </Project>

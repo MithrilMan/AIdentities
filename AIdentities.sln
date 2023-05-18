@@ -54,10 +54,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.Connector.OpenA
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AIdentities.Connector.TextGeneration", "src\Plugins\Connectors\AIdentities.Connector.TextGeneration\AIdentities.Connector.TextGeneration.csproj", "{FFA4A83A-D2FA-407E-A1E2-282000792616}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Components", "Components", "{F34B67DF-AE71-4D98-9306-D667B6C90C8F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AIdentities.UI.Components.Mentions", "src\Components\AIdentities.UI.Components.Mentions\AIdentities.UI.Components.Mentions.csproj", "{17DCD1E6-F881-4B7E-A67C-1AB50A497E71}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -108,10 +104,6 @@ Global
 		{FFA4A83A-D2FA-407E-A1E2-282000792616}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFA4A83A-D2FA-407E-A1E2-282000792616}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFA4A83A-D2FA-407E-A1E2-282000792616}.Release|Any CPU.Build.0 = Release|Any CPU
-		{17DCD1E6-F881-4B7E-A67C-1AB50A497E71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{17DCD1E6-F881-4B7E-A67C-1AB50A497E71}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{17DCD1E6-F881-4B7E-A67C-1AB50A497E71}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{17DCD1E6-F881-4B7E-A67C-1AB50A497E71}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -129,7 +121,6 @@ Global
 		{7614D485-300B-4D1F-B9F8-70D0B753F7BC} = {396E75FB-E2A2-428F-8DD1-CF3642A7C8EB}
 		{BC5201DD-4DEF-4197-8EF6-0B7FF5D799A3} = {7614D485-300B-4D1F-B9F8-70D0B753F7BC}
 		{FFA4A83A-D2FA-407E-A1E2-282000792616} = {7614D485-300B-4D1F-B9F8-70D0B753F7BC}
-		{17DCD1E6-F881-4B7E-A67C-1AB50A497E71} = {F34B67DF-AE71-4D98-9306-D667B6C90C8F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5D13AC76-EB81-47F7-ADBA-CEA6CB4D97FF}
