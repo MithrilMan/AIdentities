@@ -11,8 +11,6 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
       services.AddSingleton<IFormatDetector, FormatDetector>();
 
       RegisterFormatDetectors(services);
-
-      RegisterAIdentitySafetyChecker<BooruAIdentitySafetyChecker>();
    }
 
    private static void RegisterFormatDetectors(IServiceCollection services) => services

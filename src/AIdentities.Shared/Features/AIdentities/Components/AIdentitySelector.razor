@@ -1,0 +1,35 @@
+<MudAutocomplete T="AIdentity" AutoFocus="@AutoFocus" Immediate="true" Variant="@Variant"
+                 @bind-Value="_state.SelectedAIdentity" For="@(() => _state.SelectedAIdentity)"
+                 @bind-Value:after="@(OnSelectedAIdentityChanged)" Margin="@Margin"
+                 SearchFunc="@Search" ToStringFunc="@AIdentityConverter" Class="@Class" Style="@Style"
+                 Placeholder="@Placeholder">
+   <ItemTemplate>
+      <MudStack Row="true" AlignItems="AlignItems.Center">
+         <MudAvatar Size="Size.Medium"><MudImage Src="@context.Image" /></MudAvatar>
+         <MudText>@context.Name</MudText>
+      </MudStack>
+   </ItemTemplate>
+</MudAutocomplete>
+
+@code {
+   string AIdentityConverter(AIdentity aIdentity)
+   {
+      return aIdentity?.Name ?? string.Empty;
+   }
+
+   private Task<IEnumerable<AIdentity>> Search(string value)
+   {
+      var allItems = AIdentityProvider.All();
+      if (!string.IsNullOrWhiteSpace(value))
+      {
+         allItems = allItems.Where(i => i.Name?.Contains(value, StringComparison.OrdinalIgnoreCase) ?? false);
+      }
+
+      if (Filter != null)
+      {
+         allItems = allItems.Where(Filter);
+      }
+
+      return Task.FromResult(allItems.OrderBy(a => a.Name, StringComparer.InvariantCultureIgnoreCase).AsEnumerable());
+   }
+}

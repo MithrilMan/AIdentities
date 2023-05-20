@@ -28,7 +28,7 @@ public partial class Chat : AppPage<Chat>
    protected override void OnInitialized()
    {
       base.OnInitialized();
-      _state.Initialize(Filter);
+      _state.Initialize(Filter, ChatPromptGenerator, AIdentityProvider);
 
       var settings = PluginSettingsManager.Get<ChatSettings>();
       _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled && c.Name == settings.DefaultConnector);
@@ -37,13 +37,13 @@ public partial class Chat : AppPage<Chat>
    protected override void ConfigureHotKeys(HotKeysContext hotKeysContext)
    {
       base.ConfigureHotKeys(hotKeysContext);
-      hotKeysContext.Add(ModCode.Ctrl, Code.E, OnHotkeyExportConversation, "Exit from the conversation.");
+      hotKeysContext.Add(ModCode.Ctrl, Code.E, ExportConversation, "Exit from the conversation.");
       hotKeysContext.Add(ModCode.None, Code.Delete, OnHotkeyDeleteMessage, "Delete the selected message.");
    }
 
-   private async ValueTask OnHotkeyExportConversation()
+   private async ValueTask ExportConversation()
    {
-      if (_state.SelectedConversation == null) return;
+      if (_state.NoConversation) return;
 
       if (_state.Messages.UnfilteredCount is not > 0)
       {
@@ -57,7 +57,7 @@ public partial class Chat : AppPage<Chat>
           yesText: "Export it!", cancelText: "Cancel").ConfigureAwait(false);
       if (result != true) return;
 
-      Guid conversationId = _state.SelectedConversation.ConversationId;
+      Guid conversationId = _state.SelectedConversation!.ConversationId;
       await ConversationExporter.ExportConversationAsync(conversationId, ConversationExportFormat.Html).ConfigureAwait(false);
    }
 
@@ -85,7 +85,7 @@ public partial class Chat : AppPage<Chat>
 
    private async Task SendMessageAsync()
    {
-      if (_state.SelectedConversation is null)
+      if (_state.NoConversation)
       {
          NotificationService.ShowWarning("Please select a conversation first");
          return;
@@ -128,8 +128,7 @@ public partial class Chat : AppPage<Chat>
 
       try
       {
-         var request = await ChatPromptGenerator.GenerateApiRequest().ConfigureAwait(false);
-
+         var request = await _state.ChatPromptGenerator.GenerateApiRequest().ConfigureAwait(false);
          _state.StreamedResponse = new ChatMessage()
          {
             IsGenerated = true,
@@ -182,10 +181,9 @@ public partial class Chat : AppPage<Chat>
 
    async Task OnConversationChanged()
    {
-      if (_state.SelectedConversation is null)
+      if (_state.NoConversation)
       {
-         ChatPromptGenerator.InitializeConversation(null);
-         await _state.Messages.LoadItemsAsync(null).ConfigureAwait(false);
+         await _state.CloseConversation().ConfigureAwait(false);
          return;
       }
 
@@ -193,20 +191,17 @@ public partial class Chat : AppPage<Chat>
 
       try
       {
-         conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation.ConversationId).ConfigureAwait(false);
-         ChatPromptGenerator.InitializeConversation(conversation);
-
-         // if the last message is not generated, we need to generate a reply so we enable the "resend" button
-         _state.HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsGenerated == false;
+         conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation!.ConversationId).ConfigureAwait(false);
       }
       catch (Exception ex)
       {
          NotificationService.ShowError($"Failed to load conversation: {ex.Message}");
-         await _state.Messages.LoadItemsAsync(null).ConfigureAwait(false);
+         await _state.CloseConversation().ConfigureAwait(false);
          return;
       }
 
-      await _state.Messages.LoadItemsAsync(conversation.Messages).ConfigureAwait(false);
+      await _state.InitializeConversation(conversation).ConfigureAwait(false);
+
       await ScrollToEndOfMessageList().ConfigureAwait(false);
    }
 
@@ -247,26 +242,33 @@ public partial class Chat : AppPage<Chat>
 
          // we cannot remove easily a message from the PromptGenerator, so we just reset the conversation
          var conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation!.ConversationId).ConfigureAwait(false);
-         ChatPromptGenerator.InitializeConversation(conversation);
-
-         // if the last message is not generated, we need to generate a reply so we enable the "resend" button
-         _state.HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsGenerated == false;
+         await _state.InitializeConversation(conversation, loadMessages: false).ConfigureAwait(false);
       }
    }
-
-   async Task CloseConversation()
-   {
-      _state.SelectedConversation = null;
-      ChatPromptGenerator.InitializeConversation(null);
-      await _state.Messages.LoadItemsAsync(Enumerable.Empty<ChatMessage>()).ConfigureAwait(false);
-   }
-
 
    void StopMessageGeneration()
    {
       _state.MessageGenerationCancellationTokenSource.Cancel();
       _state.MessageGenerationCancellationTokenSource = new CancellationTokenSource();
    }
+
+   async Task AddAIdentityToConversation(AIdentity aIdentity)
+   {
+      if (_state.SelectedConversation is null)
+      {
+         NotificationService.ShowError("No conversation selected");
+         return;
+      }
+      if (_state.SelectedConversation.AIdentityIds.Contains(aIdentity.Id))
+      {
+         NotificationService.ShowError("AIdentity already in conversation");
+         return;
+      }
+      _state.SelectedConversation.AIdentityIds.Add(aIdentity.Id);
+      _state.PartecipatingAIdentities.Add(aIdentity);
+      await ChatStorage.UpdateConversationAsync(_state.SelectedConversation, null).ConfigureAwait(false);
+   }
+
 
    public override void Dispose()
    {

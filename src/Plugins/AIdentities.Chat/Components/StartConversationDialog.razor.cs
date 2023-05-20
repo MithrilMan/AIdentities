@@ -10,28 +10,7 @@ public partial class StartConversationDialog : ComponentBase
 
    MudForm? _form = default!;
 
-   //generate random AIdentities
-   List<AIdentity> AIdentities { get; set; } = GenerateRandomAIdentities();
-
    void Cancel() => MudDialog.Cancel();
-
-   private static List<AIdentity> GenerateRandomAIdentities()
-   {
-      var list = new List<AIdentity>();
-      var dataUri = "data:image/png;base64,iVBORw0KGgoAAA\r\nANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAHElEQVQI12P4\r\n//8/w38GIAXDIBKE0DHxgljNBAAO9TXL0Y4OHwAAAABJRU\r\n5ErkJggg==";
-      for (var i = 0; i < 10; i++)
-      {
-         list.Add(new AIdentity()
-         {
-            Id = Guid.NewGuid(),
-            Name = $"AIdentity {i}",
-            Image = dataUri
-         });
-      }
-
-      return list;
-   }
-
 
    async Task StartConversation()
    {

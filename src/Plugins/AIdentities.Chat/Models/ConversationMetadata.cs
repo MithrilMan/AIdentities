@@ -2,11 +2,9 @@
 
 public record ConversationMetadata
 {
+   public int Version { get; set; } = 1;
    public Guid ConversationId { get; set; }
    public Guid? UserId { get; set; }
-
-   [Obsolete("Will be removed soon, use only AIdentities", true)]
-   public Guid? AIdentityId { get; set; }
 
    /// <summary>
    /// Contains a list of AIdentity Ids that are part of this conversation.

@@ -5,7 +5,13 @@ public partial class Chat
    class State
    {
       public string? MessageSearchText { get; set; }
+
       public ConversationMetadata? SelectedConversation { get; set; }
+      /// <summary>
+      /// True if no conversation is selected.
+      /// </summary>
+      public bool NoConversation => SelectedConversation is null;
+
       public string? Message { get; set; }
       public ChatMessage? SelectedMessage { get; set; } = default!;
       public FilteredObservableCollection<ChatMessage> Messages { get; private set; } = default!;
@@ -34,14 +40,56 @@ public partial class Chat
       public IConversationalConnector? Connector { get; set; }
 
       /// <summary>
+      /// A collection of all the AIdentities that are partecipating in the current conversation.
+      /// </summary>
+      public HashSet<AIdentity> PartecipatingAIdentities { get; set; } = new HashSet<AIdentity>();
+
+      public string PartecipatingAIdentitiesTooltip => string.Join(", ", PartecipatingAIdentities.Select(aidentity => aidentity.Name));
+
+      /// <summary>
+      /// The chat prompt generator used to generate the chat prompts.
+      /// </summary>
+      public IChatPromptGenerator ChatPromptGenerator { get; private set; } = default!;
+      public IAIdentityProvider AIdentityProvider { get; private set; } = default!;
+
+      /// <summary>
       /// The cancellation token source used to cancel the message generation.
       /// </summary>
       public CancellationTokenSource MessageGenerationCancellationTokenSource { get; set; } = new CancellationTokenSource();
 
-      public void Initialize(Func<IEnumerable<ChatMessage>, ValueTask<IEnumerable<ChatMessage>>> messageFilter)
+      public void Initialize(Func<IEnumerable<ChatMessage>, ValueTask<IEnumerable<ChatMessage>>> messageFilter, IChatPromptGenerator chatPromptGenerator, IAIdentityProvider aidentityProvider)
       {
-         MessageSearchText = null;
          Messages = new(messageFilter);
+         ChatPromptGenerator = chatPromptGenerator;
+         AIdentityProvider = aidentityProvider;
+         MessageSearchText = null;
+      }
+
+      public async Task InitializeConversation(Conversation conversation, bool loadMessages = true)
+      {
+         ChatPromptGenerator.InitializeConversation(conversation);
+         // if the last message is not generated, we need to generate a reply so we enable the "resend" button
+         HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsGenerated == false;
+         if (loadMessages)
+         {
+            await Messages.LoadItemsAsync(conversation.Messages).ConfigureAwait(false);
+         }
+
+         PartecipatingAIdentities = conversation.Metadata.AIdentityIds
+            .Select(AIdentityProvider.Get)
+            .Where(aidentity => aidentity is not null)
+            .Select(aidentity => aidentity!)
+            .ToHashSet();
+      }
+
+      public async Task CloseConversation()
+      {
+         SelectedConversation = null;
+         HasMessageGenerationFailed = false;
+         await Messages.LoadItemsAsync(null).ConfigureAwait(false);
+
+         ChatPromptGenerator.InitializeConversation(null);
+         PartecipatingAIdentities.Clear();
       }
    }
 

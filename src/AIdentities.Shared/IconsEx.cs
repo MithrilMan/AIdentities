@@ -1,4 +1,5 @@
-﻿namespace AIdentities.Shared;
+﻿namespace MudBlazor;
+
 public static class IconsEx
 {
    public const string IMPORT = """

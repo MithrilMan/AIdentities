@@ -26,9 +26,9 @@ public class ChatStorage : IChatStorage
       var files = await _pluginStorage.ListAsync().ConfigureAwait(false);
 
       var conversations = new List<ConversationMetadata>();
-      foreach (var file in files.Where(f => f.EndsWith(CONVERSATION_POSTFIX)))
+      foreach (var fileName in files.Where(f => f.EndsWith(CONVERSATION_POSTFIX)))
       {
-         var conversation = await _pluginStorage.ReadAsJsonAsync<ConversationMetadata>(file).ConfigureAwait(false);
+         var conversation = await LoadConversationMetadata(fileName).ConfigureAwait(false);
          conversations.Add(conversation!);
       }
       return conversations;
@@ -39,12 +39,12 @@ public class ChatStorage : IChatStorage
       var files = await _pluginStorage.ListAsync().ConfigureAwait(false);
 
       var conversations = new List<ConversationMetadata>();
-      foreach (var file in files)
+      foreach (var fileName in files)
       {
-         if (file.EndsWith(CONVERSATION_POSTFIX)) continue;
+         if (fileName.EndsWith(CONVERSATION_POSTFIX)) continue;
 
          //search if file contains the AIdentity id
-         var conversation = await _pluginStorage.ReadAsJsonAsync<ConversationMetadata>(file).ConfigureAwait(false);
+         var conversation= await LoadConversationMetadata(fileName).ConfigureAwait(false);
          if (conversation!.AIdentityIds.Contains(aIdentity.Id))
          {
             conversations.Add(conversation);
@@ -56,8 +56,7 @@ public class ChatStorage : IChatStorage
    public async ValueTask<Conversation> LoadConversationAsync(Guid conversationId)
    {
       var fileName = $"{conversationId}{CONVERSATION_POSTFIX}";
-      var conversationMetadata = await _pluginStorage.ReadAsJsonAsync<ConversationMetadata>(fileName).ConfigureAwait(false)
-         ?? throw new ArgumentException($"Conversation with id {conversationId} not found.");
+      var conversationMetadata = await LoadConversationMetadata(fileName).ConfigureAwait(false);
 
       var conversation = new Conversation
       {
@@ -94,6 +93,28 @@ public class ChatStorage : IChatStorage
       }
 
       return conversation!;
+   }
+
+   private async Task<ConversationMetadata> LoadConversationMetadata(string fileName)
+   {
+      var conversationMetadata = await _pluginStorage.ReadAsJsonAsync<ConversationMetadata>(fileName).ConfigureAwait(false)
+            ?? throw new ArgumentException($"Conversation with file name {fileName} not found.");
+
+      //if I don't have any AIdentityIds it's because I'm on the old version that had just a single AIdentityId conversation.
+      //we try to load it anyway and convert to the new format
+      if (conversationMetadata.AIdentityIds is { Count: > 0 })
+      {
+         return conversationMetadata;
+      }
+
+      var oldConversationMetadata = await _pluginStorage.ReadAsJsonAsync<ConversationMetadataOld>(fileName).ConfigureAwait(false);
+      if (oldConversationMetadata?.AIdentityId != null)
+      {
+         oldConversationMetadata.AIdentityIds.Add(oldConversationMetadata.AIdentityId.Value);
+         return oldConversationMetadata;
+      }
+
+      return oldConversationMetadata!;
    }
 
    private static string GetConversationMessagesFileName(Guid conversationId) => $"{conversationId}{CONVERSATION_MESSAGES_POSTFIX}";
@@ -178,5 +199,11 @@ public class ChatStorage : IChatStorage
 
       var messages = string.Join(Environment.NewLine, conversation.Messages.Select(message => JsonSerializer.Serialize(message)));
       return ValueTask.CompletedTask;
+   }
+
+
+   public record ConversationMetadataOld : ConversationMetadata
+   {
+      public Guid? AIdentityId { get; set; }
    }
 }

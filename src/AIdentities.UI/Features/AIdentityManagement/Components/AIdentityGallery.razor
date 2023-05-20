@@ -7,10 +7,11 @@
                     AdornmentColor="Color.Secondary" />
    </MudItem>
    <MudItem xs="12" md="4" Class="d-flex align-center">
-      <MudExtensions.MudSelectExtended MultiSelection="true" ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" Variant="Variant.Filled"
+      <MudExtensions.MudSelectExtended MultiSelection="true" ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" Variant="Variant.Text"
                                        ItemCollection="_state.AvailableAIdentityTags" Class="mt-0"
-                                       T="string" @bind-SelectedValues="_state.AIdentityTags" AnchorOrigin="Origin.BottomCenter"
-                                       Dense="true" Clearable="true" Label="Filter by tags" Color="Color.Secondary"
+                                       T="string" @bind-SelectedValues="_state.AIdentityTags" AnchorOrigin="Origin.BottomCenter" 
+                                       Dense="true" Clearable="true" Placeholder="Filter by tags" Color="Color.Secondary" 
+                                       SearchBox="true" SearchBoxAutoFocus="true"
                                        ChipCloseable="true" ChipSize="Size.Medium" ChipVariant="Variant.Filled">
       </MudExtensions.MudSelectExtended>
    </MudItem>

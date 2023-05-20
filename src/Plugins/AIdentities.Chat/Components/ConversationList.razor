@@ -15,32 +15,16 @@
             <MudListItem Value="conversation" @key="conversation" Class="ma-0 pa-0" Inset="false">
                <MudCard Class="@(isSelected ? "mud-theme-primary" : "conversation-list")">
                   <MudCardHeader>
-                     <CardHeaderAvatar>
-                        <MudBadge Origin="Origin.TopLeft" Content="@conversation.MessageCount" Color="Color.Secondary" Overlap="true">
-                           <MudAvatarGroup Max="5" Spacing="4" MaxColor="Color.Primary">
-                              @foreach (var aidentityId in conversation.AIdentityIds)
-                              {
-                                 var aIdentity = AIdentityProvider.Get(aidentityId);
-                                 <MudTooltip Text="@aIdentity?.Name" Arrow="true" Placement="Placement.Left">
-                                    <MudAvatar Size="Size.Medium" Elevation="3" Variant="Variant.Outlined">
-                                       <MudImage Src="@aIdentity?.Image" />
-                                    </MudAvatar>
-                                 </MudTooltip>
-                              }
-                           </MudAvatarGroup>
-                        </MudBadge>
-                     </CardHeaderAvatar>
                      <CardHeaderContent>
-                        <MudStack Row="true" Spacing="2">
-                           @if (isEditingThisConversation)
-                           {
-                              <MudTextField Class="pa-0" Margin="Margin.Dense" AutoFocus="true" Required @bind-Value="_state.EditingTitle" Variant="Variant.Filled" Label="Title" OnKeyUp="SaveOnEnterPressed" />
-                           }
-                           else
-                           {
-                              <MudText>@conversation.Title</MudText>
-                           }
-                        </MudStack>
+                        @if (isEditingThisConversation)
+                        {
+                           <MudTextField Class="pa-0" Margin="Margin.Dense" AutoFocus="true" Required @bind-Value="_state.EditingTitle" Variant="Variant.Filled" Label="Title" OnKeyUp="SaveOnEnterPressed" />
+                        }
+                        else
+                        {
+                           <MudText Typo="Typo.h6">@conversation.Title</MudText>
+                        }
+
                      </CardHeaderContent>
                      <CardHeaderActions>
                         @if (isEditingThisConversation)
@@ -56,7 +40,28 @@
                   </MudCardHeader>
                   <MudCardContent Class="pt-0 d-flex align-end">
                      <MudStack>
-                        <MudText Typo="Typo.caption">Created on @conversation.CreatedAt.LocalDateTime</MudText>
+                        <MudBadge Origin="Origin.TopLeft" Content="@conversation.MessageCount" Color="Color.Secondary" Overlap="true">
+                           <MudAvatarGroup Max="5" Spacing="2" MaxColor="Color.Primary">
+                              @foreach (var aidentityId in conversation.AIdentityIds)
+                              {
+                                 var aIdentity = AIdentityProvider.Get(aidentityId);
+                                 @if (conversation.AIdentityIds.Count == 1)
+                                 {
+                                    <MudTooltip Text="@aIdentity?.Name" Arrow="true" Placement="Placement.Left">
+                                       <MudAvatar Size="Size.Medium" Elevation="3" Variant="Variant.Outlined">
+                                          <MudImage Src="@aIdentity?.Image" />
+                                       </MudAvatar>
+                                    </MudTooltip>
+                                 }
+                                 else
+                                 {
+                                    <MudAvatar Size="Size.Medium" Elevation="3" Variant="Variant.Outlined">
+                                       <MudImage Src="@aIdentity?.Image" />
+                                    </MudAvatar>
+                                 }
+                              }
+                           </MudAvatarGroup>
+                        </MudBadge>
                         <MudText Typo="Typo.caption">Last edited on @conversation.UpdatedAt.LocalDateTime</MudText>
                      </MudStack>
                      <MudSpacer />

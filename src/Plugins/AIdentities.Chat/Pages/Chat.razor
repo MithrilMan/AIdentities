@@ -1,31 +1,43 @@
 ﻿@inherits AppPage<Chat>
 
-<HeadContent>
-   <link href="_content/AIdentities.Chat/AIdentities.Chat.bundle.scp.css" rel="stylesheet">
-</HeadContent>
+<PluginResource TPlugin="PluginEntry" ResourceType="PluginResourceType.EmbeddedStyle" />
 
 <MudGrid Class="flex-grow-1" Spacing="1" Justify="Justify.SpaceBetween">
    <MudItem xs="9" Class="mud-height-full d-flex flex-column gap-1">
-      <MudPaper Elevation="25">
-         <MudToolBar Dense="true">
-            @if (_state.SelectedConversation is not null)
+      <MudPaper>
+         <MudToolBar Dense="true" Class="px-2" DisableGutters="true">
+            @if (_state.NoConversation == false)
             {
-               <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" Size="Size.Medium" Color="Color.Secondary" Variant="Variant.Filled" OnClick="CloseConversation" />
+               <MudIconButton Icon="@Icons.Material.Filled.KeyboardDoubleArrowLeft" Size="Size.Medium" Color="Color.Secondary"
+                           Variant="Variant.Filled" Class="mr-2" OnClick="_state.CloseConversation" />
             }
             <MudText Class="flex-1 text-ellipsis" Typo="Typo.h6">@GetConversationTitle()</MudText>
             <MudSpacer />
-            <MudTextField T="string" Placeholder="Search Message..." @bind-Value="_state.MessageSearchText" @bind-Value:after="@ApplyFilter"
-                          Variant="Variant.Filled" DebounceInterval="250" Class="flex-1 ma-0" Margin="Margin.Dense"
-                          Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search" Clearable="true"
-                          AdornmentColor="Color.Secondary" Disabled="@(_state.SelectedConversation == null)" />
-            <MudIconButton Icon="@Icons.Material.Filled.PeopleAlt" />
-            <MudIconButton Icon="@Icons.Material.Filled.Add" />
+
+            <MudToggleIconButton Variant="Variant.Text" Title="Add a participant" ToggledColor="Color.Tertiary"
+                                 Disabled="_state.NoConversation" @bind-Toggled="_showAddAIdentityDialog"
+                                 Icon="@Icons.Material.Filled.PersonAdd" ToggledIcon="@Icons.Material.Filled.PersonAdd" />
             <MudMenu Icon="@Icons.Material.Filled.MoreVert">
-               <MudMenuItem>Profile</MudMenuItem>
-               <MudMenuItem>My account</MudMenuItem>
-               <MudMenuItem>Logout</MudMenuItem>
+               <MudMenuItem OnClick="ExportConversation" Icon="@IconsEx.EXPORT" Disabled="_state.NoConversation">Export</MudMenuItem>
             </MudMenu>
          </MudToolBar>
+
+         @if (_showAddAIdentityDialog)
+         {
+            <MudStack Row="true">
+               <MudTooltip Text="@_state.PartecipatingAIdentitiesTooltip" Placement="Placement.Right" Arrow="true">
+                  <MudAvatarGroup Class="px-2" Spacing="2" Max="5">
+                     @foreach (var aid in _state.PartecipatingAIdentities)
+                     {
+                        <MudAvatar Size="Size.Medium"><MudImage Src="@aid.GetImageUri()" /></MudAvatar>
+                     }
+                  </MudAvatarGroup>
+               </MudTooltip>
+               <AIdentitySelector AutoFocus="true" Class="ma-0" Placeholder="Select an AIdentity to invite." Style="border-radius:0"
+                               Margin="Margin.Dense" Variant="Variant.Text" Filter="(aid => !_state.PartecipatingAIdentities.Contains(aid))"
+                               SelectedAIdentityChanged="AddAIdentityToConversation" />
+            </MudStack>
+         }
       </MudPaper>
 
       <div class="d-flex flex-column flex-grow-1 overflow-y-auto" id="@LIST_ID">
@@ -87,7 +99,7 @@
                <MudTextFieldExtended Variant="Variant.Outlined" Lines="2" @ref="_messageTextField"
                                   Placeholder="Enter your message..." Immediate="true" Margin="Margin.Dense"
                                   Class="pa-0 ma-0" AutoSize="true" AutoFocus="true"
-                                  OnKeyDown="OnKeyDown" Disabled="@(_state.SelectedConversation == null)"
+                                  OnKeyDown="OnKeyDown" Disabled="@(_state.NoConversation)"
                                   @bind-Value="_state.Message" />
             </div>
             @if (_state.IsWaitingReply)
@@ -113,44 +125,25 @@
 </MudGrid>
 
 @code {
+   bool _showAddAIdentityDialog = false;
+   void ToggleOpenAddAIdentityDialog() => _showAddAIdentityDialog = !_showAddAIdentityDialog;
+
    string GetConversationTitle()
    {
-      if (_state.SelectedConversation == null)
+      if (_state.NoConversation)
       {
          return "Select a conversation";
       }
-      return _state.SelectedConversation.Title;
+      return _state.SelectedConversation!.Title;
+   }
+
+   ICollection<AIdentity> GetAvailableAIdentities()
+   {
+      if (_state.NoConversation) return Array.Empty<AIdentity>();
+
+      return AIdentityProvider.All().Where(a => !_state.SelectedConversation!.AIdentityIds.Contains(a.Id)).ToList();
    }
 
    void OnSelectedMessageChanged(MudListItem item) => _state.SelectedMessage = item.Value as ChatMessage;
-
-   public record Mention
-   {
-      public char Marker { get; set; }
-      public string Text { get; set; }
-      public string Value { get; set; }
-      public string Description { get; set; }
-      public string Avatar { get; set; }
-   }
-
-   IEnumerable<Mention> GetMentionableAIdentities()
-   {
-      if (_state.SelectedConversation is null)
-      {
-         return Enumerable.Empty<Mention>();
-      }
-
-      return _state.SelectedConversation.AIdentityIds
-         .Select(a => AIdentityProvider.Get(a))
-         .Where(a => a is not null)
-         .Select(a => new Mention
-            {
-               Marker = '@',
-               Text = a.Name ?? "",
-               Value = a.Name, //a.Id.ToString(),
-               Description = a.Description,
-               Avatar = $"/api/AIdentity/Image/{a.Id}"
-            });
-   }
 }
 

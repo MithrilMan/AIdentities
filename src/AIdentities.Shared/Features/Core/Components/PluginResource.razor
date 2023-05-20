@@ -1,0 +1,32 @@
+@typeparam TPlugin where TPlugin : Plugins.IPluginEntry
+
+<HeadContent>
+   @switch (ResourceType)
+   {
+      case PluginResourceType.EmbeddedStyle:
+         <link href="@GetContentPath(".bundle.scp.css")" rel="stylesheet">
+         break;
+      case PluginResourceType.CustomStyle:
+         if (RelativePath is null) throw new ArgumentNullException(nameof(RelativePath));
+         <link href="@GetContentPath(RelativePath!)" rel="stylesheet">
+         break;
+      default:
+         throw new ArgumentOutOfRangeException(nameof(ResourceType), ResourceType, null);
+   }
+</HeadContent>
+
+
+
+
+@code {
+   [Parameter] public PluginResourceType ResourceType { get; set; }
+   [Parameter] public string? RelativePath { get; set; }
+
+   string GetContentPath(string relativePath)
+   {
+      var nameSpace = typeof(TPlugin).Namespace!;
+      var path = $"_content/{nameSpace}/{nameSpace}{relativePath}";
+
+      return path;
+   }
+}

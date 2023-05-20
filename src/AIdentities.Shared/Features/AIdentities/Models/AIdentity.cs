@@ -56,4 +56,9 @@ public record AIdentity : Entity
    /// Plugin developers can use this to add and manage custom features to their AIdentities or access other plugins' features.
    /// </summary>
    public FeatureCollection Features { get; set; } = new();
+
+   /// <summary>
+   /// returns an URL that can be fetched by the Controller that generate a cacheable image.
+   /// </summary>
+   public string GetImageUri() => $"/api/AIdentity/Image/{Id}";
 }
