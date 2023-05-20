@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using Microsoft.Extensions.Options;
 
-namespace AIdentities.UI.Features.AIdentityManagement.Services;
+namespace AIdentities.Shared.Features.AIdentities.Services;
 
 public class AIdentityProvider : IAIdentityProvider
 {
@@ -42,9 +42,7 @@ public class AIdentityProvider : IAIdentityProvider
          {
             var aidentity = ReadAIdentity(id);
             if (aidentity != null)
-            {
                _aidentities[aidentity.Id] = aidentity;
-            }
          }
          catch (Exception ex)
          {
@@ -58,9 +56,7 @@ public class AIdentityProvider : IAIdentityProvider
    {
       var path = GetAIdentitiesPath();
       if (!Directory.Exists(path))
-      {
          Directory.CreateDirectory(path);
-      }
    }
 
    public IEnumerable<AIdentity> All()
@@ -90,9 +86,7 @@ public class AIdentityProvider : IAIdentityProvider
          //try to read again from disk
          aidentity = ReadAIdentity(id);
          if (aidentity != null)
-         {
             _aidentities[aidentity.Id] = aidentity;
-         }
       }
 
       return aidentity;

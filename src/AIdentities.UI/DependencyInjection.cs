@@ -1,6 +1,4 @@
-﻿using AIdentities.Chat.Services;
-using AIdentities.Shared.Plugins.Storage;
-using AIdentities.UI.Features.AIdentityManagement.Services;
+﻿using AIdentities.Shared.Plugins.Storage;
 using AIdentities.UI.Features.Core.Services.PageManager;
 using AIdentities.UI.Features.Core.Services.Plugins;
 using AIdentities.UI.Features.Core.Services.PluginStaticResources;
@@ -49,6 +47,9 @@ public static class DependencyInjection
          .AddOptions<AppOptions>()
          .BindConfiguration(AppOptions.SECTION_NAME);
 
+      // inject the services from the Shared project
+      services.AddSharedServices();
+
       services.AddScoped<PluginStartupService>();
 
       // add external services
@@ -61,25 +62,11 @@ public static class DependencyInjection
 
       services.AddScoped<IPageDefinitionProvider, PageDefinitionProvider>();
       services.AddScoped<INotificationService, NotificationService>();
-      services.AddScoped<IAppComponentSettingsManager, AppComponentSettingsManager>();
-
-      services.AddScoped<IPluginSettingsManager, PluginSettingsManager>();
-
-      services
-         .AddScoped<EventAggregator.Blazor.IEventAggregator, EventAggregator.Blazor.EventAggregator>()
-         .AddScoped<IEventBus, EventBus>();
-
-      services
-         .AddScoped<IAIdentityProvider, AIdentityProvider>()
-         .AddScoped<AIdentityProviderSerializationSettings>();
 
       // JS Interop services
       services
          .AddScoped<IScrollService, ScrollService>()
          .AddScoped<IDownloadService, DownloadService>();
-
-      services
-         .AddScoped<IConversationExporter, ConversationExporter>();
 
       startupLogger = RegisterPlugins(services, webHostEnvironment, out pluginStaticWebProvider);
 

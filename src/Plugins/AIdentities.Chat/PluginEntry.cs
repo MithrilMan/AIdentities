@@ -6,7 +6,9 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
 {
    public override void RegisterServices(IServiceCollection services)
    {
-      services.AddScoped<IChatStorage,ChatStorage>();
+      services
+         .AddScoped<IChatStorage, ChatStorage>()
+         .AddScoped<IConversationExporter, ConversationExporter>();
 
       services
          .AddTransient<IChatPromptGenerator, ChatPromptGenerator>();

@@ -1,6 +1,4 @@
-﻿using System.Text.Json;
-
-namespace AIdentities.UI.Features.AIdentityManagement.Services;
+﻿namespace AIdentities.Shared.Features.AIdentities.Services;
 
 public class AIdentityProviderSerializationSettings
 {
@@ -18,6 +16,6 @@ public class AIdentityProviderSerializationSettings
    private void InitializeSerializerOptions(IEnumerable<AIdentityFeatureRegistration> aIdentityFeatureRegistrations)
    {
       var registeredFeatures = aIdentityFeatureRegistrations.Select(x => x.FeatureType);
-      SerializerOptions.Converters.Add(new Shared.Serialization.FeatureCollectionJsonConverter(_logger, registeredFeatures));
+      SerializerOptions.Converters.Add(new Serialization.FeatureCollectionJsonConverter(_logger, registeredFeatures));
    }
 }
