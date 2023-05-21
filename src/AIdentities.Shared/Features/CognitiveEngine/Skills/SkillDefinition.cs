@@ -13,6 +13,8 @@ public abstract class SkillDefinition : ISkillAction
    public string ReturnDescription { get; }
    public string Examples { get; }
 
+   public ICollection<string> Tags => new List<string>();
+
    public SkillDefinition(string name,
                           string activationContext,
                           string returnDescription,
@@ -24,7 +26,7 @@ public abstract class SkillDefinition : ISkillAction
       Examples = examples;
    }
 
-   public abstract IAsyncEnumerable<Thought> ExecuteAsync(Prompt prompt, CognitiveContext cognitiveContext, MissionContext missionContext, CancellationToken cancellationToken);
+   public abstract IAsyncEnumerable<Thought> ExecuteAsync(Prompt prompt, CognitiveContext cognitiveContext, MissionContext? missionContext, CancellationToken cancellationToken);
 
    /// <summary>
    /// Extracts the typeod arguments from the text.
@@ -47,11 +49,51 @@ public abstract class SkillDefinition : ISkillAction
       }
    }
 
+   /// <summary>
+   /// Try to extract the arguments from the contexts.
+   /// First it will try to extract the arguments from the mission context.
+   /// If it fails, it will try to extract the arguments from the cognitive context.
+   /// </summary>
+   /// <typeparam name="TReturnValue">The type of the arguments to extract.</typeparam>
+   /// <param name="cognitiveContext">The cognitive context.</param>
+   /// <param name="missionContext">The mission context.</param>
+   /// <param name="args">The extracted arguments.</param>
+   /// <returns>The extracted arguments.</returns>
+   public virtual bool TryExtractFromContext<TReturnValue>(
+      CognitiveContext cognitiveContext,
+      MissionContext? missionContext,
+      [MaybeNullWhen(false)] out TReturnValue args) where TReturnValue : class
+   {
+
+      var mission_skill_key = $"{cognitiveContext.AIdentity}_{Name}_{Id}";
+      if (cognitiveContext.State.TryGetValue(mission_skill_key, out object? rawValue)
+         && rawValue is TReturnValue missionContextValue)
+      {
+         args = missionContextValue;
+         return true;
+      }
+
+      var cognitive_skill_key = $"{Name}_{Id}";
+      if (cognitiveContext.State.TryGetValue(cognitive_skill_key, out rawValue)
+         && rawValue is TReturnValue cognitiveContextValue)
+      {
+         args = cognitiveContextValue;
+         return true;
+      }
+
+      args = null;
+      return false;
+   }
+
+   /// <summary>
+   /// Tries to extract the json from the text.
+   /// </summary>
+   /// <param name="text"></param>
+   /// <param name="json"></param>
+   /// <returns></returns>
    public virtual bool TryExtractJson(string text, [MaybeNullWhen(false)] out string json)
    {
       json = SkillRegexUtils.ExtractJson().Match(text).Value;
       return !string.IsNullOrWhiteSpace(json);
    }
-
-
 }

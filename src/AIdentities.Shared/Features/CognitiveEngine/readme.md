@@ -10,9 +10,7 @@ If we think about a job we want our AIdentity execute for us, we can imagine it 
 
 Also we aren't limiting the AIdentity to a single task: any action executed is independent from any other action the same AIdentity may be executing at the same time.
 
-To hold the state of an executing task, a CognitiveContext is used. That's the place where temporary data created by each AIdentity skill are held and any skill can modify the context in any of its part: there is no concept of owner linked to a stored state object, to keep things simpler and allow multiple actions to share state objects, but still isolated in a specific AIdentity.
-
-
+To hold the state of an executing task, a CognitiveContext is used. That's the place where temporary data created by each AIdentity skill are held and any skill can modify the context in any of its part: each state variable within the CognitiveContext isn't owned by a specific skill but can instead be modified by anyone that has access to the specific CognitiveContext. If you think like a human does, every action the human does share the state with any other action he's doing, it's kind of his volatile memory.
 
 ## AIdentity into a mission
 
@@ -60,6 +58,4 @@ Is also possible, for each skill, to set a preferred AIdentity in charge of use 
 
 In order to share some common data about the mission evolution, each AIdentity has access to a common context that works similar to CognitiveContext but it's used to share partial data during the execution of a mission.
 
-Like for CognitiveContext, MissionContext states doesn't have an owner and any AIdentity has access to any state variable.
-
-Technically a context acts like a dictionary where the key is a string and the value is an object.
+MissionContext has to be thought as a common memory among different AIdentities working on the mission, no one has exclusive access to any state variable of the Mission Context.

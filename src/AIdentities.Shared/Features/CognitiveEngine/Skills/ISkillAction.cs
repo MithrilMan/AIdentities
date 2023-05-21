@@ -28,6 +28,11 @@ public interface ISkillAction
    string ReturnDescription { get; }
 
    /// <summary>
+   /// A list of tags that can be used to filter the skill action.
+   /// </summary>
+   ICollection<string> Tags { get; }   
+
+   /// <summary>
    /// A natural language prompt that shows some examples of the skill action call.
    /// e.g.
    /// UserRequest: I don't like the color of the background, I'd like it to be blue

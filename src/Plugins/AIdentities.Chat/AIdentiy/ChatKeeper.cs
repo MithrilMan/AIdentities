@@ -1,4 +1,4 @@
-﻿namespace AIdentities.Chat.AIdentities;
+﻿namespace AIdentities.Chat.AIdentiy;
 
 /// <summary>
 /// Chat Keeper AIdentity manages any conversation happening in the chat.

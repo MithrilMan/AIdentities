@@ -33,7 +33,7 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
                                  AIdentity aIdentity,
                                  IConversationalConnector defaultConversationalConnector,
                                  ICompletionConnector defaultCompletionConnector,
-                                 ISkillActionsManager skillActionsManager)
+                                 ISkillManager skillActionsManager)
       : base(logger, aIdentity, defaultConversationalConnector, defaultCompletionConnector, skillActionsManager)
    {
    }
@@ -106,7 +106,7 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
    /// <returns>A tuple with the first item being a boolean indicating if a skill was detected and the second item being the detected skill name.</returns>
    protected async Task<(bool skillDetected, string detectedSkill)> TryDetectSkillAsync(Prompt prompt, CancellationToken cancellationToken)
    {
-      var instruction = PromptTemplates.GetFindSkillPrompt(prompt, _skillActionsManager.AvailableSkills);
+      var instruction = PromptTemplates.GetFindSkillPrompt(prompt, _skillActionsManager.All());
       var response = await _defaultCompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest
       {
          Prompt = instruction,

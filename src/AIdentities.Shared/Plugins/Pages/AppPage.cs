@@ -25,9 +25,9 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
    private HotKeysContext? _hotKeysContext;
 
    /// <summary>
-   /// Gets the reference to the cancellation token used to signal that the component has been disposed.
+   /// Gets the reference to the cancellation token used to signal that the page component has been disposed.
    /// </summary>
-   public CancellationToken CancellationToken => _cts.Token;
+   public CancellationToken PageCancellationToken => _cts.Token;
 
 
    protected override void OnInitialized()
@@ -116,7 +116,7 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
 
       if (ComponentSettingsManager.SetSettings(GetSettingsKey(), _settings))
       {
-         if (!await ComponentSettingsManager.SaveSettingsAsync(CancellationToken).ConfigureAwait(false))
+         if (!await ComponentSettingsManager.SaveSettingsAsync(PageCancellationToken).ConfigureAwait(false))
          {
             NotificationService.ShowError("Failed to save component settings.");
 
@@ -146,7 +146,7 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
          await actionAsync(arg).ConfigureAwait(false);
          StateHasChanged();
       }).ConfigureAwait(false);
-   }, interval, CancellationToken);
+   }, interval, PageCancellationToken);
 
 
    /// <summary>
@@ -165,7 +165,7 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
             await actionAsync(arg).ConfigureAwait(false);
             StateHasChanged();
          }).ConfigureAwait(false);
-      }, interval, CancellationToken);
+      }, interval, PageCancellationToken);
 
    /// <summary>
    /// Throttles the specified action.
@@ -182,7 +182,7 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
             await actionAsync().ConfigureAwait(false);
             StateHasChanged();
          }).ConfigureAwait(false);
-      }, interval, CancellationToken);
+      }, interval, PageCancellationToken);
 
    public virtual void Dispose()
    {

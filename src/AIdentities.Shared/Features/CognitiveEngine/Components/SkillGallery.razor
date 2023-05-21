@@ -1,0 +1,62 @@
+﻿<MudGrid Spacing="1">
+   <MudItem xs="12" md="8">
+      <MudTextField T="string" Placeholder="Filter skills by name..." @bind-Value="_state.SearchText" @bind-Value:after="@ApplyFilterAsync"
+                    Variant="Variant.Filled" Clearable="true" AutoFocus="true"
+                    DebounceInterval="250" Class="mx-2 my-0"
+                    Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                    AdornmentColor="Color.Secondary" />
+   </MudItem>
+   <MudItem xs="12" md="4" Class="d-flex align-center">
+      <MudExtensions.MudSelectExtended MultiSelection="true" ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" Variant="Variant.Text"
+                                       ItemCollection="_state.AvailableTags" Class="mt-0" Label="Filter by tags"
+                                       T="string" @bind-SelectedValues="_state.Tags" AnchorOrigin="Origin.BottomCenter"
+                                       Dense="true" Clearable="true" Placeholder="Filter by tags" Color="Color.Secondary"
+                                       SearchBox="true" SearchBoxAutoFocus="true"
+                                       ChipCloseable="true" ChipSize="Size.Medium" ChipVariant="Variant.Filled">
+      </MudExtensions.MudSelectExtended>
+   </MudItem>
+</MudGrid>
+
+<MudContainer MaxWidth="MaxWidth.False" Style="max-width:100%" Class="pa-0">
+   <MudPaper Class="flex-1 pa-2">
+      <MudGrid>
+         @foreach (var skill in _state.Skills.Items)
+         {
+            <MudItem xs="12" sm="6" md="3" lg="2">
+               <MudCard Class="mud-height-full" Elevation="3">
+                  <MudCardHeader Class="mud-theme-secondary py-2 pl-2">
+                     <CardHeaderActions>
+                        @if (CanBeSelected)
+                        {
+                           <MudStack Spacing="0">
+                              <MudText>Enable</MudText>
+                              <MudSwitchM3 T="bool" Checked="@_state.SelectedSkills.Contains(skill.Name)"
+                                     CheckedChanged="@((isChecked) => OnSelectedSkillChanged(skill, isChecked))" />
+                           </MudStack>
+                        }
+                     </CardHeaderActions>
+                     <CardHeaderContent><h2>@skill.Name</h2></CardHeaderContent>
+                  </MudCardHeader>
+                  <MudCardContent Class="pa-2">
+                     <MudText Typo="Typo.subtitle1">Activation:</MudText>
+                     <p class="line-clamp-3">@skill.ActivationContext</p>
+                     <MudDivider DividerType="DividerType.FullWidth" Class="mud-border-primary" />
+                     <MudText Typo="Typo.subtitle1">Parameters:</MudText>
+                     <div class="d-flex flex-wrap">
+                        @foreach (var argument in skill.Arguments)
+                        {
+                           <MudTooltip Text="@argument.Description">
+                              <MudChip Size="Size.Small">@argument.Name</MudChip>
+                           </MudTooltip>
+                        }
+                     </div>
+                  </MudCardContent>
+                  <MudCardActions>
+
+                  </MudCardActions>
+               </MudCard>
+            </MudItem>
+         }
+      </MudGrid>
+   </MudPaper>
+</MudContainer>

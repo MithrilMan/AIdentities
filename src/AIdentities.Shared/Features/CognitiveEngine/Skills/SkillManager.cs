@@ -1,24 +1,26 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace AIdentities.Shared.Features.CognitiveEngine.Skills;
 
-namespace AIdentities.Shared.Features.CognitiveEngine.Skills;
-public class SkillManager
+public class SkillManager : ISkillManager
 {
    readonly ILogger<SkillManager> _logger;
-   readonly Dictionary<Type, SkillDefinition> _registeredSkills = new();
+   readonly Dictionary<string, ISkillAction> _knownSkills;
 
-   public SkillManager(ILogger<SkillManager> logger, IEnumerable<ISkillAction> registeredSkills)
+   public SkillManager(ILogger<SkillManager> logger, IEnumerable<ISkillAction> availableSkills)
    {
       _logger = logger;
-
-      RegisterSkills();
+      _knownSkills = availableSkills.ToDictionary(s => s.Name, s => s);
    }
 
-   void RegisterSkills()
+   public ISkillAction? Get(string skillName)
    {
+      if (_knownSkills.TryGetValue(skillName, out var skill))
+      {
+         return skill;
+      }
 
+      _logger.LogDebug("Skill {SkillName} not found.", skillName);
+      return null;
    }
+
+   public IEnumerable<ISkillAction> All() => _knownSkills.Values;
 }

@@ -1,4 +1,6 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine.Mission;
+﻿using System.Reflection;
+using System.Threading;
+using AIdentities.Shared.Features.CognitiveEngine.Mission;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 using AIdentities.Shared.Plugins.Connectors.Completion;
 using AIdentities.Shared.Plugins.Connectors.Conversational;
@@ -16,7 +18,7 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    protected readonly ILogger _logger;
    protected readonly IConversationalConnector _defaultConversationalConnector;
    protected readonly ICompletionConnector _defaultCompletionConnector;
-   protected readonly ISkillActionsManager _skillActionsManager;
+   protected readonly ISkillManager _skillActionsManager;
 
    public AIdentity AIdentity { get; }
 
@@ -30,7 +32,7 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
                           AIdentity aIdentity,
                           IConversationalConnector defaultConversationalConnector,
                           ICompletionConnector defaultCompletionConnector,
-                          ISkillActionsManager skillActionsManager)
+                          ISkillManager skillActionsManager)
    {
       _logger = logger;
       AIdentity = aIdentity;
@@ -69,5 +71,11 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
                  Name: AIdentity.Name);
    }
 
+   /// <inheritdoc />
    public abstract IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, MissionContext? missionContext, CancellationToken cancellationToken);
+
+   public virtual MissionToken StartMission(IMission mission, CancellationToken cancellationToken)
+   {
+      return new MissionToken(mission, cancellationToken);
+   }
 }

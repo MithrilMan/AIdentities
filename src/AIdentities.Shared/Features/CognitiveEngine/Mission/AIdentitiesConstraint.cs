@@ -2,5 +2,5 @@
 
 public record AIdentitiesConstraint
 {
-   public List<AIdentity>? AllowedAIdentities { get; set; }
+   public List<AIdentity> AllowedAIdentities { get; set; } = new();
 }

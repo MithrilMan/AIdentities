@@ -1,5 +1,6 @@
 ﻿using AIdentities.Chat.Components;
-using AIdentities.Chat.Skills.CallAFriend;
+using AIdentities.Chat.Missions;
+using AIdentities.Chat.Skills.InviteFriend;
 using AIdentities.Shared.Features.CognitiveEngine.Skills;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,8 +13,9 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
          .AddScoped<IChatStorage, ChatStorage>()
          .AddScoped<IConversationExporter, ConversationExporter>();
 
-      services
-         .AddTransient<IChatPromptGenerator, ChatPromptGenerator>();
+      services.AddTransient<IChatPromptGenerator, ChatPromptGenerator>();
+
+      services.AddTransient<CognitiveChatMission>();
 
       // Register the AIdentity feature to expose an editor in the AIdentity management page.
       RegisterAIdentityFeature<AIdentityChatFeature, TabAIdentityFeatureChat>("Chat");

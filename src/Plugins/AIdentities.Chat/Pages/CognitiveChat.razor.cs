@@ -1,15 +1,22 @@
-﻿using AIdentities.Shared.Features.Core.Services;
+﻿using AIdentities.Chat.AIdentiy;
+using AIdentities.Chat.Missions;
+using AIdentities.Shared.Features.CognitiveEngine;
+using AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
+using AIdentities.Shared.Features.CognitiveEngine.Mission;
+using AIdentities.Shared.Features.CognitiveEngine.Skills;
+using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Toolbelt.Blazor.HotKeys2;
 
 namespace AIdentities.Chat.Pages;
 
 [Route(PAGE_URL)]
-[PageDefinition(PAGE_TITLE, Icons.Material.Filled.ChatBubble, PAGE_URL, Description = "Allow the user to chat with one or multiple other AIdentities")]
-public partial class Chat : AppPage<Chat>
+[PageDefinition(PAGE_TITLE, IconsEx.CHAT_PLUS, PAGE_URL, Description = PAGE_DESCRIPTION)]
+public partial class CognitiveChat : AppPage<CognitiveChat>
 {
-   const string PAGE_TITLE = "Chat";
-   const string PAGE_URL = "/chat";
+   const string PAGE_TITLE = "Cognitive Chat";
+   const string PAGE_URL = "/cognitive-chat";
+   const string PAGE_DESCRIPTION = "Chat with AIdentities and humans, let them chat freely and assist anytime there is a skill you know to execute";
    const string LIST_ID = "message-list-wrapper";
    const string LIST_SELECTOR = $"#{LIST_ID}";
 
@@ -21,7 +28,19 @@ public partial class Chat : AppPage<Chat>
    [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
    [Inject] private IPluginSettingsManager PluginSettingsManager { get; set; } = null!;
    [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
+   [Inject] private ICognitiveEngineProvider CognitiveEngineProvider { get; set; } = null!;
 
+   /// <summary>
+   /// The mission that will be assigned to the <see cref="_chatKeeper"/> instance.
+   /// </summary>
+   [Inject] private CognitiveChatMission CognitiveChatMission { get; set; } = null!;
+
+   /// <summary>
+   /// reference to the _chatKeeper instance
+   /// </summary>
+   private readonly ChatKeeper _chatKeeper = new();
+   private ICognitiveEngine _chatKeeperCognitiveEngine = default!;
+   private MissionToken? _chatMissionToken;
 
    MudTextFieldExtended<string?> _messageTextField = default!;
 
@@ -32,12 +51,20 @@ public partial class Chat : AppPage<Chat>
 
       var settings = PluginSettingsManager.Get<ChatSettings>();
       _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled && c.Name == settings.DefaultConnector);
+
+      StartChatKeeperCognitiveEngine(_chatKeeper, CognitiveChatMission);
+   }
+
+   private void StartChatKeeperCognitiveEngine(ChatKeeper chatKeeper, CognitiveChatMission mission)
+   {
+      _chatKeeperCognitiveEngine = CognitiveEngineProvider.CreateCognitiveEngine<MithrilCognitiveEngine>(chatKeeper);
+      _chatMissionToken = _chatKeeperCognitiveEngine.StartMission(mission, PageCancellationToken);
    }
 
    protected override void ConfigureHotKeys(HotKeysContext hotKeysContext)
    {
       base.ConfigureHotKeys(hotKeysContext);
-      hotKeysContext.Add(ModCode.Ctrl, Code.E, ExportConversation, "Export from the conversation.");
+      hotKeysContext.Add(ModCode.Ctrl, Code.E, ExportConversation, "Export the conversation.");
       hotKeysContext.Add(ModCode.None, Code.Delete, OnHotkeyDeleteMessage, "Delete the selected message.");
    }
 
@@ -81,8 +108,6 @@ public partial class Chat : AppPage<Chat>
       return unfilteredItems;
    }
 
-   private Task ApplyFilter() => _state.Messages.ApplyFilterAsync().AsTask();
-
    private async Task SendMessageAsync()
    {
       if (_state.NoConversation)
@@ -110,67 +135,84 @@ public partial class Chat : AppPage<Chat>
          await ScrollToEndOfMessageList().ConfigureAwait(false);
 
          ChatPromptGenerator.AppendMessage(message);
-         await SendMessageToConnector().ConfigureAwait(false);
+         //await SendMessageToConnector().ConfigureAwait(false);
+
+         var responses = _chatKeeperCognitiveEngine.HandlePromptAsync(new UserPrompt
+         {
+            Text = message.Message,
+         }, null, _state.MessageGenerationCancellationTokenSource.Token)
+         .ConfigureAwait(false);
+
+         await foreach (var response in responses)
+         {
+            await InvokeAsync(() => _state.Messages.AppendItemAsync(new ChatMessage
+            {
+               AIDentityId = response.AIdentityId,
+               IsGenerated = true,
+               Message = response.Content,
+            }).AsTask()).ConfigureAwait(false);
+            await ScrollToEndOfMessageList().ConfigureAwait(false);
+         }
       }
    }
 
    private async Task SendMessageToConnector()
    {
-      if (_state.Connector is null)
-      {
-         NotificationService.ShowError("No chat connector found");
-         return;
-      }
+      //if (_state.Connector is null)
+      //{
+      //   NotificationService.ShowError("No chat connector found");
+      //   return;
+      //}
 
-      _state.IsWaitingReply = true;
-      await ScrollToEndOfMessageList().ConfigureAwait(false);
-      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+      //_state.IsWaitingReply = true;
+      //await ScrollToEndOfMessageList().ConfigureAwait(false);
+      //await InvokeAsync(StateHasChanged).ConfigureAwait(false);
 
-      try
-      {
-         var request = await _state.ChatPromptGenerator.GenerateApiRequest().ConfigureAwait(false);
-         _state.StreamedResponse = new ChatMessage()
-         {
-            IsGenerated = true,
-            AIDentityId = _state.SelectedConversation?.AIdentityIds.FirstOrDefault() //TODO handle multiple AIdentities
-         };
-         _state.StreamedResponse.Metadata.Add("Request", request);
+      //try
+      //{
+      //   var request = await _state.ChatPromptGenerator.GenerateApiRequest().ConfigureAwait(false);
+      //   _state.StreamedResponse = new ChatMessage()
+      //   {
+      //      IsGenerated = true,
+      //      AIDentityId = _state.SelectedConversation?.AIdentityIds.FirstOrDefault() //TODO handle multiple AIdentities
+      //   };
+      //   _state.StreamedResponse.Metadata.Add("Request", request);
 
-         var completions = _state.Connector.RequestChatCompletionAsStreamAsync(request, _state.MessageGenerationCancellationTokenSource.Token)
-            .WithCancellation(_state.MessageGenerationCancellationTokenSource.Token)
-            .ConfigureAwait(false);
+      //   var completions = _state.Connector.RequestChatCompletionAsStreamAsync(request, _state.MessageGenerationCancellationTokenSource.Token)
+      //      .WithCancellation(_state.MessageGenerationCancellationTokenSource.Token)
+      //      .ConfigureAwait(false);
 
-         await foreach (var completion in completions)
-         {
-            _state.StreamedResponse.Message += completion.GeneratedMessage;
-            // we force the update to show the streamed response
-            await ScrollToEndOfMessageList().ConfigureAwait(false);
-         }
+      //   await foreach (var completion in completions)
+      //   {
+      //      _state.StreamedResponse.Message += completion.GeneratedMessage;
+      //      // we force the update to show the streamed response
+      //      await ScrollToEndOfMessageList().ConfigureAwait(false);
+      //   }
 
-         if (_state.StreamedResponse.Message?.Length > 0)
-         {
-            _state.HasMessageGenerationFailed = false;
-            ChatPromptGenerator.AppendMessage(_state.StreamedResponse);
-            await InvokeAsync(() => _state.Messages.AppendItemAsync(_state.StreamedResponse).AsTask()).ConfigureAwait(false);
-            await ScrollToEndOfMessageList().ConfigureAwait(false);
-            await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, _state.StreamedResponse).ConfigureAwait(false);
-         }
-      }
-      catch (OperationCanceledException)
-      {
-         NotificationService.ShowInfo("Message generation cancelled");
-      }
-      catch (Exception ex)
-      {
-         NotificationService.ShowError($"Failed to send message to connector: {ex.Message}");
-         _state.HasMessageGenerationFailed = true;
-         return;
-      }
-      finally
-      {
-         _state.StreamedResponse = null;
-         _state.IsWaitingReply = false;
-      }
+      //   if (_state.StreamedResponse.Message?.Length > 0)
+      //   {
+      //      _state.HasMessageGenerationFailed = false;
+      //      ChatPromptGenerator.AppendMessage(_state.StreamedResponse);
+      //      await InvokeAsync(() => _state.Messages.AppendItemAsync(_state.StreamedResponse).AsTask()).ConfigureAwait(false);
+      //      await ScrollToEndOfMessageList().ConfigureAwait(false);
+      //      await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, _state.StreamedResponse).ConfigureAwait(false);
+      //   }
+      //}
+      //catch (OperationCanceledException)
+      //{
+      //   NotificationService.ShowInfo("Message generation cancelled");
+      //}
+      //catch (Exception ex)
+      //{
+      //   NotificationService.ShowError($"Failed to send message to connector: {ex.Message}");
+      //   _state.HasMessageGenerationFailed = true;
+      //   return;
+      //}
+      //finally
+      //{
+      //   _state.StreamedResponse = null;
+      //   _state.IsWaitingReply = false;
+      //}
    }
 
    private async Task ScrollToEndOfMessageList()
@@ -184,6 +226,7 @@ public partial class Chat : AppPage<Chat>
       if (_state.NoConversation)
       {
          await _state.CloseConversation().ConfigureAwait(false);
+         CognitiveChatMission.ClearConversation();
          return;
       }
 
@@ -273,6 +316,7 @@ public partial class Chat : AppPage<Chat>
    public override void Dispose()
    {
       base.Dispose();
+      _chatMissionToken?.Dispose();
       _state.MessageGenerationCancellationTokenSource?.Dispose();
    }
 }

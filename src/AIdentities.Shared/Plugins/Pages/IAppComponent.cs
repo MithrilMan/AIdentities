@@ -1,6 +1,6 @@
 ﻿namespace AIdentities.Shared.Plugins.Pages;
 public interface IAppComponent
 {
-   CancellationToken CancellationToken { get; }
+   CancellationToken PageCancellationToken { get; }
    Task SignalComponentStateHasChanged();
 }

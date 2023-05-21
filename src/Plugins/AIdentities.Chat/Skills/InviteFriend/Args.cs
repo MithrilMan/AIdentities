@@ -1,6 +1,6 @@
 ﻿using AIdentities.Shared.Features.CognitiveEngine.Skills;
 
-namespace AIdentities.Chat.Skills.CallAFriend;
+namespace AIdentities.Chat.Skills.InviteFriend;
 
 record Args
 {

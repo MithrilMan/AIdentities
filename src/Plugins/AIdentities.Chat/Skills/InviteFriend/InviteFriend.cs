@@ -1,13 +1,11 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Text;
 using AIdentities.Shared.Features.CognitiveEngine;
 using AIdentities.Shared.Features.CognitiveEngine.Mission;
 using AIdentities.Shared.Features.CognitiveEngine.Skills;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 using AIdentities.Shared.Plugins.Connectors;
-using AIdentities.Shared.Plugins.Connectors.Completion;
 
-namespace AIdentities.Chat.Skills.CallAFriend;
+namespace AIdentities.Chat.Skills.InviteFriend;
 
 public class InviteFriend : SkillDefinition
 {
@@ -60,7 +58,7 @@ public class InviteFriend : SkillDefinition
 
    public override async IAsyncEnumerable<Thought> ExecuteAsync(Prompt prompt,
                                                                 CognitiveContext cognitiveContext,
-                                                                MissionContext missionContext,
+                                                                MissionContext? missionContext,
                                                                 [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       SetResult(cognitiveContext, null);
@@ -87,9 +85,7 @@ public class InviteFriend : SkillDefinition
             .FirstOrDefault(a => a.Name.Contains(args.WhoToInvite, StringComparison.OrdinalIgnoreCase));
 
          if (aidentity is null)
-         {
             yield return cognitiveContext.InvalidPrompt(this);
-         }
 
          SetResult(cognitiveContext, aidentity);
       }
@@ -97,6 +93,6 @@ public class InviteFriend : SkillDefinition
 
    private static void SetResult(CognitiveContext cognitiveContext, AIdentity? aidentity)
    {
-      cognitiveContext.StateObjects["InviteFriend"] = aidentity;
+      cognitiveContext.State["InviteFriend"] = aidentity;
    }
 }

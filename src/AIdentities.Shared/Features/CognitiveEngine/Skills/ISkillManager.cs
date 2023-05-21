@@ -1,11 +1,12 @@
 ﻿namespace AIdentities.Shared.Features.CognitiveEngine.Skills;
 
-public interface ISkillActionsManager
+public interface ISkillManager
 {
    /// <summary>
-   /// The list of available skills.
+   /// Returns all the known skills.
    /// </summary>
-   IEnumerable<ISkillAction> AvailableSkills { get; }
+   /// <returns>The list of known skills.</returns>
+   IEnumerable<ISkillAction> All();
 
    /// <summary>
    /// Get a skill by its name.

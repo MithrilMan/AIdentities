@@ -25,7 +25,7 @@ public class CognitiveEngineProvider : ICognitiveEngineProvider
          aIdentity: aIdentity,
          defaultConversationalConnector: _defaultConnectors.DefaultConversationalConnector,
          defaultCompletionConnector: _defaultConnectors.DefaultCompletionConnector,
-         skillActionsManager: _serviceProvider.GetRequiredService<ISkillActionsManager>()
+         skillActionsManager: _serviceProvider.GetRequiredService<ISkillManager>()
          );
 
       return cognitiveEngine;

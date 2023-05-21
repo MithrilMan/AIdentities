@@ -5,7 +5,7 @@ namespace AIdentities.Shared.Features.CognitiveEngine;
 public class CognitiveContext
 {
    public AIdentity AIdentity { get; }
-   public Dictionary<string, object?> StateObjects { get; set; } = new();
+   public Dictionary<string, object?> State { get; set; } = new();
 
    public CognitiveContext(AIdentity aIdentity)
    {

@@ -18,6 +18,12 @@ public record Thought(Guid? SkillActionId, Guid AIdentityId, string Content)
    public bool IsFinal { get; set; }
 
    /// <summary>
+   /// When the thought is streamed, it could be sent to the user as soon as it's created.
+   /// A streamed result must be handled properly
+   /// </summary>
+   public virtual bool IsStreamed => false;
+
+   /// <summary>
    /// The content of the thought.
    /// A final thought could be considered as the output toward the user.
    /// </summary>

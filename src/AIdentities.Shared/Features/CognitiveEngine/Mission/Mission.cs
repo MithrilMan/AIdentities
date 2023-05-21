@@ -4,15 +4,17 @@
 /// What the user wants to achieve.
 /// A mission can have a set of constraints that affect the way the cognitive engine will work.
 /// </summary>
-public record Mission
+public class Mission<TMissionContext> : IMission
+   where TMissionContext : MissionContext, new()
 {
-   /// <summary>
-   /// The goal of the mission.
-   /// </summary>
+   /// <inheritdoc/>
    public string Goal { get; set; } = "";
 
    /// <summary>
-   /// The mission context.
+   /// The specialized mission context.
    /// </summary>
-   public MissionContext Context { get; set; } = new();
+   public TMissionContext Context { get; set; } = new();
+
+   /// <inheritdoc/>
+   MissionContext IMission.Context { get => Context; }
 }

@@ -35,4 +35,12 @@ public interface ICognitiveEngine
    /// <param name="cancellationToken">The cancellation token.</param>
    /// <returns>A stream of thoughts generated during the prompt handling.</returns>
    IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, MissionContext? missionContext, CancellationToken cancellationToken);
+
+   /// <summary>
+   /// Starts a mission and returns a token that can be used to stop the mission.
+   /// </summary>
+   /// <param name="mission">The mission to start.</param>
+   /// <param name="cancellationToken">The cancellation token needed to stop the mission.</param>
+   /// <returns></returns>
+   MissionToken StartMission(IMission mission, CancellationToken cancellationToken);
 }

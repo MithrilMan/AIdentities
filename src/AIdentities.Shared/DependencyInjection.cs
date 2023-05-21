@@ -25,7 +25,7 @@ public static class DependencyInjection
 
       services
          .AddScoped<ICognitiveEngineProvider, CognitiveEngineProvider>()
-         .AddScoped<ISkillActionsManager, SkillActionsManager>();
+         .AddScoped<ISkillManager, SkillManager>();
 
       services.AddScoped<IDefaultConnectors, DefaultConnectors>();
 
