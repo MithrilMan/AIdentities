@@ -1,4 +1,4 @@
-﻿namespace AIdentities.Shared.Features.CognitiveEngine.Models;
+﻿namespace AIdentities.Shared.Features.CognitiveEngine.Mission;
 
 /// <summary>
 /// This class represents the result of a mission.

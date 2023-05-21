@@ -1,4 +1,6 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine.Models;
+﻿using AIdentities.Shared.Features.CognitiveEngine.Mission;
+using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
+using AIdentities.Shared.Plugins.Connectors.Completion;
 using AIdentities.Shared.Plugins.Connectors.Conversational;
 
 namespace AIdentities.Shared.Features.CognitiveEngine;
@@ -8,20 +10,42 @@ namespace AIdentities.Shared.Features.CognitiveEngine;
 /// There can be different implementations of this class that differs on how
 /// each one handles the prompts.
 /// </summary>
-public abstract class CognitiveEngine : ICognitiveEngine
+public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
+   where TCognitiveContext : CognitiveContext
 {
+   protected readonly ILogger _logger;
+   protected readonly IConversationalConnector _defaultConversationalConnector;
+   protected readonly ICompletionConnector _defaultCompletionConnector;
+   protected readonly ISkillActionsManager _skillActionsManager;
+
    public AIdentity AIdentity { get; }
-   public CognitiveContext Context { get; } = new();
+
+   public TCognitiveContext Context { get; }
+
+   CognitiveContext ICognitiveEngine.Context => Context;
 
    protected DefaultConversationalMessage PersonalityInstruction { get; private set; } = default!;
 
-   public CognitiveEngine(AIdentity aIdentity)
+   public CognitiveEngine(ILogger logger,
+                          AIdentity aIdentity,
+                          IConversationalConnector defaultConversationalConnector,
+                          ICompletionConnector defaultCompletionConnector,
+                          ISkillActionsManager skillActionsManager)
    {
+      _logger = logger;
       AIdentity = aIdentity;
+      _defaultConversationalConnector = defaultConversationalConnector;
+      _defaultCompletionConnector = defaultCompletionConnector;
+      _skillActionsManager = skillActionsManager;
 
       EnsureAIdentityIsValid();
+
+      Context = CreateCognitiveContext();
+
       SetupAIdentityPersonality();
    }
+
+   public abstract TCognitiveContext CreateCognitiveContext();
 
    /// <summary>
    /// Ensure that the AIdentity is valid and meet the minimum requirements.
@@ -45,12 +69,5 @@ public abstract class CognitiveEngine : ICognitiveEngine
                  Name: AIdentity.Name);
    }
 
-   /// <summary>
-   /// Handle a prompt, returning a stream of thoguhts.
-   /// 
-   /// </summary>
-   /// <param name="prompt"></param>
-   /// <returns></returns>
-   /// <exception cref="NotImplementedException"></exception>
-   public abstract IAsyncEnumerable<Thought> HandlePrompt(Prompt prompt);
+   public abstract IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, MissionContext? missionContext, CancellationToken cancellationToken);
 }

@@ -1,6 +1,4 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine.Models;
-
-namespace AIdentities.Shared.Features.CognitiveEngine;
+﻿namespace AIdentities.Shared.Features.CognitiveEngine;
 
 interface IMissionManager
 {
@@ -10,5 +8,5 @@ interface IMissionManager
    /// <param name="mission">The mission to start.</param>
    /// <param name="cancellationToken">The cancellation token that can be used to stop the mission execution.</param>
    /// <returns></returns>
-   public Task StartMissionAsync(Mission mission, AIdentity missionLeader, CancellationToken cancellationToken);
+   public Task StartMissionAsync(Mission.Mission mission, AIdentity missionLeader, CancellationToken cancellationToken);
 }

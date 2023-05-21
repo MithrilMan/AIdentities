@@ -2,7 +2,7 @@
 using AIdentities.Shared.Plugins.Connectors.Conversational;
 
 namespace AIdentities.Shared.Plugins.Connectors;
-public class DefaultConnectors
+public class DefaultConnectors : IDefaultConnectors
 {
    readonly IEnumerable<IConversationalConnector> _conversationalConnectors;
    readonly IEnumerable<ICompletionConnector> _completionConnectors;

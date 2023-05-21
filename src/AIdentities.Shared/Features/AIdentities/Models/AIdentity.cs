@@ -58,6 +58,12 @@ public record AIdentity : Entity
    public FeatureCollection Features { get; set; } = new();
 
    /// <summary>
+   /// True if the AIdentity is managed by the system or a plugin.
+   /// These kind of AIdentities cannot be deleted or modified except by the system or the plugin that manages them.
+   /// </summary>
+   public virtual bool IsManaged => false;
+
+   /// <summary>
    /// returns an URL that can be fetched by the Controller that generate a cacheable image.
    /// </summary>
    public string GetImageUri() => $"/api/AIdentity/Image/{Id}";

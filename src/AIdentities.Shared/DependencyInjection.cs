@@ -1,12 +1,9 @@
 ﻿using AIdentities.Shared.Features.AIdentities.Services;
+using AIdentities.Shared.Features.CognitiveEngine;
 using AIdentities.Shared.Features.Core.Services;
-using AIdentities.Shared.Plugins.Storage;
+using AIdentities.Shared.Plugins.Connectors;
 using AIdentities.Shared.Services.EventBus;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Options;
-using MudExtensions.Services;
-using Toolbelt.Blazor.Extensions.DependencyInjection;
 
 namespace AIdentities.Shared;
 
@@ -25,6 +22,12 @@ public static class DependencyInjection
       services
          .AddScoped<IAIdentityProvider, AIdentityProvider>()
          .AddScoped<AIdentityProviderSerializationSettings>();
+
+      services
+         .AddScoped<ICognitiveEngineProvider, CognitiveEngineProvider>()
+         .AddScoped<ISkillActionsManager, SkillActionsManager>();
+
+      services.AddScoped<IDefaultConnectors, DefaultConnectors>();
 
       return services;
    }

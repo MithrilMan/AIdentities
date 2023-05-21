@@ -1,4 +1,6 @@
 ﻿using AIdentities.Chat.Components;
+using AIdentities.Chat.Skills.CallAFriend;
+using AIdentities.Shared.Features.CognitiveEngine.Skills;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AIdentities.Chat;
@@ -19,5 +21,12 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
       RegisterAIdentitySafetyChecker<ChatAIdentitySafetyChecker>();
 
       RegisterPluginSettings<ChatSettings, Settings>("Chat");
+      RegisterAvailableCommands(services);
+   }
+
+   private void RegisterAvailableCommands(IServiceCollection services)
+   {
+      services
+         .AddScoped<ISkillAction, InviteFriend>();
    }
 }

@@ -1,4 +1,6 @@
-﻿using AIdentities.Shared.Features.Core.Services;
+﻿using AIdentities.Shared.Features.CognitiveEngine;
+using AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
+using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Components.Web;
 using Toolbelt.Blazor.HotKeys2;
 
@@ -21,6 +23,7 @@ public partial class Chat : AppPage<Chat>
    [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
    [Inject] private IPluginSettingsManager PluginSettingsManager { get; set; } = null!;
    [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
+   [Inject] private ICognitiveEngineProvider CognitiveEngineProvider { get; set; } = null!;
 
 
    MudTextFieldExtended<string?> _messageTextField = default!;
@@ -110,7 +113,25 @@ public partial class Chat : AppPage<Chat>
          await ScrollToEndOfMessageList().ConfigureAwait(false);
 
          ChatPromptGenerator.AppendMessage(message);
-         await SendMessageToConnector().ConfigureAwait(false);
+         //await SendMessageToConnector().ConfigureAwait(false);
+
+         var cognitiveEngine = CognitiveEngineProvider.CreateCognitiveEngine<MithrilCognitiveEngine>(_state.PartecipatingAIdentities.First());
+         var responses = cognitiveEngine.HandlePromptAsync(new UserPrompt
+         {
+            Text = message.Message,
+         }, null, _state.MessageGenerationCancellationTokenSource.Token)
+         .ConfigureAwait(false);
+
+         await foreach (var response in responses)
+         {
+            await InvokeAsync(() => _state.Messages.AppendItemAsync(new ChatMessage
+            {
+               AIDentityId = response.AIdentityId,
+               IsGenerated = true,
+               Message = response.Content,
+            }).AsTask()).ConfigureAwait(false);
+            await ScrollToEndOfMessageList().ConfigureAwait(false);
+         }
       }
    }
 
