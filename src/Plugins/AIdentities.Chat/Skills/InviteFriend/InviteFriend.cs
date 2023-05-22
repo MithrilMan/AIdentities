@@ -24,7 +24,7 @@ public partial class InviteFriend : Skill
 
    public override async IAsyncEnumerable<Thought> ExecuteAsync(Prompt prompt, SkillExecutionContext executionContext, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      SetResult(cognitiveContext, null);
+      SetResult(executionContext, null);
 
       var connector = _defaultConnectors.DefaultCompletionConnector
          ?? throw new InvalidOperationException("No completion connector is enabled");
@@ -64,8 +64,8 @@ public partial class InviteFriend : Skill
       }
    }
 
-   private static void SetResult(CognitiveContext cognitiveContext, AIdentity? aidentity)
+   private static void SetResult(SkillExecutionContext executionContext, AIdentity? aidentity)
    {
-      cognitiveContext.State[RESULT_KEY] = aidentity;
+      executionContext.State[OUT_FRIEND_INVITED] = aidentity;
    }
 }
