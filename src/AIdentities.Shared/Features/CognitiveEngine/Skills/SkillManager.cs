@@ -23,4 +23,6 @@ public class SkillManager : ISkillManager
    }
 
    public IEnumerable<ISkillAction> All() => _knownSkills.Values;
+
+   public ISkillAction? Get<TSkill>() => _knownSkills.Values.FirstOrDefault(s => s.GetType() == typeof(TSkill));
 }

@@ -1,15 +1,10 @@
 ﻿using System.Runtime.CompilerServices;
-using AIdentities.Shared.Features.CognitiveEngine;
-using AIdentities.Shared.Features.CognitiveEngine.Mission;
-using AIdentities.Shared.Features.CognitiveEngine.Skills;
-using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
-using AIdentities.Shared.Plugins.Connectors;
+using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 
-namespace AIdentities.Chat.Skills.IntroduceAIdentity;
-
-public class IntroduceAIdentity : SkillDefinition
+namespace AIdentities.Chat.Skills.ReplyToPrompt;
+public class ReplyToPrompt : SkillDefinition
 {
-   public const string NAME = nameof(IntroduceAIdentity);
+   public const string NAME = nameof(ReplyToPrompt);
    const string ACTIVATION_CONTEXT = "The AIdenity has to introduce itself to the conversation";
    const string RETURN_DESCRIPTION = "The sentence that the AIdentity will say to introduce itself";
 
@@ -19,15 +14,15 @@ public class IntroduceAIdentity : SkillDefinition
 
    private readonly List<SkillArgumentDefinition> _arguments = new()
    {
-      Args.AIdentityIdDefinition
+      Args.ConversationContextDefinition
    };
 
-   readonly ILogger<IntroduceAIdentity> _logger;
+   readonly ILogger<ReplyToPrompt> _logger;
    readonly IDefaultConnectors _defaultConnectors;
    readonly IPluginStorage<PluginEntry> _pluginStorage;
    readonly IAIdentityProvider _aIdentityProvider;
 
-   public IntroduceAIdentity(ILogger<IntroduceAIdentity> logger,
+   public ReplyToPrompt(ILogger<ReplyToPrompt> logger,
                              IDefaultConnectors defaultConnectors,
                              IPluginStorage<PluginEntry> pluginStorage,
                              IAIdentityProvider aIdentityProvider
@@ -50,40 +45,45 @@ public class IntroduceAIdentity : SkillDefinition
       var connector = _defaultConnectors.DefaultConversationalConnector
          ?? throw new InvalidOperationException("No completion connector is enabled");
 
-      if (!TryExtractFromContext<Args>(cognitiveContext, missionContext, out Args? args))
+      var aidentity = cognitiveContext.AIdentity;
+
+      // check if in the cognitive context there is a conversation history
+      if (!TryExtractFromContext<IConversationHistory>(cognitiveContext, missionContext, out IConversationHistory? conversationHistory))
       {
-         if (!TryExtractJson<Args>(prompt.Text, out args))
+         yield return cognitiveContext.ActionThought(this, "I don't have a chat history to examine, using the prompt instead");
+      }
+
+      (Guid authorId, bool isAiGenerated) = prompt switch
+      {
+         UserPrompt userPrompt => (userPrompt.UserId, false),
+         AIdentityPrompt aIdentityPrompt => (aIdentityPrompt.AIdentityId, true),
+         _ => (Guid.Empty, false)
+      };
+
+      var history = conversationHistory is not null ?
+         conversationHistory.GetConversationHistory(aidentity)
+         : new List<ConversationMessage>()
          {
-            yield return cognitiveContext.InvalidPrompt(this);
-            yield break;
-         }
-      }
-
-      if (!Guid.TryParse(args.AIdentityId, out Guid aIdentityId))
-      {
-         yield return cognitiveContext.MissingArguments(this, Args.AIdentityIdDefinition);
-         yield break;
-      }
-
-
-      var aidentity = _aIdentityProvider.Get(aIdentityId);
-      if (aidentity is null)
-      {
-         yield return cognitiveContext.InvalidPrompt(this);
-         yield break;
-      }
-
+            new ConversationMessage{
+               AuthorId = authorId,
+               IsAIGenerated = !isAiGenerated,
+               Text=prompt.Text
+            }
+         };
 
       var streamedResult = connector.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest
       {
-         Messages = PromptTemplates.GetIntroductionPrompt(aidentity),
-         MaxGeneratedTokens = 100
+         Messages = PromptTemplates.BuildPromptMessages(aidentity, history),
+         MaxGeneratedTokens = 200
       }, cancellationToken).ConfigureAwait(false);
 
+      var streamedFinalThought = cognitiveContext.StreamFinalThought(this, "");
       await foreach (var thought in streamedResult)
       {
-         yield return new StreamedFinalThought(Id, aidentity.Id, thought.GeneratedMessage ?? "", false);
+         streamedFinalThought.AppendContent(thought.GeneratedMessage ?? "");
+         yield return streamedFinalThought;
       }
-      yield return new StreamedFinalThought(Id, aidentity.Id, "", true);
+
+      yield return streamedFinalThought.Completed();
    }
 }

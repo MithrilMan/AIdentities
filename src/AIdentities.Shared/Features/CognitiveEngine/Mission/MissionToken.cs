@@ -14,6 +14,8 @@ public class MissionToken : IDisposable
 
    public IMission Mission { get; }
 
+   internal CancellationToken CancellationToken => _cancellationTokenSource?.Token ?? CancellationToken.None;
+
    public MissionToken(IMission mission, params CancellationToken[] linkedCancellationTokens)
    {
       Mission = mission;

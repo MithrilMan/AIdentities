@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 
 namespace AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
 public static class PromptTemplates

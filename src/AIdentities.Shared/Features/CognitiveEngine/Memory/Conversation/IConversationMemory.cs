@@ -15,7 +15,7 @@ interface IInMemoryConversation
 
    ValueTask DeleteAsync();
 
-   ValueTask AddMessageAsync(Message message);
+   ValueTask AddMessageAsync(ConversationMessage message);
 
    ValueTask RemoveMessageAsync(Guid messageId);
 

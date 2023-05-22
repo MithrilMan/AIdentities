@@ -1,9 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using AIdentities.Shared.Features.CognitiveEngine;
-using AIdentities.Shared.Features.CognitiveEngine.Mission;
-using AIdentities.Shared.Features.CognitiveEngine.Skills;
-using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
-using AIdentities.Shared.Plugins.Connectors;
 
 namespace AIdentities.Chat.Skills.InviteFriend;
 

@@ -1,4 +1,5 @@
 ﻿using AIdentities.Shared.Common;
+using AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Shared.Features.AIdentities.Models;
@@ -62,6 +63,11 @@ public record AIdentity : Entity
    /// These kind of AIdentities cannot be deleted or modified except by the system or the plugin that manages them.
    /// </summary>
    public virtual bool IsManaged => false;
+
+   /// <summary>
+   /// Defines the default cognitive engine type name for this AIdentity.
+   /// </summary>
+   public string DefaultCognitiveEngine { get; set; } = nameof(MithrilCognitiveEngine);
 
    /// <summary>
    /// returns an URL that can be fetched by the Controller that generate a cacheable image.

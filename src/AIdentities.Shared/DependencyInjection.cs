@@ -1,5 +1,6 @@
 ﻿using AIdentities.Shared.Features.AIdentities.Services;
 using AIdentities.Shared.Features.CognitiveEngine;
+using AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors;
 using AIdentities.Shared.Services.EventBus;
@@ -24,11 +25,22 @@ public static class DependencyInjection
          .AddScoped<AIdentityProviderSerializationSettings>();
 
       services
-         .AddScoped<ICognitiveEngineProvider, CognitiveEngineProvider>()
          .AddScoped<ISkillManager, SkillManager>();
 
       services.AddScoped<IDefaultConnectors, DefaultConnectors>();
 
+      RegisterCogntiveEngines(services);
+
       return services;
+   }
+
+   private static void RegisterCogntiveEngines(IServiceCollection services)
+   {
+      // this service has to be used by whoever wants to create a cognitive engine for a specific AIdentity.
+      // it will make use of the various factories to create the proper cognitive engine.
+      services.AddScoped<ICognitiveEngineProvider, CognitiveEngineProvider>();
+
+      services
+         .AddScoped<ICognitiveEngineFactory, MithrilCognitiveEngineFactory>();
    }
 }

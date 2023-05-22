@@ -1,7 +1,7 @@
 ﻿using AIdentities.Chat.Components;
-using AIdentities.Chat.Missions;
+using AIdentities.Chat.Skills.IntroduceYourself;
 using AIdentities.Chat.Skills.InviteFriend;
-using AIdentities.Shared.Features.CognitiveEngine.Skills;
+using AIdentities.Chat.Skills.ReplyToPrompt;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AIdentities.Chat;
@@ -26,9 +26,12 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
       RegisterAvailableCommands(services);
    }
 
-   private void RegisterAvailableCommands(IServiceCollection services)
+   private static void RegisterAvailableCommands(IServiceCollection services)
    {
       services
-         .AddScoped<ISkillAction, InviteFriend>();
+         .AddScoped<ISkillAction, InviteFriend>()
+         .AddScoped<ISkillAction, IntroduceYourself>()
+         .AddScoped<ISkillAction, ReplyToPrompt>()
+         ;
    }
 }

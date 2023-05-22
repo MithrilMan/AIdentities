@@ -9,9 +9,9 @@ public class CognitiveChatMissionContext : MissionContext
       set => SetOrRemove(nameof(CurrentConversation), value);
    }
 
-   public HashSet<AIdentity> PartecipatingAIdentities
+   public Dictionary<Guid, PartecipatingAIdentity> PartecipatingAIdentities
    {
-      get => GetOrDefault<HashSet<AIdentity>>(nameof(PartecipatingAIdentities), new());
+      get => GetOrDefault<Dictionary<Guid, PartecipatingAIdentity>>(nameof(PartecipatingAIdentities), new());
       set => State[nameof(PartecipatingAIdentities)] = value;
    }
 }

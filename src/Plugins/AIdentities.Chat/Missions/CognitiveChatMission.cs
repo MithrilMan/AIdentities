@@ -1,4 +1,7 @@
 ﻿using AIdentities.Chat.AIdentiy;
+using AIdentities.Chat.Skills.IntroduceYourself;
+using AIdentities.Chat.Skills.ReplyToPrompt;
+using AIdentities.Shared.Features.CognitiveEngine;
 using AIdentities.Shared.Features.CognitiveEngine.Mission;
 using AIdentities.Shared.Features.CognitiveEngine.Skills;
 using AIdentities.Shared.Features.Core.Services;
@@ -13,7 +16,9 @@ namespace AIdentities.Chat.Missions;
 internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>
 {
    readonly ILogger<CognitiveChatMission> _logger;
+   readonly IAIdentityProvider _aIdentityProvider;
    readonly ISkillManager _skillManager;
+   readonly ICognitiveEngineProvider _cognitiveEngineProvider;
    readonly ChatSettings _settings;
 
    /// <summary>
@@ -21,10 +26,16 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>
    /// </summary>
    public AIdentity MissionRunner { get; } = new ChatKeeper();
 
-   public CognitiveChatMission(ILogger<CognitiveChatMission> logger, IPluginSettingsManager pluginSettingsManager, ISkillManager skillManager)
+   public CognitiveChatMission(ILogger<CognitiveChatMission> logger,
+                               IPluginSettingsManager pluginSettingsManager,
+                               IAIdentityProvider aIdentityProvider,
+                               ISkillManager skillManager,
+                               ICognitiveEngineProvider cognitiveEngineProvider)
    {
       _logger = logger;
+      _aIdentityProvider = aIdentityProvider;
       _skillManager = skillManager;
+      _cognitiveEngineProvider = cognitiveEngineProvider;
       _settings = pluginSettingsManager.Get<ChatSettings>();
 
       SetupMission(_settings);
@@ -62,12 +73,53 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>
    /// <summary>
    /// We want to start a new conversation.
    /// We clear previous conversation data and start the conversation from the point we left the conversation we are going to load.
-   /// If the conversation is empty, we are going to ask the first AIdentity that partecipate to the discussion, to start talking.
+   /// If the conversation is empty, we are going to ask the first AIdentity that participate to the discussion, to start talking.
    /// </summary>
    /// <param name="conversation"></param>
-   public void StartNewConversation(Conversation conversation)
+   public async IAsyncEnumerable<Thought> StartNewConversationAsync(Conversation conversation)
    {
       Context.CurrentConversation = conversation;
-      Context.PartecipatingAIdentities = new HashSet<AIdentity>();
+      Context.PartecipatingAIdentities.Clear();
+
+      foreach (var aidentityId in conversation.Metadata.AIdentityIds)
+      {
+         var aidentity = _aIdentityProvider.Get(aidentityId);
+         if (aidentity is null)
+         {
+            _logger.LogWarning("The AIdentity {aidentityId} is not available and will not be used.", aidentityId);
+            continue;
+         }
+
+         // we create a new cognitive engine for each AIdentity that participate to the conversation.
+         Context.PartecipatingAIdentities.Add(
+            aidentityId,
+            new PartecipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine(aidentity))
+            );
+      }
+
+      if (conversation.Messages is not { Count: > 0 })
+      {
+         // if the conversation is empty, we ask the first AIdentity that participate to the discussion, to start talking.
+         var firstParticipant = Context.PartecipatingAIdentities.First().Value.CognitiveEngine;
+
+         // we bypass mission constraints on this skill because it's needed to start a conversation.
+         var replyToPromptSkill = _skillManager.Get<IntroduceYourself>();
+         if (replyToPromptSkill is null)
+         {
+            _logger.LogWarning("The skill {skillName} is not available and will not be used.", nameof(IntroduceYourself));
+            yield break;
+         }
+
+         var responseStream = replyToPromptSkill.ExecuteAsync(
+            new InstructionPrompt("Hello"),
+            firstParticipant.Context,
+            Context,
+            Context.MissionRunningCancellationToken).ConfigureAwait(false);
+
+         await foreach (var item in responseStream)
+         {
+            yield return item;
+         }
+      }
    }
 }

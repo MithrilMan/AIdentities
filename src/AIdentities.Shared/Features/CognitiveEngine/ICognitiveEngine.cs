@@ -1,4 +1,5 @@
 ﻿using AIdentities.Shared.Features.CognitiveEngine.Mission;
+using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 
 namespace AIdentities.Shared.Features.CognitiveEngine;

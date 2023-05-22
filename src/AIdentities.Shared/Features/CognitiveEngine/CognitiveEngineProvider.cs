@@ -1,33 +1,45 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
-using AIdentities.Shared.Plugins.Connectors;
-using Microsoft.Extensions.DependencyInjection;
-
-namespace AIdentities.Shared.Features.CognitiveEngine;
+﻿namespace AIdentities.Shared.Features.CognitiveEngine;
 
 public class CognitiveEngineProvider : ICognitiveEngineProvider
 {
-   readonly ILogger<CognitiveEngineProvider> _logger;
-   readonly IServiceProvider _serviceProvider;
-   readonly IDefaultConnectors _defaultConnectors;
+   readonly Dictionary<Type, ICognitiveEngineFactory> _cognitiveEngineFactories;
 
-   public CognitiveEngineProvider(ILogger<CognitiveEngineProvider> logger, IServiceProvider serviceProvider, IDefaultConnectors defaultConnectors)
+   public CognitiveEngineProvider(IEnumerable<ICognitiveEngineFactory> cognitiveEngineFactories)
    {
-      _logger = logger;
-      _serviceProvider = serviceProvider;
-      _defaultConnectors = defaultConnectors;
+      _cognitiveEngineFactories = cognitiveEngineFactories.ToDictionary(f => f.CognitiveEngineType, f => f);
    }
 
-   public ICognitiveEngine CreateCognitiveEngine<TCognitiveEngine>(AIdentity aIdentity)
-      where TCognitiveEngine : ICognitiveEngine
-   {
-      var cognitiveEngine = new MithrilCognitiveEngine(
-         logger: _serviceProvider.GetRequiredService<ILogger<MithrilCognitiveEngine>>(),
-         aIdentity: aIdentity,
-         defaultConversationalConnector: _defaultConnectors.DefaultConversationalConnector,
-         defaultCompletionConnector: _defaultConnectors.DefaultCompletionConnector,
-         skillActionsManager: _serviceProvider.GetRequiredService<ISkillManager>()
-         );
+   /// <inheritdoc/>
+   public IEnumerable<Type> KnownCognitiveEngineTypes => _cognitiveEngineFactories.Keys;
 
-      return cognitiveEngine;
+   /// <inheritdoc/>
+   public ICognitiveEngine CreateCognitiveEngine(Type CognitiveEngineType, AIdentity aIdentity)
+   {
+      if (!_cognitiveEngineFactories.TryGetValue(CognitiveEngineType, out var factory))
+      {
+         throw new ArgumentException($"The cognitive engine type {CognitiveEngineType.Name} is not registered.");
+      }
+
+      return factory.CreateCognitiveEngine(aIdentity);
+   }
+
+   /// <inheritdoc/>
+   public ICognitiveEngine CreateCognitiveEngine(string CognitiveEngineTypeName, AIdentity aIdentity)
+   {
+      //find the type by searching in the dictionary keys names
+      var type = _cognitiveEngineFactories.Keys.FirstOrDefault(k => k.Name == CognitiveEngineTypeName)
+         ?? throw new ArgumentException($"The cognitive engine type {CognitiveEngineTypeName} is not registered.");
+
+      return _cognitiveEngineFactories[type].CreateCognitiveEngine(aIdentity);
+   }
+
+   /// <inheritdoc/>
+   public ICognitiveEngine CreateCognitiveEngine(AIdentity aIdentity)
+   {
+      //find the type by searching in the dictionary keys names
+      var type = _cognitiveEngineFactories.Keys.FirstOrDefault(k => k.Name == aIdentity.DefaultCognitiveEngine)
+         ?? throw new ArgumentException($"The configured DefaultCognitiveEngine {aIdentity.DefaultCognitiveEngine} is not registered.");
+
+      return _cognitiveEngineFactories[type].CreateCognitiveEngine(aIdentity);
    }
 }

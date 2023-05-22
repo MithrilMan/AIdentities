@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Threading;
 using AIdentities.Shared.Features.CognitiveEngine.Mission;
+using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 using AIdentities.Shared.Plugins.Connectors.Completion;
 using AIdentities.Shared.Plugins.Connectors.Conversational;
@@ -76,6 +77,8 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
 
    public virtual MissionToken StartMission(IMission mission, CancellationToken cancellationToken)
    {
-      return new MissionToken(mission, cancellationToken);
+      var missionToken = new MissionToken(mission, cancellationToken);
+      mission.Context.MissionRunningCancellationToken = missionToken.CancellationToken;
+      return missionToken;
    }
 }

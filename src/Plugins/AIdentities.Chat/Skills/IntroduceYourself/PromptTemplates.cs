@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace AIdentities.Chat.Skills.IntroduceAIdentity;
+namespace AIdentities.Chat.Skills.IntroduceYourself;
 
 internal static class PromptTemplates
 {

@@ -9,6 +9,8 @@
 public class MissionContext : IMissionContext
 {
    /// <inheritdoc/>
+   public CancellationToken MissionRunningCancellationToken { get; internal set; }
+
    public AIdentitiesConstraint AIdentitiesConstraints { get; init; } = new();
    /// <inheritdoc/>
    public ResourceConstraints ResourceConstraints { get; init; } = new();

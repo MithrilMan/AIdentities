@@ -16,5 +16,8 @@ public class Mission<TMissionContext> : IMission
    public TMissionContext Context { get; set; } = new();
 
    /// <inheritdoc/>
+   public CancellationToken MissionRunningCancellationToken { get; internal set; }
+
+   /// <inheritdoc/>
    MissionContext IMission.Context { get => Context; }
 }

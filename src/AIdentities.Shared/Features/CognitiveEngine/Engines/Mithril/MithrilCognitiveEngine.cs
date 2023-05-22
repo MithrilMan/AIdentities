@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using AIdentities.Shared.Features.CognitiveEngine.Mission;
+using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 using AIdentities.Shared.Plugins.Connectors.Completion;
 using AIdentities.Shared.Plugins.Connectors.Conversational;
@@ -46,7 +47,7 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
       if (IsFirstPrompt)
       {
          IsFirstPrompt = false;
-         yield return Context.Thinking(null, $"Here I am, {(missionContext is null ? "on my duty" : "working for a mission!")}");
+         yield return Context.ActionThought(null, $"Here I am, {(missionContext is null ? "on my duty" : "working for a mission!")}");
       }
 
       var thoughts = (prompt switch

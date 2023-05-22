@@ -22,17 +22,17 @@ public class Conversation
    /// <summary>
    /// The messages of the conversation.
    /// </summary>
-   private List<Message> _messages { get; init; } = new();
+   private List<ConversationMessage> _messages { get; init; } = new();
    /// <summary>
    /// The messages of the conversation.
    /// </summary>
-   public IReadOnlyCollection<Message> Messages => _messages;
+   public IReadOnlyCollection<ConversationMessage> Messages => _messages;
 
    /// <summary>
    /// Allows to add a message to the conversation and update the statistics.
    /// </summary>
    /// <param name="message"></param>
-   public void AddMessage(Message message)
+   public void AddMessage(ConversationMessage message)
    {
       _messages.Add(message);
       Metadata.MessageCount++;
