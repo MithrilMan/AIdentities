@@ -17,5 +17,5 @@ public static partial class SkillRegexUtils
    /// </summary>
    /// <returns></returns>
    [GeneratedRegex("(?<=Skill:\\s+)\\w+", RegexOptions.IgnoreCase)]
-   public static partial Regex ExtractCommandName();
+   public static partial Regex ExtractSkillName();
 }

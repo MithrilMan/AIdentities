@@ -1,10 +1,12 @@
 ﻿using System.Runtime.CompilerServices;
+using AIdentities.Shared.Features.CognitiveEngine.Skills;
 
 namespace AIdentities.Chat.Skills.InviteFriend;
 
 public class InviteFriend : SkillDefinition
 {
    public const string NAME = nameof(InviteFriend);
+   public const string RESULT_KEY = nameof(InviteFriend);
    const string ACTIVATION_CONTEXT = "The user wants you to invite a friend";
    const string RETURN_DESCRIPTION = "The friend that has been invited to the conversation";
 
@@ -61,33 +63,43 @@ public class InviteFriend : SkillDefinition
       var connector = _defaultConnectors.DefaultCompletionConnector
          ?? throw new InvalidOperationException("No completion connector is enabled");
 
-      if (!TryExtractJson<Args>(prompt.Text, out var args))
+      var json = cognitiveContext.GetSkillJsonArgs(Id);
+      Args? args = null;
+      if (json is not null)
+      {
+         if (!TryExtractJson<Args>(json, out args))
+         {
+            yield return cognitiveContext.InvalidPrompt(this);
+            yield break;
+         }
+      }
+
+      if (args is null && !TryExtractJson<Args>(prompt.Text, out args))
       {
          yield return cognitiveContext.InvalidPrompt(this);
          yield break;
       }
 
-      if (args.WhoToInvite is null && args.CharacteristicToHave is null)
+      if (args?.WhoToInvite is null && args?.CharacteristicToHave is null)
       {
          yield return cognitiveContext.MissingArguments(this, Args.WhoToInviteDefinition, Args.WhoToInviteDefinition);
          yield break;
       }
 
-
-      if (args.WhoToInvite is not null)
+      if (args?.WhoToInvite is not null)
       {
          var aidentity = _aIdentityProvider.All()
             .FirstOrDefault(a => a.Name.Contains(args.WhoToInvite, StringComparison.OrdinalIgnoreCase));
 
-         if (aidentity is null)
-            yield return cognitiveContext.InvalidPrompt(this);
+         if (aidentity is null) yield return cognitiveContext.InvalidPrompt(this);
 
          SetResult(cognitiveContext, aidentity);
+         yield return cognitiveContext.IntrospectiveThought(this, $"I've inserted the AIdentity to invite in the cognitive key {RESULT_KEY}");
       }
    }
 
    private static void SetResult(CognitiveContext cognitiveContext, AIdentity? aidentity)
    {
-      cognitiveContext.State["InviteFriend"] = aidentity;
+      cognitiveContext.State[RESULT_KEY] = aidentity;
    }
 }

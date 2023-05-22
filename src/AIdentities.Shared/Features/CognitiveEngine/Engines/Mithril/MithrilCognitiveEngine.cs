@@ -70,13 +70,17 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
       bool isFirstPrompt,
       [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      (bool skillDetected, string detectedSkill) = await TryDetectSkillAsync(prompt, cancellationToken).ConfigureAwait(false);
+      (bool skillDetected, string detectedSkill, string? jsonArgs)
+         = await TryDetectSkillAsync(prompt, cancellationToken).ConfigureAwait(false);
+
       if (skillDetected && detectedSkill != UNKNOWN_SKILL)
       {
-         var skillAction = _skillActionsManager.Get(detectedSkill);
+         yield return Context.ActionThought(null, $"I detected the skill {detectedSkill}.");
+         var skillAction = _skillManager.Get(detectedSkill);
          if (skillAction is not null)
          {
-            _skillsWaitingPrompt.Add(skillAction.Id, skillAction);
+            //_skillsWaitingPrompt.Add(skillAction.Id, skillAction);
+            Context.SetSkillJsonArgs(skillAction.Id, jsonArgs);
             var thoughtStream = skillAction.ExecuteAsync(prompt, Context, missionContext, cancellationToken).ConfigureAwait(false);
             await foreach (var thought in thoughtStream)
             {
@@ -105,21 +109,43 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
    /// <param name="prompt">The prompt to analyze.</param>
    /// <param name="cancellationToken">A cancellation token.</param>
    /// <returns>A tuple with the first item being a boolean indicating if a skill was detected and the second item being the detected skill name.</returns>
-   protected async Task<(bool skillDetected, string detectedSkill)> TryDetectSkillAsync(Prompt prompt, CancellationToken cancellationToken)
+   protected async Task<(bool skillDetected, string detectedSkill, string? jsonArgs)> TryDetectSkillAsync(Prompt prompt, CancellationToken cancellationToken)
    {
-      var instruction = PromptTemplates.GetFindSkillPrompt(prompt, _skillActionsManager.All());
+      var instruction = PromptTemplates.BuildFindSkillPrompt(prompt, _skillManager.All());
       var response = await _defaultCompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest
       {
          Prompt = instruction,
-         MaxGeneratedTokens = 60,
+         MaxGeneratedTokens = 250,
          Temperature = 0,
       }, cancellationToken).ConfigureAwait(false);
 
-      var detectedSkill = SkillRegexUtils.ExtractCommandName().Match(response!.GeneratedMessage!).Value;
+      var detectedSkill = SkillRegexUtils.ExtractSkillName().Match(response!.GeneratedMessage!).Value;
+      bool skillDetected = !string.IsNullOrEmpty(detectedSkill);
+
+
+      string? jsonArgs = null;
+      if (skillDetected && detectedSkill != UNKNOWN_SKILL)
+      {
+         var skill = _skillManager.Get(detectedSkill);
+         if (skill is not null)
+         {
+            // try to detect arguments out of the prompt
+            instruction = PromptTemplates.BuildGenerateSkillParametersJson(prompt, skill);
+            response = await _defaultCompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest
+            {
+               Prompt = instruction,
+               MaxGeneratedTokens = 500, //TODO: make this configurable
+               Temperature = 0,
+            }, cancellationToken).ConfigureAwait(false);
+
+            jsonArgs = SkillRegexUtils.ExtractJson().Match(response!.GeneratedMessage!).Value;
+         }
+      }
 
       return (
-         skillDetected: !string.IsNullOrEmpty(detectedSkill),
-         detectedSkill: detectedSkill
+         skillDetected: skillDetected,
+         detectedSkill: detectedSkill,
+         jsonArgs: jsonArgs
          );
    }
 }

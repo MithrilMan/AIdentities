@@ -6,6 +6,4 @@ public class MithrilCognitiveContext : CognitiveContext
    public MithrilCognitiveContext(AIdentity aIdentity) : base(aIdentity)
    {
    }
-
-
 }

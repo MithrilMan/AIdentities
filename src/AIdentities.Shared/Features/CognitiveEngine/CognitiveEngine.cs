@@ -19,7 +19,7 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    protected readonly ILogger _logger;
    protected readonly IConversationalConnector _defaultConversationalConnector;
    protected readonly ICompletionConnector _defaultCompletionConnector;
-   protected readonly ISkillManager _skillActionsManager;
+   protected readonly ISkillManager _skillManager;
 
    public AIdentity AIdentity { get; }
 
@@ -33,13 +33,13 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
                           AIdentity aIdentity,
                           IConversationalConnector defaultConversationalConnector,
                           ICompletionConnector defaultCompletionConnector,
-                          ISkillManager skillActionsManager)
+                          ISkillManager skillManager)
    {
       _logger = logger;
       AIdentity = aIdentity;
       _defaultConversationalConnector = defaultConversationalConnector;
       _defaultCompletionConnector = defaultCompletionConnector;
-      _skillActionsManager = skillActionsManager;
+      _skillManager = skillManager;
 
       EnsureAIdentityIsValid();
 

@@ -254,13 +254,44 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       var thoughts = thoughtsProducer.ConfigureAwait(false);
       await foreach (var thought in thoughts)
       {
-         await InvokeAsync(() => _state.Messages.AppendItemAsync(new ChatMessage
+         // if we receive a streamed thought, we create a new message and we add it to the list
+         // subsequent streamed thoughts with same id will just replace the content of the temporary
+         // message until we receive a IsStreamComplete that signal that our message is finally complete
+         // and we can add it to the list
+         if (thought is StreamedThought streamedThought)
          {
-            AIDentityId = thought.AIdentityId,
-            IsGenerated = true,
-            Message = thought.Content,
-         }).AsTask()).ConfigureAwait(false);
-         await ScrollToEndOfMessageList().ConfigureAwait(false);
+            if (!_unfinisheMessages.TryGetValue(thought.ThoughtId, out var message))
+            {
+               message = new ChatMessage
+               {
+                  AIDentityId = thought.AIdentityId,
+                  IsGenerated = true,
+                  Message = "",
+               };
+               _unfinisheMessages[thought.ThoughtId] = message;
+
+               await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
+            }
+
+            message.Message = streamedThought.Content;
+            await ScrollToEndOfMessageList().ConfigureAwait(false);
+
+            if(streamedThought.IsStreamComplete)
+            {
+               _unfinisheMessages.Remove(thought.ThoughtId);
+            }
+         }
+         else
+         {
+            // if the thought is not streamed, we just add it to the list
+            await InvokeAsync(() => _state.Messages.AppendItemAsync(new ChatMessage
+            {
+               AIDentityId = thought.AIdentityId,
+               IsGenerated = true,
+               Message = thought.Content,
+            }).AsTask()).ConfigureAwait(false);
+            await ScrollToEndOfMessageList().ConfigureAwait(false);
+         }
       }
    }
 

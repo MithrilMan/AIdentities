@@ -8,7 +8,7 @@
    </MudTabPanel>
    @foreach (var pluginSettings in PluginSettingRegistration)
    {
-      <PluginSettingsTab PluginSettingRegistration="pluginSettings" />
+      <PluginSettingsTab @key="pluginSettings" PluginSettingRegistration="pluginSettings" />
    }
 </MudTabs>
 

@@ -1,6 +1,4 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine.Mission;
-
-namespace AIdentities.Chat.Missions;
+﻿namespace AIdentities.Chat.Missions;
 public class CognitiveChatMissionContext : MissionContext
 {
    public Conversation? CurrentConversation

@@ -54,7 +54,7 @@ public static class PromptTemplates
    /// <see cref="TOKEN_DETECTED_SKILL_EXAMPLE"/> with the actual detected skill example.
    /// <see cref="TOKEN_USER_PROMPT"/> with the actual user prompt.
    /// </summary>
-   const string SKILL_EXTRACTION = $"""
+   const string SKILL_EXTRACTION_WITH_PARAMETERS = $"""
       Here the yaml definition of the skill that you have to execute
       ```yaml
       Skill: {TOKEN_DETECTED_SKILL}
@@ -73,7 +73,33 @@ public static class PromptTemplates
 
       """;
 
-   public static string GetFindSkillPrompt(Prompt userPrompt, IEnumerable<ISkillAction> availableSkills)
+
+   const string SKILL_EXTRACTION_WITHOUT_PARAMETERS = $"""
+      Here the yaml definition of the skill that you have to execute
+      ```yaml
+      Skill: {TOKEN_DETECTED_SKILL}
+        arguments:
+      {TOKEN_SKILL_ARGUMENTS}
+      ```
+      
+      Based on the user prompt, explain in the context of the {TOKEN_DETECTED_SKILL} command what the user wants to do.
+      
+      <START Examples>
+      UserRequest: I don't like the color of the background, I'd like it to be blue
+      Reasoning: The user is asking to change the background of the theme with a blue color.
+      Request: Change the application theme background color to blue.
+      
+      UserRequest: I'd like a colorful theme for the application
+      Reasoning: The user is asking to change the theme of the application with a colorful one.
+      Request: Change the application theme to a colorful one
+      <END Examples>
+      
+      UserRequest: {TOKEN_USER_PROMPT}
+      Reasoning:  
+
+      """;
+
+   public static string BuildFindSkillPrompt(Prompt userPrompt, IEnumerable<ISkillAction> availableSkills)
    {
       var sbAvailableSkills = new StringBuilder();
       foreach (var skillAction in availableSkills)
@@ -88,7 +114,7 @@ public static class PromptTemplates
       return sb.ToString();
    }
 
-   public static string GetFindExtraction(Prompt userPrompt, ISkillAction detectedSkillAction)
+   public static string BuildGenerateSkillParametersJson(Prompt userPrompt, ISkillAction detectedSkillAction)
    {
       var sbSkillArgs = new StringBuilder();
       foreach (var arg in detectedSkillAction.Arguments)
@@ -98,7 +124,16 @@ public static class PromptTemplates
          sbSkillArgs.AppendLine($"    required: {arg.IsRequired}");
       }
 
-      var sb = new StringBuilder(SKILL_EXTRACTION);
+      StringBuilder sb = new();
+      if (detectedSkillAction.Arguments.Any())
+      {
+         sb.Append(SKILL_EXTRACTION_WITH_PARAMETERS);
+      }
+      else
+      {
+         sb.Append(SKILL_EXTRACTION_WITHOUT_PARAMETERS);
+      }
+
       sb.Replace(TOKEN_DETECTED_SKILL, userPrompt.Text);
       sb.Replace(TOKEN_SKILL_ARGUMENTS, string.Join(Environment.NewLine, sbSkillArgs.ToString()));
       sb.Replace(TOKEN_DETECTED_SKILL_EXAMPLE, string.Join(Environment.NewLine, sbSkillArgs.ToString()));
