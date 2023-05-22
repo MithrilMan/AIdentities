@@ -2,7 +2,7 @@
 using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 
 namespace AIdentities.Chat.Skills.ReplyToPrompt;
-public class ReplyToPrompt : SkillDefinition
+public class ReplyToPrompt : Skill
 {
    public const string NAME = nameof(ReplyToPrompt);
    const string ACTIVATION_CONTEXT = "The AIdenity has to introduce itself to the conversation";

@@ -7,13 +7,13 @@ public partial class SkillGallery
    class State
    {
       public string? SearchText { get; set; }
-      public FilteredObservableCollection<ISkillAction> Skills { get; private set; } = default!;
+      public FilteredObservableCollection<ISkill> Skills { get; private set; } = default!;
       public HashSet<string> AvailableTags { get; set; } = new HashSet<string>();
       public IEnumerable<string> Tags { get; set; } = new HashSet<string>();
 
       public ICollection<string> SelectedSkills { get; set; } = new HashSet<string>();
 
-      public void Initialize(Func<IEnumerable<ISkillAction>, ValueTask<IEnumerable<ISkillAction>>> filter)
+      public void Initialize(Func<IEnumerable<ISkill>, ValueTask<IEnumerable<ISkill>>> filter)
       {
          SearchText = null;
          Skills = new(filter);

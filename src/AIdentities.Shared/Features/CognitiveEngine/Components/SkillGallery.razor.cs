@@ -41,7 +41,7 @@ public partial class SkillGallery
       }
    }
 
-   public ValueTask<IEnumerable<ISkillAction>> Filter(IEnumerable<ISkillAction> unfilteredItems)
+   public ValueTask<IEnumerable<ISkill>> Filter(IEnumerable<ISkill> unfilteredItems)
    {
       if (!string.IsNullOrWhiteSpace(_state.SearchText))
       {
@@ -75,7 +75,7 @@ public partial class SkillGallery
       }
    }
 
-   void OnSelectedSkillChanged(ISkillAction skill, bool isChecked)
+   void OnSelectedSkillChanged(ISkill skill, bool isChecked)
    {
       if (isChecked)
       {

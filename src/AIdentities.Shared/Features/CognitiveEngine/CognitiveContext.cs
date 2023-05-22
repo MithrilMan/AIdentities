@@ -101,7 +101,7 @@ public class CognitiveContext
    /// </summary>
    /// <param name="skillAction">The optional skill action that is being executed.</param>
    /// <returns>The invalid prompt thought.</returns>
-   public InvalidPromptThought InvalidPrompt(ISkillAction? skillAction)
+   public InvalidPromptThought InvalidPrompt(ISkill? skillAction)
       => new(skillAction?.Id, AIdentity);
 
    /// <summary>
@@ -113,10 +113,10 @@ public class CognitiveContext
    /// <param name="skillAction">The optional skill action that is being executed.</param>
    /// <param name="missingArguments">The list of missing arguments.</param>
    /// <returns>The invalid prompt response thought.</returns>
-   public MissingArgumentsThought MissingArguments(ISkillAction? skillAction, params SkillArgumentDefinition[] missingArguments)
+   public MissingArgumentsThought MissingArguments(ISkill? skillAction, params string[] missingArguments)
       => new MissingArgumentsThought(skillAction?.Id, AIdentity, missingArguments);
 
-   public IntrospectiveThought IntrospectiveThought(ISkillAction? skillAction, string thought)
+   public IntrospectiveThought IntrospectiveThought(ISkill? skillAction, string thought)
       => new IntrospectiveThought(skillAction?.Id, AIdentity, thought);
 
    /// <summary>
@@ -126,7 +126,7 @@ public class CognitiveContext
    /// <param name="skillAction">The optional skill action that is being executed.</param>
    /// <param name="thought">The thought to produce.</param>
    /// <returns>The action thought.</returns>
-   public ActionThought ActionThought(ISkillAction? skillAction, string thought)
+   public ActionThought ActionThought(ISkill? skillAction, string thought)
       => new ActionThought(skillAction?.Id, AIdentity, thought);
 
    /// <summary>
@@ -136,7 +136,7 @@ public class CognitiveContext
    /// <param name="skillAction">The optional skill action that is being executed.</param>
    /// <param name="thought">The thought to produce.</param>
    /// <returns>The final thought.</returns>
-   public FinalThought FinalThought(ISkillAction? skillAction, string thought)
+   public FinalThought FinalThought(ISkill? skillAction, string thought)
       => new FinalThought(skillAction?.Id, AIdentity.Id, thought);
 
    /// <summary>
@@ -147,7 +147,7 @@ public class CognitiveContext
    /// <param name="skillAction">The optional skill action that is being executed.</param>
    /// <param name="thought">The thought to produce.</param>
    /// <returns>The first streamed thought.</returns>
-   public StreamedFinalThought StreamFinalThought(ISkillAction? skillAction, string thought)
+   public StreamedFinalThought StreamFinalThought(ISkill? skillAction, string thought)
       => new StreamedFinalThought(skillAction?.Id, AIdentity.Id, thought);
 
    /// <summary>
@@ -158,6 +158,6 @@ public class CognitiveContext
    /// <param name="skillAction">The optional skill action that is being executed.</param>
    /// <param name="thought">The thought to produce.</param>
    /// <returns>The first streamed thought.</returns>
-   public StreamedIntrospectiveThought StreamIntrospectiveThought(ISkillAction? skillAction, string thought)
+   public StreamedIntrospectiveThought StreamIntrospectiveThought(ISkill? skillAction, string thought)
       => new StreamedIntrospectiveThought(skillAction?.Id, AIdentity, thought);
 }

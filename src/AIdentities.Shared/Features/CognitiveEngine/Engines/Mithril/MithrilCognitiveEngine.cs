@@ -28,7 +28,7 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
    /// Holds the skills that are waiting for a user prompt.
    /// Whenever a skill action required from this AIdentity requires a user prompt, it is added to this dictionary.
    /// </summary>
-   private readonly Dictionary<Guid, ISkillAction> _skillsWaitingPrompt = new();
+   private readonly Dictionary<Guid, ISkill> _skillsWaitingPrompt = new();
 
    public MithrilCognitiveEngine(ILogger<MithrilCognitiveEngine> logger,
                                  AIdentity aIdentity,

@@ -25,5 +25,6 @@
 
    <ItemGroup>
      <Folder Include="Features\CognitiveEngine\Attributes\" />
+     <Folder Include="Features\CognitiveEngine\Skills\2\" />
    </ItemGroup>
 </Project>

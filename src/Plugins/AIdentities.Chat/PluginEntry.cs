@@ -29,9 +29,9 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
    private static void RegisterAvailableCommands(IServiceCollection services)
    {
       services
-         .AddScoped<ISkillAction, InviteFriend>()
-         .AddScoped<ISkillAction, IntroduceYourself>()
-         .AddScoped<ISkillAction, ReplyToPrompt>()
+         .AddScoped<ISkill, InviteFriend>()
+         .AddScoped<ISkill, IntroduceYourself>()
+         .AddScoped<ISkill, ReplyToPrompt>()
          ;
    }
 }

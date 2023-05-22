@@ -7,9 +7,9 @@
 /// </summary>
 public record MissingArgumentsThought : IntrospectiveThought
 {
-   public IEnumerable<SkillArgumentDefinition> MissingArguments { get; }
+   public IEnumerable<string> MissingArguments { get; }
 
-   public MissingArgumentsThought(Guid? SkillActionId, AIdentity AIdentity, IEnumerable<SkillArgumentDefinition> missingArguments)
+   public MissingArgumentsThought(Guid? SkillActionId, AIdentity AIdentity, IEnumerable<string> missingArguments)
       : base(SkillActionId, AIdentity, "Not enough data to process the request.")
    {
       MissingArguments = missingArguments;

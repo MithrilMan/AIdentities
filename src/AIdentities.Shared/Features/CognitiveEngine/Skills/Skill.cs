@@ -5,29 +5,17 @@ using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 
 namespace AIdentities.Shared.Features.CognitiveEngine.Skills;
 
-public abstract class SkillDefinition : ISkillAction
+public abstract class Skill : ISkill
 {
    public Guid Id { get; } = Guid.NewGuid();
    public string Name { get; }
-   public string ActivationContext { get; }
-   public IEnumerable<SkillArgumentDefinition> Arguments { get; protected set; } = Enumerable.Empty<SkillArgumentDefinition>();
-   public string ReturnDescription { get; }
-   public string Examples { get; }
 
-   public ICollection<string> Tags => new List<string>();
-
-   public SkillDefinition(string name,
-                          string activationContext,
-                          string returnDescription,
-                          string examples)
+   public Skill(string name)
    {
       Name = name;
-      ActivationContext = activationContext;
-      ReturnDescription = returnDescription;
-      Examples = examples;
    }
 
-   public abstract IAsyncEnumerable<Thought> ExecuteAsync(Prompt prompt, CognitiveContext cognitiveContext, MissionContext? missionContext, CancellationToken cancellationToken);
+   public abstract IAsyncEnumerable<Thought> ExecuteAsync(Prompt prompt, SkillExecutionContext executionContext, CancellationToken cancellationToken);
 
    /// <summary>
    /// Extracts the typeod arguments from the text.

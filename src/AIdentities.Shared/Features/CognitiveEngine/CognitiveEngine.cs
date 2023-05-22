@@ -81,4 +81,17 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
       mission.Context.MissionRunningCancellationToken = missionToken.CancellationToken;
       return missionToken;
    }
+
+   public IAsyncEnumerable<Thought> ExecuteSkill(ISkill skill, Prompt prompt, MissionContext missionContext, CancellationToken cancellationToken)
+   {
+
+      var executionContext = new SkillExecutionContext(
+         cognitiveContext: Context,
+         missionContext: missionContext
+         );
+
+      // TODO: try to load parameters from prompt or merge from another skillExecutionContext
+
+      return skill.ExecuteAsync(prompt, executionContext, cancellationToken);
+   }
 }

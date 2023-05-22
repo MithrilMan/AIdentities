@@ -99,7 +99,7 @@ public static class PromptTemplates
 
       """;
 
-   public static string BuildFindSkillPrompt(Prompt userPrompt, IEnumerable<ISkillAction> availableSkills)
+   public static string BuildFindSkillPrompt(Prompt userPrompt, IEnumerable<ISkill> availableSkills)
    {
       var sbAvailableSkills = new StringBuilder();
       foreach (var skillAction in availableSkills)
@@ -114,7 +114,7 @@ public static class PromptTemplates
       return sb.ToString();
    }
 
-   public static string BuildGenerateSkillParametersJson(Prompt userPrompt, ISkillAction detectedSkillAction)
+   public static string BuildGenerateSkillParametersJson(Prompt userPrompt, ISkill detectedSkillAction)
    {
       var sbSkillArgs = new StringBuilder();
       foreach (var arg in detectedSkillAction.Arguments)

@@ -3,15 +3,15 @@
 public class SkillManager : ISkillManager
 {
    readonly ILogger<SkillManager> _logger;
-   readonly Dictionary<string, ISkillAction> _knownSkills;
+   readonly Dictionary<string, ISkill> _knownSkills;
 
-   public SkillManager(ILogger<SkillManager> logger, IEnumerable<ISkillAction> availableSkills)
+   public SkillManager(ILogger<SkillManager> logger, IEnumerable<ISkill> availableSkills)
    {
       _logger = logger;
       _knownSkills = availableSkills.ToDictionary(s => s.Name, s => s);
    }
 
-   public ISkillAction? Get(string skillName)
+   public ISkill? Get(string skillName)
    {
       if (_knownSkills.TryGetValue(skillName, out var skill))
       {
@@ -22,7 +22,7 @@ public class SkillManager : ISkillManager
       return null;
    }
 
-   public IEnumerable<ISkillAction> All() => _knownSkills.Values;
+   public IEnumerable<ISkill> All() => _knownSkills.Values;
 
-   public ISkillAction? Get<TSkill>() => _knownSkills.Values.FirstOrDefault(s => s.GetType() == typeof(TSkill));
+   public ISkill? Get<TSkill>() => _knownSkills.Values.FirstOrDefault(s => s.GetType() == typeof(TSkill));
 }

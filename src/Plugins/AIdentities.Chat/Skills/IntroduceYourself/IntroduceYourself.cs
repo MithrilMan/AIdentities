@@ -2,7 +2,7 @@
 
 namespace AIdentities.Chat.Skills.IntroduceYourself;
 
-public class IntroduceYourself : SkillDefinition
+public class IntroduceYourself : Skill
 {
    public const string NAME = nameof(IntroduceYourself);
    const string ACTIVATION_CONTEXT = "The AIdenity has to introduce itself to the conversation";
