@@ -20,8 +20,4 @@
    <ItemGroup>
       <ProjectReference Include="..\..\AIdentities.Shared\AIdentities.Shared.csproj" />
    </ItemGroup>
-
-   <ItemGroup>
-     <Folder Include="wwwroot\" />
-   </ItemGroup>
 </Project>

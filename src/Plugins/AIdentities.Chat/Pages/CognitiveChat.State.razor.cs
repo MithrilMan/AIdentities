@@ -57,6 +57,8 @@ public partial class CognitiveChat
       /// </summary>
       public CancellationTokenSource MessageGenerationCancellationTokenSource { get; set; } = new CancellationTokenSource();
 
+      public List<Thought> ChatKeeperThoughts { get; } = new();
+
       public void Initialize(Func<IEnumerable<ChatMessage>, ValueTask<IEnumerable<ChatMessage>>> messageFilter, IChatPromptGenerator chatPromptGenerator, IAIdentityProvider aidentityProvider)
       {
          Messages = new(messageFilter);

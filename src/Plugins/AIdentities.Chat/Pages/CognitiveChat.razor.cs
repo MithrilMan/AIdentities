@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Web;
+﻿using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
+using Microsoft.AspNetCore.Components.Web;
 using Toolbelt.Blazor.HotKeys2;
 
 namespace AIdentities.Chat.Pages;
@@ -22,6 +23,8 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    [Inject] private IPluginSettingsManager PluginSettingsManager { get; set; } = null!;
    [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
    [Inject] private ICognitiveEngineProvider CognitiveEngineProvider { get; set; } = null!;
+   [Inject] private IPluginResourcePath PluginResourcePath { get; set; } = null!;
+
 
    /// <summary>
    /// The mission that will be assigned to the <see cref="_chatKeeper"/> instance.
@@ -34,6 +37,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    private readonly ChatKeeper _chatKeeper = new();
    private ICognitiveEngine _chatKeeperCognitiveEngine = default!;
    private MissionToken? _chatMissionToken;
+   readonly Dictionary<Guid, ChatMessage> _unfinisheMessages = new();
 
    MudTextFieldExtended<string?> _messageTextField = default!;
 
@@ -128,7 +132,6 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          await ScrollToEndOfMessageList().ConfigureAwait(false);
 
          ChatPromptGenerator.AppendMessage(message);
-         //await SendMessageToConnector().ConfigureAwait(false);
 
          await HandlePrompt(message).ConfigureAwait(false);
       }
@@ -154,6 +157,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       if (_state.NoConversation)
       {
          await _state.CloseConversation().ConfigureAwait(false);
+         _state.ChatKeeperThoughts.Clear();
          CognitiveChatMission.ClearConversation();
          return;
       }
@@ -198,7 +202,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       }
    }
 
-   Task Resend() => HandlePrompt(_state.Messages.UnfilteredItems.Last());
+   Task Resend() => HandlePrompt(_state.Messages.UnfilteredItems.Last(m => m.AIDentityId != _chatKeeper.Id));
 
    async Task OnDeleteMessage(ChatMessage message)
    {
@@ -270,32 +274,58 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
                };
                _unfinisheMessages[thought.ThoughtId] = message;
 
-               await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
+               if (thought.AIdentityId != _chatKeeper.Id)
+               {
+                  await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
+               }
+               else
+               {
+                  _state.ChatKeeperThoughts.Add(thought);
+               }
             }
 
             message.Message = streamedThought.Content;
             await ScrollToEndOfMessageList().ConfigureAwait(false);
 
-            if(streamedThought.IsStreamComplete)
+            if (streamedThought.IsStreamComplete)
             {
                _unfinisheMessages.Remove(thought.ThoughtId);
+               await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
             }
          }
          else
          {
             // if the thought is not streamed, we just add it to the list
-            await InvokeAsync(() => _state.Messages.AppendItemAsync(new ChatMessage
+            var message = new ChatMessage
             {
                AIDentityId = thought.AIdentityId,
                IsGenerated = true,
                Message = thought.Content,
-            }).AsTask()).ConfigureAwait(false);
-            await ScrollToEndOfMessageList().ConfigureAwait(false);
+            };
+
+            if (thought.AIdentityId != _chatKeeper.Id)
+            {
+               await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
+               await ScrollToEndOfMessageList().ConfigureAwait(false);
+            }
+            else
+            {
+               _state.ChatKeeperThoughts.Add(thought);
+            }
+            await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
          }
       }
    }
 
-   readonly Dictionary<Guid, ChatMessage> _unfinisheMessages = new();
+   public async Task UpdateChatStorageIfNeeded(Thought generatingThought, ChatMessage message)
+   {
+      if (generatingThought is FinalThought)
+      {
+         //final thought are saved in the database because are meaningful conversation messages
+         await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, message).ConfigureAwait(false);
+      }
+   }
+
 
    public override void Dispose()
    {

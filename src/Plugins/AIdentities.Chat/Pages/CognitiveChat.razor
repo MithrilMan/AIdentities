@@ -44,6 +44,16 @@
          <MudPaper Class="d-flex flex-column flex-grow-1 pa-2 gap-1" Outlined="true">
             <MudList Class="list d-flex flex-column flex-grow-1" DisablePadding="true" DisableGutters="true" Dense="true"
                      Clickable="true" SelectedItemChanged="OnSelectedMessageChanged">
+               <div class="absolute top-0 left-0 cursor-pointer" @onclick="@(() => _areChatKeeperThoughtsVisible = !_areChatKeeperThoughtsVisible)">
+                  <MudAvatar Elevation="10" Size="Size.Large">
+                     <MudImage Src="@(PluginResourcePath.GetContentPath<PluginEntry>("chat-keeper.jpeg"))" />
+                  </MudAvatar>
+                  <MudPopover AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopLeft" Open="@_areChatKeeperThoughtsVisible">
+                     <MudListExtended Virtualize=" true" T="Thought"
+                              ItemCollection="(((IEnumerable<Thought>)_state.ChatKeeperThoughts).Reverse().ToList())" ToStringFunc="@(f => f.Content)" />
+                  </MudPopover>
+               </div>
+
                <MudSpacer />
                @foreach (var message in _state.Messages.Items)
                {
@@ -126,6 +136,7 @@
 
 @code {
    bool _showAddAIdentityDialog = false;
+   bool _areChatKeeperThoughtsVisible = false;
    void ToggleOpenAddAIdentityDialog() => _showAddAIdentityDialog = !_showAddAIdentityDialog;
 
    string GetConversationTitle()

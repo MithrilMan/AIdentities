@@ -2,6 +2,7 @@
 using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 
 namespace AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
+
 public static class PromptTemplates
 {
    const string TOKEN_USER_PROMPT = $"{nameof(TOKEN_USER_PROMPT)}";
@@ -114,10 +115,10 @@ public static class PromptTemplates
       return sb.ToString();
    }
 
-   public static string BuildGenerateSkillParametersJson(Prompt userPrompt, SkillDefinition detectedSkillAction)
+   public static string BuildGenerateSkillParametersJson(Prompt userPrompt, SkillDefinition detectedSkill)
    {
       var sbSkillArgs = new StringBuilder();
-      foreach (var arg in detectedSkillAction.Inputs)
+      foreach (var arg in detectedSkill.Inputs)
       {
          sbSkillArgs.AppendLine($"  - name: {arg.Name}");
          sbSkillArgs.AppendLine($"    description: {arg.Description}");
@@ -125,7 +126,7 @@ public static class PromptTemplates
       }
 
       StringBuilder sb = new();
-      if (detectedSkillAction.Inputs.Any())
+      if (detectedSkill.Inputs.Any())
       {
          sb.Append(SKILL_EXTRACTION_WITH_PARAMETERS);
       }
@@ -134,10 +135,10 @@ public static class PromptTemplates
          sb.Append(SKILL_EXTRACTION_WITHOUT_PARAMETERS);
       }
 
-      sb.Replace(TOKEN_DETECTED_SKILL, userPrompt.Text);
+      sb.Replace(TOKEN_DETECTED_SKILL, detectedSkill.Name);
       sb.Replace(TOKEN_SKILL_ARGUMENTS, string.Join(Environment.NewLine, sbSkillArgs.ToString()));
-      sb.Replace(TOKEN_DETECTED_SKILL_EXAMPLE, string.Join(Environment.NewLine, sbSkillArgs.ToString()));
-      sb.Replace(TOKEN_DETECTED_SKILL_EXAMPLE, string.Join(Environment.NewLine, sbSkillArgs.ToString()));
+      sb.Replace(TOKEN_DETECTED_SKILL_EXAMPLE, string.Join(Environment.NewLine, detectedSkill.Examples));
+      sb.Replace(TOKEN_USER_PROMPT, string.Join(Environment.NewLine, userPrompt.Text));
       return sb.ToString();
    }
 }

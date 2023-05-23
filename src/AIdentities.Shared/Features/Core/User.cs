@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using AIdentities.Shared.Common;
 
 namespace AIdentities.Shared.Features.Core;
 
-public record User : Entity
+public record User
 {
+   public Guid Id { get; set; } = Guid.NewGuid();
    public DateTime? DateCreated { get; set; }
    [Required] public string? Username { get; set; }
    [Required] public string? Email { get; set; }

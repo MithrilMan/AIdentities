@@ -1,5 +1,4 @@
-﻿using AIdentities.Shared.Common;
-using AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
+﻿using AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Shared.Features.AIdentities.Models;
@@ -12,8 +11,13 @@ namespace AIdentities.Shared.Features.AIdentities.Models;
 /// - AIdentity Description: A nice and friendly AIdentity that loves to chat with people with a bit of sarcasm. She's a bit shy and doesn't like to talk about herself.
 /// - AIdentity Personality: Friendly and nice with a bit of sarcasm. She's a bit shy and doesn't like to talk about herself.
 /// </summary>
-public record AIdentity : Entity
+public record AIdentity
 {
+   /// <summary>
+   /// The id of the AIdentity.
+   /// </summary>
+   public Guid Id { get; set; } = Guid.NewGuid();
+
    /// <summary>
    /// The date and time when the AIdentity was created.
    /// </summary>

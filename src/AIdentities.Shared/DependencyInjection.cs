@@ -1,6 +1,5 @@
 ﻿using AIdentities.Shared.Features.AIdentities.Services;
 using AIdentities.Shared.Features.CognitiveEngine;
-using AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors;
 using AIdentities.Shared.Services.EventBus;
@@ -15,6 +14,7 @@ public static class DependencyInjection
       services.AddScoped<IAppComponentSettingsManager, AppComponentSettingsManager>();
 
       services.AddScoped<IPluginSettingsManager, PluginSettingsManager>();
+      services.AddScoped<IPluginResourcePath, PluginResourcePath>();
 
       services
          .AddScoped<EventAggregator.Blazor.IEventAggregator, EventAggregator.Blazor.EventAggregator>()
