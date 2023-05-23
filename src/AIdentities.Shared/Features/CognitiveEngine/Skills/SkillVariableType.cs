@@ -9,6 +9,5 @@ public enum SkillVariableType
    Boolean,
    Epoch,
    TimeSpan,
-   Base64,
-   Guid
+   Base64
 }

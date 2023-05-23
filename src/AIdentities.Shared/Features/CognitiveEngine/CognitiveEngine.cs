@@ -85,13 +85,14 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    public IAsyncEnumerable<Thought> ExecuteSkill(ISkill skill, Prompt prompt, MissionContext missionContext, CancellationToken cancellationToken)
    {
 
-      var executionContext = new SkillExecutionContext(
+      var context = new SkillExecutionContext(
+         skill,
          cognitiveContext: Context,
          missionContext: missionContext
          );
 
-      // TODO: try to load parameters from prompt or merge from another skillExecutionContext
+      // TODO: try to load parameters from prompt or merge from another skillcontext
 
-      return skill.ExecuteAsync(prompt, executionContext, cancellationToken);
+      return skill.ExecuteAsync(prompt, context, cancellationToken);
    }
 }

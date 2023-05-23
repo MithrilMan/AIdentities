@@ -1,6 +1,4 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine;
-
-namespace AIdentities.Chat.Missions;
+﻿namespace AIdentities.Chat.Missions;
 
 /// <summary>
 /// holds a reference to the AIdentity engine.

@@ -11,6 +11,7 @@ global using AIdentities.Shared.Features.CognitiveEngine;
 global using AIdentities.Shared.Features.CognitiveEngine.Mission;
 global using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 global using AIdentities.Shared.Features.CognitiveEngine.Skills;
+global using AIdentities.Shared.Features.CognitiveEngine.Skills.Attributes;
 global using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 global using AIdentities.Shared.Features.Core.Abstracts;
 global using AIdentities.Shared.Features.Core.Components;

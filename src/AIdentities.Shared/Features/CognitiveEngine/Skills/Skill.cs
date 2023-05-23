@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using AIdentities.Shared.Features.CognitiveEngine.Mission;
 using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 
@@ -7,15 +6,51 @@ namespace AIdentities.Shared.Features.CognitiveEngine.Skills;
 
 public abstract class Skill : ISkill
 {
-   public Guid Id { get; } = Guid.NewGuid();
-   public string Name { get; }
+   SkillDefinition ISkill.Definition { get; set; } = default!;
 
-   public Skill(string name)
+   public SkillDefinition Definition => ((ISkill)this).Definition;
+   public string Name => ((ISkill)this).Definition.Name;
+
+   public async IAsyncEnumerable<Thought> ExecuteAsync(
+      Prompt prompt,
+      SkillExecutionContext context,
+      [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      Name = name;
+      context.PromptChain.Push(prompt);
+
+      if (!ValidateInputs(prompt, context, out var howToRemedy))
+      {
+         yield return howToRemedy;
+      }
+
+      var thoughts = ExecuteAsync(context, cancellationToken).ConfigureAwait(false);
+      await foreach (var thought in thoughts)
+      {
+         yield return thought;
+      }
    }
 
-   public abstract IAsyncEnumerable<Thought> ExecuteAsync(Prompt prompt, SkillExecutionContext executionContext, CancellationToken cancellationToken);
+   /// <summary>
+   /// Check if the inputs are valid.
+   /// If there is something it can do to fix the inputs, it should do it.
+   /// </summary>
+   /// <param name="error">
+   /// An explaination about how to remedy to the failed validation inputs.
+   /// This text could be used to let the LLM try to fix it, or to let the user know what is wrong.
+   /// </param>
+   /// <returns>True if the inputs are valid, false otherwise.</returns>
+   protected abstract bool ValidateInputs(Prompt prompt, SkillExecutionContext context, [MaybeNullWhen(true)] out InvalidArgumentsThought error);
+
+   /// <summary>
+   /// Execute the skill.
+   /// Skillcontext contains the current state of the execution 
+   /// and a chain of Prompts that has been used to reach this point.
+   /// It contains also all the input and output variables set so far.
+   /// </summary>
+   /// <param name="context">The execution context.</param>
+   /// <param name="cancellationToken">The cancellation token.</param>
+   /// <returns></returns>
+   protected abstract IAsyncEnumerable<Thought> ExecuteAsync(SkillExecutionContext context, CancellationToken cancellationToken);
 
    /// <summary>
    /// Extracts the typeod arguments from the text.
@@ -49,12 +84,11 @@ public abstract class Skill : ISkill
    /// <param name="args">The extracted arguments.</param>
    /// <returns>The extracted arguments.</returns>
    public virtual bool TryExtractFromContext<TReturnValue>(
-      CognitiveContext cognitiveContext,
-      MissionContext? missionContext,
+      SkillExecutionContext context,
       [MaybeNullWhen(false)] out TReturnValue args) where TReturnValue : class
    {
-
-      var mission_skill_key = $"{cognitiveContext.AIdentity}_{Name}_{Id}";
+      var cognitiveContext = context.CognitiveContext;
+      var mission_skill_key = $"{cognitiveContext.AIdentity}_{Name}";
       if (cognitiveContext.State.TryGetValue(mission_skill_key, out object? rawValue)
          && rawValue is TReturnValue missionContextValue)
       {
@@ -62,7 +96,7 @@ public abstract class Skill : ISkill
          return true;
       }
 
-      var cognitive_skill_key = $"{Name}_{Id}";
+      var cognitive_skill_key = $"{Name}";
       if (cognitiveContext.State.TryGetValue(cognitive_skill_key, out rawValue)
          && rawValue is TReturnValue cognitiveContextValue)
       {

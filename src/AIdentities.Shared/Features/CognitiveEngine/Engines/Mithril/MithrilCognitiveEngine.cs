@@ -1,6 +1,7 @@
 ﻿using System.Runtime.CompilerServices;
 using AIdentities.Shared.Features.CognitiveEngine.Mission;
 using AIdentities.Shared.Features.CognitiveEngine.Prompts;
+using AIdentities.Shared.Features.CognitiveEngine.Skills;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 using AIdentities.Shared.Plugins.Connectors.Completion;
 using AIdentities.Shared.Plugins.Connectors.Conversational;
@@ -47,7 +48,7 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
       if (IsFirstPrompt)
       {
          IsFirstPrompt = false;
-         yield return Context.ActionThought(null, $"Here I am, {(missionContext is null ? "on my duty" : "working for a mission!")}");
+         yield return ActionThought($"Here I am, {(missionContext is null ? "on my duty" : "working for a mission!")}");
       }
 
       var thoughts = (prompt switch
@@ -75,13 +76,26 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
 
       if (skillDetected && detectedSkill != UNKNOWN_SKILL)
       {
-         yield return Context.ActionThought(null, $"I detected the skill {detectedSkill}.");
-         var skillAction = _skillManager.Get(detectedSkill);
-         if (skillAction is not null)
+         yield return ActionThought($"I detected the skill {detectedSkill}.");
+         var skill = _skillManager.Get(detectedSkill);
+         if (skill is not null)
          {
             //_skillsWaitingPrompt.Add(skillAction.Id, skillAction);
-            Context.SetSkillJsonArgs(skillAction.Id, jsonArgs);
-            var thoughtStream = skillAction.ExecuteAsync(prompt, Context, missionContext, cancellationToken).ConfigureAwait(false);
+
+            var skillExecutionContext = new SkillExecutionContext(skill, Context, missionContext);
+
+            //jsonArgs may contain the arguments to pass to the skill
+            //try to apply them to the skillContext using the SkillDefinition of the skill
+            if (jsonArgs is not null)
+            {
+               var args = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonArgs);
+               foreach (var arg in args)
+               {
+                  skillExecutionContext.SetInput(arg.Key, arg.Value);
+               }
+            }
+
+            var thoughtStream = skill.ExecuteAsync(prompt, skillExecutionContext, cancellationToken).ConfigureAwait(false);
             await foreach (var thought in thoughtStream)
             {
                yield return thought;
@@ -111,7 +125,7 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
    /// <returns>A tuple with the first item being a boolean indicating if a skill was detected and the second item being the detected skill name.</returns>
    protected async Task<(bool skillDetected, string detectedSkill, string? jsonArgs)> TryDetectSkillAsync(Prompt prompt, CancellationToken cancellationToken)
    {
-      var instruction = PromptTemplates.BuildFindSkillPrompt(prompt, _skillManager.All());
+      var instruction = PromptTemplates.BuildFindSkillPrompt(prompt, _skillManager.GetSkillDefinitions());
       var response = await _defaultCompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest
       {
          Prompt = instruction,
@@ -126,7 +140,7 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
       string? jsonArgs = null;
       if (skillDetected && detectedSkill != UNKNOWN_SKILL)
       {
-         var skill = _skillManager.Get(detectedSkill);
+         var skill = _skillManager.GetSkillDefinition(detectedSkill);
          if (skill is not null)
          {
             // try to detect arguments out of the prompt
@@ -148,4 +162,7 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
          jsonArgs: jsonArgs
          );
    }
+
+
+   private ActionThought ActionThought(string content) => new ActionThought(null, AIdentity, content);
 }

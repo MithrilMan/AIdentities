@@ -1,4 +1,5 @@
-﻿global using System.Text.Json;
+﻿global using System.Runtime.CompilerServices;
+global using System.Text.Json;
 global using System.Text.Json.Serialization;
 global using AIdentities.Shared.Features.AIdentities.Abstracts;
 global using AIdentities.Shared.Features.AIdentities.Models;

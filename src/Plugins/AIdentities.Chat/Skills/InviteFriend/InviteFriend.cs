@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace AIdentities.Chat.Skills.InviteFriend;
+﻿namespace AIdentities.Chat.Skills.InviteFriend;
 
 public partial class InviteFriend : Skill
 {
@@ -14,7 +12,6 @@ public partial class InviteFriend : Skill
                              IPluginStorage<PluginEntry> pluginStorage,
                              IAIdentityProvider aIdentityProvider
                              )
-      : base(NAME)
    {
       _logger = logger;
       _defaultConnectors = defaultConnectors;
@@ -22,50 +19,28 @@ public partial class InviteFriend : Skill
       _aIdentityProvider = aIdentityProvider;
    }
 
-   public override async IAsyncEnumerable<Thought> ExecuteAsync(Prompt prompt, SkillExecutionContext executionContext, [EnumeratorCancellation] CancellationToken cancellationToken)
+   protected override async IAsyncEnumerable<Thought> ExecuteAsync(
+      SkillExecutionContext context,
+      CancellationToken cancellationToken)
    {
-      SetResult(executionContext, null);
+      SetFriendInvited(context, null);
 
       var connector = _defaultConnectors.DefaultCompletionConnector
          ?? throw new InvalidOperationException("No completion connector is enabled");
 
-      var json = cognitiveContext.GetSkillJsonArgs(Id);
-      Args? args = null;
-      if (json is not null)
-      {
-         if (!TryExtractJson<Args>(json, out args))
-         {
-            yield return cognitiveContext.InvalidPrompt(this);
-            yield break;
-         }
-      }
-
-      if (args is null && !TryExtractJson<Args>(prompt.Text, out args))
-      {
-         yield return cognitiveContext.InvalidPrompt(this);
-         yield break;
-      }
-
-      if (args?.WhoToInvite is null && args?.CharacteristicToHave is null)
-      {
-         yield return cognitiveContext.MissingArguments(this, Args.WhoToInviteDefinition, Args.WhoToInviteDefinition);
-         yield break;
-      }
-
-      if (args?.WhoToInvite is not null)
+      var whoToInvite = WhoToInvite(context);
+      if (whoToInvite is not null)
       {
          var aidentity = _aIdentityProvider.All()
-            .FirstOrDefault(a => a.Name.Contains(args.WhoToInvite, StringComparison.OrdinalIgnoreCase));
+            .FirstOrDefault(a => a.Name.Contains(whoToInvite, StringComparison.OrdinalIgnoreCase));
 
-         if (aidentity is null) yield return cognitiveContext.InvalidPrompt(this);
+         if (aidentity is null)
+         {
+            yield return context.InvalidArgumentsThought($"Cannot find the AIdentity named {whoToInvite}");
+         }
 
-         SetResult(cognitiveContext, aidentity);
-         yield return cognitiveContext.IntrospectiveThought(this, $"I've inserted the AIdentity to invite in the cognitive key {RESULT_KEY}");
+         SetFriendInvited(context, aidentity);
+         yield return context.IntrospectiveThought( $"I've inserted the AIdentity to invite in the cognitive key {OUT_FRIEND_INVITED}");
       }
-   }
-
-   private static void SetResult(SkillExecutionContext executionContext, AIdentity? aidentity)
-   {
-      executionContext.State[OUT_FRIEND_INVITED] = aidentity;
    }
 }

@@ -39,11 +39,11 @@
                   </MudCardHeader>
                   <MudCardContent Class="pa-2">
                      <MudText Typo="Typo.subtitle1">Activation:</MudText>
-                     <p class="line-clamp-3">@skill.ActivationContext</p>
+                     <p class="line-clamp-3">@skill.Description</p>
                      <MudDivider DividerType="DividerType.FullWidth" Class="mud-border-primary" />
                      <MudText Typo="Typo.subtitle1">Parameters:</MudText>
                      <div class="d-flex flex-wrap">
-                        @foreach (var argument in skill.Arguments)
+                        @foreach (var argument in skill.Inputs)
                         {
                            <MudTooltip Text="@argument.Description">
                               <MudChip Size="Size.Small">@argument.Name</MudChip>

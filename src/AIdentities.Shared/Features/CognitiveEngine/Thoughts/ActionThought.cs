@@ -7,8 +7,8 @@
 /// </summary>
 public record ActionThought : Thought
 {
-   public ActionThought(Guid? SkillActionId, AIdentity AIdentity, string Content)
-      : base(SkillActionId, AIdentity.Id, Content)
+   public ActionThought(string? skillName, AIdentity aIdentity, string content)
+      : base(skillName, aIdentity.Id, content)
    {
    }
 }

@@ -8,8 +8,8 @@
 /// </summary>
 public record IntrospectiveThought : Thought
 {
-   public IntrospectiveThought(Guid? SkillActionId, AIdentity AIdentity, string Content)
-      : base(SkillActionId, AIdentity.Id, Content)
+   public IntrospectiveThought(string? skillName, AIdentity aIdentity, string content)
+      : base(skillName, aIdentity.Id, content)
    {
    }
 }

@@ -7,6 +7,6 @@
 /// </summary>
 public record StreamedIntrospectiveThought : StreamedThought
 {
-   public StreamedIntrospectiveThought(Guid? SkillActionId, AIdentity AIdentity, string Content, bool IsStreamComplete = false)
-      : base(SkillActionId, AIdentity.Id, Content, IsStreamComplete) { }
+   public StreamedIntrospectiveThought(string? skillName, AIdentity aIdentity, string content, bool isStreamComplete = false)
+      : base(skillName, aIdentity, content, isStreamComplete) { }
 }

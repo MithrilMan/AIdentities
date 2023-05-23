@@ -5,7 +5,7 @@ namespace AIdentities.Chat.Components;
 public partial class Settings : BasePluginSettingsTab<ChatSettings, Settings.State>
 {
    [Inject] IEnumerable<IConversationalConnector> ConversationalConnectors { get; set; } = default!;
-   [Inject] ISkillManager SkillActionsManager { get; set; } = default!;
+   [Inject] ISkillManager SkillManager { get; set; } = default!;
 
    MudForm? _form;
 
@@ -14,7 +14,7 @@ public partial class Settings : BasePluginSettingsTab<ChatSettings, Settings.Sta
       base.OnInitialized();
       _validator = new Validator(ConversationalConnectors);
       _state.AvailableConnectors = ConversationalConnectors.ToDictionary(c => c.Name, c => c);
-      _state.AllKnownSkillNames = SkillActionsManager.All().Select(s => s.Name).ToList();
+      _state.AllKnownSkillNames = SkillManager.GetSkillDefinitions().Select(s => s.Name).ToList();
    }
 
    protected override async ValueTask<bool> AreSettingsValid()

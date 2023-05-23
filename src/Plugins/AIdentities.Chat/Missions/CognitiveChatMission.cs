@@ -110,10 +110,15 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>
             yield break;
          }
 
+         var skillExecutionContext = new SkillExecutionContext(
+            replyToPromptSkill,
+            firstParticipant.Context,
+            Context
+            );
+
          var responseStream = replyToPromptSkill.ExecuteAsync(
             new InstructionPrompt("Hello"),
-            firstParticipant.Context,
-            Context,
+            skillExecutionContext,
             Context.MissionRunningCancellationToken).ConfigureAwait(false);
 
          await foreach (var item in responseStream)

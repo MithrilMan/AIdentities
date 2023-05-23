@@ -1,21 +1,11 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
 using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 
 namespace AIdentities.Chat.Skills.ReplyToPrompt;
-public class ReplyToPrompt : Skill
+public partial class ReplyToPrompt : Skill
 {
-   public const string NAME = nameof(ReplyToPrompt);
-   const string ACTIVATION_CONTEXT = "The AIdenity has to introduce itself to the conversation";
-   const string RETURN_DESCRIPTION = "The sentence that the AIdentity will say to introduce itself";
-
-   const string EXAMPLES = "";
-
    static readonly JsonSerializerOptions _jsonOptionExample = new() { WriteIndented = true };
-
-   private readonly List<SkillArgumentDefinition> _arguments = new()
-   {
-      Args.ConversationContextDefinition
-   };
 
    readonly ILogger<ReplyToPrompt> _logger;
    readonly IDefaultConnectors _defaultConnectors;
@@ -27,32 +17,30 @@ public class ReplyToPrompt : Skill
                              IPluginStorage<PluginEntry> pluginStorage,
                              IAIdentityProvider aIdentityProvider
                              )
-      : base(NAME, ACTIVATION_CONTEXT, RETURN_DESCRIPTION, EXAMPLES)
    {
       _logger = logger;
       _defaultConnectors = defaultConnectors;
       _pluginStorage = pluginStorage;
       _aIdentityProvider = aIdentityProvider;
 
-      Arguments = _arguments;
    }
-
-   public override async IAsyncEnumerable<Thought> ExecuteAsync(Prompt prompt,
-                                                                CognitiveContext cognitiveContext,
-                                                                MissionContext? missionContext,
-                                                                [EnumeratorCancellation] CancellationToken cancellationToken)
+  
+   protected override async IAsyncEnumerable<Thought> ExecuteAsync(
+      SkillExecutionContext context,
+      [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       var connector = _defaultConnectors.DefaultConversationalConnector
          ?? throw new InvalidOperationException("No completion connector is enabled");
 
-      var aidentity = cognitiveContext.AIdentity;
+      var aidentity = context.AIdentity;
 
       // check if in the cognitive context there is a conversation history
-      if (!TryExtractFromContext<IConversationHistory>(cognitiveContext, missionContext, out IConversationHistory? conversationHistory))
+      if (!TryExtractFromContext<IConversationHistory>(context, out IConversationHistory? conversationHistory))
       {
-         yield return cognitiveContext.ActionThought(this, "I don't have a chat history to examine, using the prompt instead");
+         yield return context.ActionThought("I don't have a chat history to examine, using the prompt instead");
       }
 
+      var prompt = context.PromptChain.Peek();
       (Guid authorId, bool isAiGenerated) = prompt switch
       {
          UserPrompt userPrompt => (userPrompt.UserId, false),
@@ -77,7 +65,7 @@ public class ReplyToPrompt : Skill
          MaxGeneratedTokens = 200
       }, cancellationToken).ConfigureAwait(false);
 
-      var streamedFinalThought = cognitiveContext.StreamFinalThought(this, "");
+      var streamedFinalThought = context.StreamFinalThought("");
       await foreach (var thought in streamedResult)
       {
          streamedFinalThought.AppendContent(thought.GeneratedMessage ?? "");

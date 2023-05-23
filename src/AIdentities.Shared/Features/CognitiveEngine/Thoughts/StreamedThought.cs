@@ -8,15 +8,21 @@
 /// IsStreamComplete to know if the thought is complete.
 /// </summary>
 /// <param name="SkillActionId"></param>
-/// <param name="AIdentityId"></param>
+/// <param name="AIdentity"></param>
 /// <param name="Content"></param>
 /// <param name="IsStreamComplete"></param>
-public abstract record StreamedThought(Guid? SkillActionId, Guid AIdentityId, string Content, bool IsStreamComplete) : Thought(SkillActionId, AIdentityId, Content)
+public abstract record StreamedThought : Thought
 {
    /// <summary>
    /// Specifies if the current streamed thought is completed.
    /// </summary>
-   public bool IsStreamComplete { get; set; } = IsStreamComplete;
+   public bool IsStreamComplete { get; set; }
+
+   public StreamedThought(string? skillName, AIdentity aIdentity, string content, bool isStreamComplete)
+      : base(skillName, aIdentity.Id, content)
+   {
+      IsStreamComplete = isStreamComplete;
+   }
 
    /// <summary>
    /// Append content to the thought.

@@ -5,6 +5,6 @@
 /// </summary>
 public record FinalThought : Thought
 {
-   public FinalThought(Guid? SkillActionId, Guid AIdentityId, string Content)
-      : base(SkillActionId, AIdentityId, Content) { }
+   public FinalThought(string? skillName, AIdentity aIdentity, string content)
+      : base(skillName, aIdentity.Id, content) { }
 }

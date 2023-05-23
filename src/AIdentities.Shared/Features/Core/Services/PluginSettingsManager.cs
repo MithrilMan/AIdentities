@@ -27,7 +27,7 @@ public class PluginSettingsManager : IPluginSettingsManager
 
    public async ValueTask<IPluginSettings> GetAsync(Type pluginSettingsType)
    {
-      if (_pluginSettings.TryGetValue(pluginSettingsType, out var pluginSettings))
+      if (_pluginSettings.TryGetValue(pluginSettingsType, out var pluginSettings)) //FIX: multithread issue (race condition)
       {
          return pluginSettings;
       }

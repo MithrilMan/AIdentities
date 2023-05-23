@@ -8,10 +8,10 @@
 /// Each thought has an unique identifier that can be used to manage streamed thoughts.
 /// Each thought has a skill action identifier that can be used to manage the skill action that created the thought.
 /// </summary>
-/// <param name="SkillActionId">The optional skill action that created the thought.</param>
+/// <param name="skillName">The optional skill name that created the thought.</param>
 /// <param name="AIdentityId">The AIdentity that created the thought.</param>
 /// <param name="Content">The content of the thought.</param>
-public abstract record Thought(Guid? SkillActionId, Guid AIdentityId, string Content)
+public abstract record Thought(string? SkillName, Guid AIdentityId, string Content)
 {
    /// <summary>
    /// An unique identifier for the thought.
@@ -22,7 +22,7 @@ public abstract record Thought(Guid? SkillActionId, Guid AIdentityId, string Con
    /// <summary>
    /// The skill action that created the thought.
    /// </summary>
-   public Guid? SkillActionId { get; set; } = SkillActionId;
+   public string? SkillName { get; set; } = SkillName;
 
    /// <summary>
    /// The AIdentity that created the thought.

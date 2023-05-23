@@ -1,13 +1,15 @@
 ﻿namespace AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 
 /// <summary>
-/// When a skill receives an invalid prompt, it will return this thought.
+/// When a skill doesn't have the required arguments or the format are wrong, it will return this thought.
 /// Some skills need for example a valid Json object as a prompt, but the prompt provided something else.
+/// The description of the thought should contains information about the error and how to fix it, to let
+/// the LLM try to fix it or to let the user know what is wrong.
 /// </summary>
-public record InvalidPromptThought : IntrospectiveThought
+public record InvalidArgumentsThought : IntrospectiveThought
 {
-   public InvalidPromptThought(Guid? SkillActionId, AIdentity AIdentity)
-      : base(SkillActionId, AIdentity, "I couldn't extract a proper JSON object from the prompt to extract arguments I need.")
+   public InvalidArgumentsThought(string? skillName, AIdentity aIdentity, string howToFix)
+      : base(skillName, aIdentity, howToFix)
    {
    }
 }

@@ -25,7 +25,7 @@ public partial class SkillGallery
 
    private async Task FetchData()
    {
-      await _state.Skills.LoadItemsAsync(SkillManager.All()).ConfigureAwait(false);
+      await _state.Skills.LoadItemsAsync(SkillManager.GetSkillDefinitions()).ConfigureAwait(false);
       _state.AvailableTags = _state.Skills.UnfilteredItems.SelectMany(i => i.Tags).ToHashSet();
       await ApplyFilterAsync().ConfigureAwait(false);
       _state.SelectedSkills = SelectedSkills;
@@ -41,7 +41,7 @@ public partial class SkillGallery
       }
    }
 
-   public ValueTask<IEnumerable<ISkill>> Filter(IEnumerable<ISkill> unfilteredItems)
+   public ValueTask<IEnumerable<SkillDefinition>> Filter(IEnumerable<SkillDefinition> unfilteredItems)
    {
       if (!string.IsNullOrWhiteSpace(_state.SearchText))
       {
@@ -51,9 +51,7 @@ public partial class SkillGallery
          var tags = _state.Tags.Select(t => t.ToString()).ToList();
 
          if (_state.Tags.Any())
-         {
             unfilteredItems = unfilteredItems.Where(i => i.Tags.Any(x => tags.Contains(x)));
-         }
       }
 
       unfilteredItems = unfilteredItems.OrderBy(c => c.Name, StringComparer.InvariantCultureIgnoreCase);
@@ -75,7 +73,7 @@ public partial class SkillGallery
       }
    }
 
-   void OnSelectedSkillChanged(ISkill skill, bool isChecked)
+   void OnSelectedSkillChanged(SkillDefinition skill, bool isChecked)
    {
       if (isChecked)
       {

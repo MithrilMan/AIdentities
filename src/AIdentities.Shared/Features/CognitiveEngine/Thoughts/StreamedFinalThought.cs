@@ -6,7 +6,7 @@
 /// </summary>
 public record StreamedFinalThought : StreamedThought
 {
-   public StreamedFinalThought(Guid? SkillActionId, Guid AIdentityId, string Content, bool IsStreamComplete = false)
-      : base(SkillActionId, AIdentityId, Content, IsStreamComplete)
+   public StreamedFinalThought(string? skillName, AIdentity aIdentity, string content, bool isStreamComplete = false)
+      : base(skillName, aIdentity, content, isStreamComplete)
    { }
 }

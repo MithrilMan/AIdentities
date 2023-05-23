@@ -99,13 +99,13 @@ public static class PromptTemplates
 
       """;
 
-   public static string BuildFindSkillPrompt(Prompt userPrompt, IEnumerable<ISkill> availableSkills)
+   public static string BuildFindSkillPrompt(Prompt userPrompt, IEnumerable<SkillDefinition> availableSkills)
    {
       var sbAvailableSkills = new StringBuilder();
-      foreach (var skillAction in availableSkills)
+      foreach (var skill in availableSkills)
       {
-         sbAvailableSkills.AppendLine($"  - skill: {skillAction.Name}");
-         sbAvailableSkills.AppendLine($"    when: {skillAction.ActivationContext}");
+         sbAvailableSkills.AppendLine($"  - skill: {skill.Name}");
+         sbAvailableSkills.AppendLine($"    when: {skill.Description}");
       }
 
       var sb = new StringBuilder(FIND_SKILL);
@@ -114,10 +114,10 @@ public static class PromptTemplates
       return sb.ToString();
    }
 
-   public static string BuildGenerateSkillParametersJson(Prompt userPrompt, ISkill detectedSkillAction)
+   public static string BuildGenerateSkillParametersJson(Prompt userPrompt, SkillDefinition detectedSkillAction)
    {
       var sbSkillArgs = new StringBuilder();
-      foreach (var arg in detectedSkillAction.Arguments)
+      foreach (var arg in detectedSkillAction.Inputs)
       {
          sbSkillArgs.AppendLine($"  - name: {arg.Name}");
          sbSkillArgs.AppendLine($"    description: {arg.Description}");
@@ -125,7 +125,7 @@ public static class PromptTemplates
       }
 
       StringBuilder sb = new();
-      if (detectedSkillAction.Arguments.Any())
+      if (detectedSkillAction.Inputs.Any())
       {
          sb.Append(SKILL_EXTRACTION_WITH_PARAMETERS);
       }
