@@ -8,6 +8,8 @@ namespace AIdentities.Shared.Features.CognitiveEngine;
 /// Represents the cognitive engine of an AIdentity (it's brain basically).
 /// There can be different implementations of this interface that differs on how
 /// each one handles the prompts and coordinate a common goal with others.
+/// An AIdentity can clone itself and each clone will have its own cognitive engine.
+/// A cognitive engine has to be considered like the brain of an instance of an AIdentity.
 /// </summary>
 public interface ICognitiveEngine
 {
@@ -35,13 +37,5 @@ public interface ICognitiveEngine
    /// </param>
    /// <param name="cancellationToken">The cancellation token.</param>
    /// <returns>A stream of thoughts generated during the prompt handling.</returns>
-   IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, MissionContext? missionContext, CancellationToken cancellationToken);
-
-   /// <summary>
-   /// Starts a mission and returns a token that can be used to stop the mission.
-   /// </summary>
-   /// <param name="mission">The mission to start.</param>
-   /// <param name="cancellationToken">The cancellation token needed to stop the mission.</param>
-   /// <returns></returns>
-   MissionToken StartMission(IMission mission, CancellationToken cancellationToken);
+   IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, IMissionContext? missionContext, CancellationToken cancellationToken);
 }

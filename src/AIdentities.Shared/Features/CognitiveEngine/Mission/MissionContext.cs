@@ -9,13 +9,19 @@
 public class MissionContext : IMissionContext
 {
    /// <inheritdoc/>
-   public CancellationToken MissionRunningCancellationToken { get; internal set; }
+   public string Goal { get; set; } = default!;
+
+   /// <inheritdoc/>
+   public CancellationToken MissionRunningCancellationToken { get; set; }
 
    public AIdentitiesConstraint AIdentitiesConstraints { get; init; } = new();
+
    /// <inheritdoc/>
    public ResourceConstraints ResourceConstraints { get; init; } = new();
+
    /// <inheritdoc/>
    public List<SkillConstraint> SkillConstraints { get; init; } = new();
+
    /// <inheritdoc/>
    public Dictionary<string, object> State { get; init; } = new();
 

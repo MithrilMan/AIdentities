@@ -73,16 +73,9 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    }
 
    /// <inheritdoc />
-   public abstract IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, MissionContext? missionContext, CancellationToken cancellationToken);
+   public abstract IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, IMissionContext? missionContext, CancellationToken cancellationToken);
 
-   public virtual MissionToken StartMission(IMission mission, CancellationToken cancellationToken)
-   {
-      var missionToken = new MissionToken(mission, cancellationToken);
-      mission.Context.MissionRunningCancellationToken = missionToken.CancellationToken;
-      return missionToken;
-   }
-
-   public IAsyncEnumerable<Thought> ExecuteSkill(ISkill skill, Prompt prompt, MissionContext missionContext, CancellationToken cancellationToken)
+   public IAsyncEnumerable<Thought> ExecuteSkill(ISkill skill, Prompt prompt, IMissionContext missionContext, CancellationToken cancellationToken)
    {
 
       var context = new SkillExecutionContext(

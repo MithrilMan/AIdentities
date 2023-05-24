@@ -36,7 +36,7 @@ public partial class Interaction : AppPage<Interaction>
       await ScrollService.ScrollToBottom(LIST_SELECTOR).ConfigureAwait(false);
    }
 
-   Task Resend() => ReplyToUserRequest(_state.ConversationPieces.LastOrDefault()?.Message);
+   Task Resend() => ReplyToUserRequest(_state.ConversationPieces.LastOrDefault()?.Message ?? "");
 
    async Task OnKeyDown(KeyboardEventArgs e)
    {

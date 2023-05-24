@@ -135,7 +135,7 @@ public class ChangeTheme : CommandDefinition
          else
          {
             yield return new CommandExecutionStreamedFragment($"For you I thought to give you this palette");
-            await _themeUpdater.SavePaletteToDisk(proposedPalette, args.IsDarkPalette).ConfigureAwait(false);
+            await _themeUpdater.SavePaletteToDisk(proposedPalette!, args.IsDarkPalette).ConfigureAwait(false);
          }
       } while (!success && retryAttempt < 3);
 

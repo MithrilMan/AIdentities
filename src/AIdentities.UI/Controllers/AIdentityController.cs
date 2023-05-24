@@ -17,7 +17,7 @@ public class AIdentityController : ControllerBase
 
    [HttpGet("Image/{aidentityId}")]
    [ResponseCache(Duration = 120, Location = ResponseCacheLocation.Client)]
-   public async Task<IActionResult> GetImage(Guid aidentityId, CancellationToken cancellationToken)
+   public IActionResult GetImage(Guid aidentityId, CancellationToken cancellationToken)
    {
       var aidentity = _aIdentityProvider.Get(aidentityId);
       if (aidentity == null) return NotFound();

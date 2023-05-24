@@ -14,14 +14,14 @@ public class PathUtilsTests
       Assert.Equal(expectedResult, result);
    }
 
-   public static IEnumerable<object[]> SanitizeFileName_TestCases
+   public static IEnumerable<object?[]> SanitizeFileName_TestCases
    {
       get
       {
-         yield return new object[] { "test.txt", true, "test.txt" };
-         yield return new object[] { "invalid|file.txt", true, "invalid_file.txt" };
-         yield return new object[] { "a" + new string('a', 255), true, "a" + new string('a', 254) };
-         yield return new object[] { "a" + new string('a', 255), false, null };
+         yield return new object?[] { "test.txt", true, "test.txt" };
+         yield return new object?[] { "invalid|file.txt", true, "invalid_file.txt" };
+         yield return new object?[] { "a" + new string('a', 255), true, "a" + new string('a', 254) };
+         yield return new object?[] { "a" + new string('a', 255), false, null };
       }
    }
 

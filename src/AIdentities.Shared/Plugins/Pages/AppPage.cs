@@ -18,7 +18,7 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
 
    private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-   protected TAppPageSettings _settings = null;
+   protected TAppPageSettings? _settings = null;
    protected static bool HasConfiguration => typeof(EmptyAppPageSettings).IsAssignableFrom(typeof(TAppPageSettings)) == false;
    protected bool SettingsLoaded { get; set; } = false;
 
@@ -113,6 +113,7 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
    protected async Task<bool> SaveSettings()
    {
       if (!HasConfiguration) return true;
+      if (_settings == null) return true;
 
       if (ComponentSettingsManager.SetSettings(GetSettingsKey(), _settings))
       {

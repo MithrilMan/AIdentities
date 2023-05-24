@@ -92,6 +92,15 @@ public class AIdentityProvider : IAIdentityProvider
       return aidentity;
    }
 
+   public AIdentity? Get(string name)
+   {
+      if (string.IsNullOrWhiteSpace(name)) return null;
+
+      return _aidentities
+         .Values
+         .FirstOrDefault(x => x.Name is not null && x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+   }
+
    public bool Update(AIdentity updatedAIdentity)
    {
       WriteAIdentity(updatedAIdentity);

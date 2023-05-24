@@ -4,7 +4,8 @@ namespace AIdentities.Chat.Skills.InviteFriend;
 
 [SkillDefinition(
    Name = NAME,
-   Description = "The user wants you to invite a friend"
+   Description = "The user wants you to invite a friend",
+   Tags = new[] { SkillTags.TAG_CHAT }
    )]
 [SkillInputDefinition(
    Name = IN_WHO_TO_INVITE, Type = SkillVariableType.String,

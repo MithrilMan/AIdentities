@@ -361,7 +361,7 @@ public class PluginManager : IPluginManager
             throw new InvalidPluginException($"Plugin package entry point not found: {entryPointPath}");
          }
 
-         using var loader = PluginLoader.CreateFromAssemblyFile(entryPointPath, null, c => c.PreferSharedTypes = true);
+         using var loader = PluginLoader.CreateFromAssemblyFile(entryPointPath, null!, c => c.PreferSharedTypes = true);
 
          var pluginAssembly = loader.LoadDefaultAssembly();
 

@@ -1,10 +1,7 @@
-﻿using AIdentities.Chat.AIdentiy;
+﻿using System.Threading.Channels;
 using AIdentities.Chat.Skills.IntroduceYourself;
-using AIdentities.Chat.Skills.ReplyToPrompt;
-using AIdentities.Shared.Features.CognitiveEngine;
-using AIdentities.Shared.Features.CognitiveEngine.Mission;
-using AIdentities.Shared.Features.CognitiveEngine.Skills;
-using AIdentities.Shared.Features.Core.Services;
+using AIdentities.Chat.Skills.InviteFriend.Events;
+using AIdentities.Shared.Services.EventBus;
 
 namespace AIdentities.Chat.Missions;
 
@@ -13,30 +10,47 @@ namespace AIdentities.Chat.Missions;
 /// and implement details of the mission within, like constraints, goals and maybe custom state properties that map to the mission context.
 /// In this example we'll register the mission in the DI container and use it in the CognitiveChat page.
 /// </summary>
-internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>
+internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
+   IHandle<InviteToConversation>
 {
    readonly ILogger<CognitiveChatMission> _logger;
    readonly IAIdentityProvider _aIdentityProvider;
    readonly ISkillManager _skillManager;
    readonly ICognitiveEngineProvider _cognitiveEngineProvider;
+   readonly IEventBus _eventBus;
    readonly ChatSettings _settings;
 
    /// <summary>
-   /// The AIdentity that is running the mission.
+   /// This channel is used to communicate the thoughts as they arrive from cognitive engines working on the mission.
+   /// It's configured to only have one consumer and one producer, and to drop the oldest thought if the channel is full.
    /// </summary>
-   public AIdentity MissionRunner { get; } = new ChatKeeper();
+   public Channel<Thought> Thoughts { get; } = Channel.CreateBounded<Thought>(new BoundedChannelOptions(1000)
+   {
+      FullMode = BoundedChannelFullMode.DropOldest,
+      SingleReader = true,
+      SingleWriter = true
+   });
+
+   /// <summary>
+   /// The AIdentity responsible for keeping the conversation.
+   /// </summary>
+   public AIdentity ChatKeeper { get; set; } = new ChatKeeper();
 
    public CognitiveChatMission(ILogger<CognitiveChatMission> logger,
                                IPluginSettingsManager pluginSettingsManager,
                                IAIdentityProvider aIdentityProvider,
                                ISkillManager skillManager,
-                               ICognitiveEngineProvider cognitiveEngineProvider)
+                               ICognitiveEngineProvider cognitiveEngineProvider,
+                               IEventBus eventBus)
    {
       _logger = logger;
       _aIdentityProvider = aIdentityProvider;
       _skillManager = skillManager;
       _cognitiveEngineProvider = cognitiveEngineProvider;
+      _eventBus = eventBus;
       _settings = pluginSettingsManager.Get<ChatSettings>();
+
+      _eventBus.Subscribe(this);
 
       SetupMission(_settings);
    }
@@ -56,11 +70,17 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>
                continue;
             }
 
-            Context.SkillConstraints.Add(new SkillConstraint(skill, MissionRunner));
+            Context.SkillConstraints.Add(new SkillConstraint(skill, ChatKeeper));
          }
       }
 
-      Context.AIdentitiesConstraints.AllowedAIdentities.Add(MissionRunner);
+      Context.AIdentitiesConstraints.AllowedAIdentities.Add(ChatKeeper);
+   }
+
+
+   public void Start(CancellationToken cancellationToken)
+   {
+      Start(_cognitiveEngineProvider.CreateCognitiveEngine(ChatKeeper), cancellationToken);
    }
 
 
@@ -76,7 +96,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>
    /// If the conversation is empty, we are going to ask the first AIdentity that participate to the discussion, to start talking.
    /// </summary>
    /// <param name="conversation"></param>
-   public async IAsyncEnumerable<Thought> StartNewConversationAsync(Conversation conversation)
+   public async Task StartNewConversationAsync(Conversation conversation)
    {
       Context.CurrentConversation = conversation;
       Context.PartecipatingAIdentities.Clear();
@@ -102,29 +122,57 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>
          // if the conversation is empty, we ask the first AIdentity that participate to the discussion, to start talking.
          var firstParticipant = Context.PartecipatingAIdentities.First().Value.CognitiveEngine;
 
-         // we bypass mission constraints on this skill because it's needed to start a conversation.
-         var replyToPromptSkill = _skillManager.Get<IntroduceYourself>();
-         if (replyToPromptSkill is null)
-         {
-            _logger.LogWarning("The skill {skillName} is not available and will not be used.", nameof(IntroduceYourself));
-            yield break;
-         }
+         await MakeAIdentityIntroduce(firstParticipant).ConfigureAwait(false);
+      }
+   }
 
-         var skillExecutionContext = new SkillExecutionContext(
-            replyToPromptSkill,
-            firstParticipant.Context,
-            Context
-            );
+   private async Task MakeAIdentityIntroduce(ICognitiveEngine whoToIntroduce)
+   {
+      // we bypass mission constraints on this skill because it's needed to start a conversation.
+      var replyToPromptSkill = _skillManager.Get<IntroduceYourself>();
+      if (replyToPromptSkill is null)
+      {
+         _logger.LogWarning("The skill {skillName} is not available and will not be used.", nameof(IntroduceYourself));
+         return;
+      }
 
-         var responseStream = replyToPromptSkill.ExecuteAsync(
-            new InstructionPrompt("Hello"),
-            skillExecutionContext,
-            Context.MissionRunningCancellationToken).ConfigureAwait(false);
+      var skillExecutionContext = new SkillExecutionContext(
+         replyToPromptSkill,
+         whoToIntroduce.Context,
+         Context
+         );
 
-         await foreach (var item in responseStream)
-         {
-            yield return item;
-         }
+      await EnqueueThoughtsAsync(replyToPromptSkill.ExecuteAsync(
+         new AIdentityPrompt(ChatKeeper.Id, "Introduce Yourself"),
+         skillExecutionContext,
+         Context.MissionRunningCancellationToken)).ConfigureAwait(false);
+   }
+
+   private async Task EnqueueThoughtsAsync(IAsyncEnumerable<Thought> thoughts)
+   {
+      var items = thoughts.ConfigureAwait(false);
+      await foreach (var item in items)
+      {
+         Thoughts.Writer.TryWrite(item);
+      }
+   }
+
+   public override void Dispose()
+   {
+      _eventBus.Unsubscribe(this);
+      base.Dispose();
+   }
+
+   public async Task HandleAsync(InviteToConversation message)
+   {
+      var aidentity = message.AIdentity;
+      if (!Context.PartecipatingAIdentities.ContainsKey(aidentity.Id))
+      {
+         var partecipatingAIdentity = new PartecipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine(aidentity));
+         // we create a new cognitive engine for each AIdentity that participate to the conversation.
+         Context.PartecipatingAIdentities.Add(aidentity.Id, partecipatingAIdentity);
+
+         await MakeAIdentityIntroduce(partecipatingAIdentity.CognitiveEngine).ConfigureAwait(false);
       }
    }
 }

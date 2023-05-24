@@ -24,7 +24,7 @@ public record CommandArgumentDefinition
    public Type Type { get; }
 
    // This is a positional argument
-   public CommandArgumentDefinition(string name, string description, bool isRequired, Type type = null)
+   public CommandArgumentDefinition(string name, string description, bool isRequired, Type type = null!)
    {
       Name = name;
       Description = description;

@@ -56,7 +56,7 @@ public class PageDefinitionProvider : IPageDefinitionProvider, IDisposable
                _logger.LogInformation("Page {PageName} added", page.Title);
          }
 
-         await _eventBus.Publish(new PageDefinitionsAdded(loadedPackage.Pages)).ConfigureAwait(false);
+         await _eventBus.PublishAsync(new PageDefinitionsAdded(loadedPackage.Pages)).ConfigureAwait(false);
       }
    }
 

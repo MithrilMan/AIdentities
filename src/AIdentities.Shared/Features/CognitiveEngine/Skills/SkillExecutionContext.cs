@@ -8,7 +8,7 @@ public class SkillExecutionContext
 {
    public CognitiveContext CognitiveContext { get; }
 
-   public MissionContext? MissionContext { get; }
+   public IMissionContext? MissionContext { get; }
 
    /// <summary>
    /// The AIdentity that is executing the skill.
@@ -29,7 +29,7 @@ public class SkillExecutionContext
 
    readonly ConcurrentDictionary<string, object?> _state = new();
 
-   public SkillExecutionContext(ISkill skill, CognitiveContext cognitiveContext, MissionContext? missionContext)
+   public SkillExecutionContext(ISkill skill, CognitiveContext cognitiveContext, IMissionContext? missionContext)
    {
       CurrentSkill = skill.Definition;
       CognitiveContext = cognitiveContext;
@@ -106,19 +106,19 @@ public class SkillExecutionContext
       => new StreamedIntrospectiveThought(CurrentSkill.Name, AIdentity, thought);
 
 
-   public T? GetInput<T>(string key, SkillVariableType type) where T : class => GetVariable<T>($"IN_{key}", type);
-   public void SetInput(string key, SkillVariableType type, object? value) => SetVariable($"IN_{key}", type, value);
-   public T? GetInput<T>(string key) where T : class => GetVariable<T>($"IN_{key}", GetInputVariableType(key));
-   public void SetInput(string key, object? value) => SetVariable($"IN_{key}", GetInputVariableType(key), value);
+   public T? GetInput<T>(string key, SkillVariableType type) where T : class => GetVariable<T>(key, type);
+   public void SetInput(string key, SkillVariableType type, object? value) => SetVariable(key, type, value);
+   public T? GetInput<T>(string key) where T : class => GetVariable<T>(key, GetInputVariableType(key));
+   public void SetInput(string key, object? value) => SetVariable(key, GetInputVariableType(key), value);
 
-   public T? GetOutput<T>(string key, SkillVariableType type) where T : class => GetVariable<T>($"OUT_{key}", type);
-   public void SetOutput(string key, SkillVariableType type, object? value) => SetVariable($"OUT_{key}", type, value);
-   public T? GetOutput<T>(string key) where T : class => GetVariable<T>($"OUT_{key}", GetOutputVariableType(key));
-   public void SetOutput(string key, object? value) => SetVariable($"OUT_{key}", GetOutputVariableType(key), value);
+   public T? GetOutput<T>(string key, SkillVariableType type) where T : class => GetVariable<T>(key, type);
+   public void SetOutput(string key, SkillVariableType type, object? value) => SetVariable(key, type, value);
+   public T? GetOutput<T>(string key) where T : class => GetVariable<T>(key, GetOutputVariableType(key));
+   public void SetOutput(string key, object? value) => SetVariable(key, GetOutputVariableType(key), value);
 
    protected T? GetVariable<T>(string key, SkillVariableType type) where T : class
    {
-      if (_state.TryGetValue($"IN_{key}", out var value))
+      if (_state.TryGetValue(key, out var value))
       {
          return type switch
          {
@@ -129,7 +129,7 @@ public class SkillExecutionContext
             SkillVariableType.Boolean => Convert.ToBoolean(value, System.Globalization.CultureInfo.InvariantCulture) as T,
             SkillVariableType.Epoch => Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture) as T,
             SkillVariableType.TimeSpan => TimeSpan.FromMilliseconds(Convert.ToInt64(value, System.Globalization.CultureInfo.InvariantCulture)) as T,
-            SkillVariableType.Base64 => Convert.FromBase64String(Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture)) as T,
+            SkillVariableType.Base64 => Convert.FromBase64String(Convert.ToString(value, System.Globalization.CultureInfo.InvariantCulture) ?? "") as T,
             _ => throw new NotImplementedException(),
          };
       }

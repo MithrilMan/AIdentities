@@ -1,9 +1,10 @@
 ﻿namespace AIdentities.Chat.Skills.IntroduceYourself;
 
 [SkillDefinition(
-     Name = NAME,
-     Description = "The AIdenity has to introduce itself to the conversation"
-     )]
+   Name = NAME,
+   Description = "The AIdenity has to introduce itself to the conversation",
+   Tags = new[] { SkillTags.TAG_CHAT }
+   )]
 [SkillOutputDefinition(
    Name = OUT_PRESENTATION, Type = SkillVariableType.String,
    Description = "The LLM generated presentation"

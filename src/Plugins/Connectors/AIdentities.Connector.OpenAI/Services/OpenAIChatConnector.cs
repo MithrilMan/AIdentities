@@ -2,6 +2,7 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Http.Features;
@@ -139,7 +140,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
          {
             streamedResponse = JsonSerializer.Deserialize<ChatCompletionResponse>(line);
          }
-         catch (Exception)
+         catch (Exception ex)
          {
             // if we can't deserialize the response, it's probably because it's an error, try to deserialize
             // the rest of the stream as an error message
@@ -175,7 +176,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
       {
          Content = m.Content,
-         Name = m.Name,
+         Name = SanitizeName(m.Name),
          Role = MapRole(m.Role)
       }).ToList(),
       Model = request.ModelId ?? DefaultModel,
@@ -187,6 +188,32 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       TopP = request.TopPSamplings,
       User = request.UserId,
    };
+
+   /// <summary>
+   /// Sanitizes a name to be used in the request.
+   /// OpenAI's API doesn't allow names to contain spaces, so we replace them with underscores.
+   /// Accepted characters are letters, digits, underscores, and hyphens.
+   /// Regex pattern: ^[a-zA-Z0-9_-]{1,64}
+   /// </summary>
+   /// <param name="name"></param>
+   /// <returns></returns>
+   /// <exception cref="NotImplementedException"></exception>
+   private string? SanitizeName(string? name)
+   {
+      if (name is null) return null;
+
+      //trim the name if too long
+      if (name.Length > 64)
+      {
+         name = name[..64];
+      }
+
+      string pattern = @"[^a-zA-Z0-9_-]"; // matches any character that is not a letter, digit, underscore, or hyphen
+      string replacement = "_";
+      string sanitized = Regex.Replace(name, pattern, replacement);
+
+      return sanitized;
+   }
 
    private static ChatCompletionRoleEnum? MapRole(DefaultConversationalRole role) => role switch
    {

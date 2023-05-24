@@ -14,7 +14,7 @@ public partial class StartConversationDialog : ComponentBase
 
    async Task StartConversation()
    {
-      await _form.Validate().ConfigureAwait(false);
+      await _form!.Validate().ConfigureAwait(false);
       if (!_form.IsValid)
       {
          NotificationService.ShowWarning("Please fix the errors on the form.");

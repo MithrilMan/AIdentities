@@ -25,5 +25,5 @@ public class SkillDefinitionAttribute : Attribute
    /// <summary>
    /// A list of tags that can be used to find the skill.
    /// </summary>
-   public List<string> Tags { get; init; } = new();
+   public string[]? Tags { get; init; }
 }

@@ -23,5 +23,5 @@ public class EventBus : IEventBus
       _eventAggregator.Unsubscribe(subscriber);
    }
 
-   public Task Publish(object @event) => _eventAggregator.PublishAsync(@event);
+   public Task PublishAsync(object @event) => _eventAggregator.PublishAsync(@event);
 }

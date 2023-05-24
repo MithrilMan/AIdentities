@@ -4,7 +4,8 @@ namespace AIdentities.Chat.Skills.ReplyToPrompt;
 
 [SkillDefinition(
    Name = NAME,
-   Description = "The AIdenity has to introduce itself to the conversation"
+   Description = "The AIdenity has to introduce itself to the conversation",
+   Tags = new[] { SkillTags.TAG_CHAT }
    )]
 [SkillInputDefinition(
    Name = IN_CONVERSATION_CONTEXT, Type = SkillVariableType.String,

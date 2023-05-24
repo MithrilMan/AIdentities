@@ -19,11 +19,11 @@ namespace AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
 /// </summary>
 public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
 {
+   protected const string UNKNOWN_SKILL = "DUNNO";
+
    public bool IsFirstPrompt { get; set; } = true;
 
    public bool IsWaitingUserFeedback { get; set; }
-
-   private const string UNKNOWN_SKILL = "DUNNO";
 
    /// <summary>
    /// Holds the skills that are waiting for a user prompt.
@@ -42,43 +42,21 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
 
    public override MithrilCognitiveContext CreateCognitiveContext() => new MithrilCognitiveContext(AIdentity);
 
-   public override async IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, MissionContext? missionContext, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public override async IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, IMissionContext? missionContext, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      bool isFirstPrompt = IsFirstPrompt;
       if (IsFirstPrompt)
       {
          IsFirstPrompt = false;
-         yield return ActionThought($"Here I am, {(missionContext is null ? "on my duty" : "working for a mission!")}");
+         yield return ActionThought($"Here I am, {(missionContext is null ? "on my duty" : $"my mission is: {missionContext.Goal}")}");
       }
 
-      var thoughts = (prompt switch
-      {
-         UserPrompt userPrompt => HandleUserPrompt(userPrompt, missionContext, isFirstPrompt, cancellationToken),
-         SKillResultPrompt skillResultPrompt => HandleSKillResultPrompt(skillResultPrompt, missionContext, isFirstPrompt, cancellationToken),
-         ThoughtResultPrompt thoughtResultPrompt => HandleThoughtResultPrompt(thoughtResultPrompt, missionContext, isFirstPrompt, cancellationToken),
-         _ => throw new NotImplementedException(),
-      }).ConfigureAwait(false);
-
-      await foreach (var thought in thoughts)
-      {
-         yield return thought;
-      }
-   }
-
-   protected async IAsyncEnumerable<Thought> HandleUserPrompt(
-      UserPrompt prompt,
-      MissionContext? missionContext,
-      bool isFirstPrompt,
-      [EnumeratorCancellation] CancellationToken cancellationToken)
-   {
       (bool skillDetected, string detectedSkill, string? jsonArgs)
          = await TryDetectSkillAsync(prompt, cancellationToken).ConfigureAwait(false);
 
       if (skillDetected && detectedSkill != UNKNOWN_SKILL)
       {
          yield return ActionThought($"I detected the skill {detectedSkill}.");
-         var skill = _skillManager.Get(detectedSkill);
-         if (skill is not null)
+         if (_skillManager.Get(detectedSkill) is { } skill)
          {
             //_skillsWaitingPrompt.Add(skillAction.Id, skillAction);
 
@@ -89,9 +67,12 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
             if (jsonArgs is not null)
             {
                var args = JsonSerializer.Deserialize<Dictionary<string, string>>(jsonArgs);
-               foreach (var arg in args)
+               if (args != null)
                {
-                  skillExecutionContext.SetInput(arg.Key, arg.Value);
+                  foreach (var arg in args)
+                  {
+                     skillExecutionContext.SetInput(arg.Key, arg.Value);
+                  }
                }
             }
 
@@ -101,20 +82,26 @@ public class MithrilCognitiveEngine : CognitiveEngine<MithrilCognitiveContext>
                yield return thought;
             }
          }
+         else
+         {
+            yield return ActionThought($"I don't know the skill {detectedSkill}");
+         }
+
+         yield break;
+      }
+
+      await foreach (var thought in HandleNoCommandDetected(prompt, missionContext, cancellationToken).ConfigureAwait(false))
+      {
+         yield return thought;
       }
    }
 
-   protected IAsyncEnumerable<Thought> HandleThoughtResultPrompt(ThoughtResultPrompt thoughtResultPrompt, MissionContext? missionContext, bool isFirstPrompt, CancellationToken cancellationToken)
+   private virtual async IAsyncEnumerable<Thought> HandleNoCommandDetected(Prompt prompt,
+                                                                     IMissionContext? missionContext,
+                                                                     [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      throw new NotImplementedException();
+      //TODO: default behavior when no command has been found.
    }
-
-   protected IAsyncEnumerable<Thought> HandleSKillResultPrompt(SKillResultPrompt skillResultPrompt, MissionContext? missionContext, bool isFirstPrompt, CancellationToken cancellationToken)
-   {
-      throw new NotImplementedException();
-   }
-
-
 
    /// <summary>
    /// Tries to detect a skill in the prompt.
