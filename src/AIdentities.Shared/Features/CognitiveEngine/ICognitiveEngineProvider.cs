@@ -34,4 +34,12 @@ public interface ICognitiveEngineProvider
    /// <param name="aIdentity">The AIdentity for which the cognitive engine is created.</param>
    /// <returns>The created cognitive engine.</returns>
    ICognitiveEngine CreateCognitiveEngine(AIdentity aIdentity);
+
+   /// <summary>
+   /// Creates the specified cognitive engine for a specific AIdentity.
+   /// </summary>
+   /// <typeparam name="TCognitiveEngine">The type of the cognitive engine to create.</typeparam>
+   /// <param name="aIdentity">The AIdentity for which the cognitive engine is created.</param>
+   /// <returns>The created cognitive engine.</returns>
+   ICognitiveEngine CreateCognitiveEngine<TCognitiveEngine>(AIdentity aIdentity);
 }

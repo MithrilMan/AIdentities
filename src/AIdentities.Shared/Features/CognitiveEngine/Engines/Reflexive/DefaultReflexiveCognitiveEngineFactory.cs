@@ -1,17 +1,16 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
-using AIdentities.Shared.Plugins.Connectors;
+﻿using AIdentities.Shared.Plugins.Connectors;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AIdentities.Shared.Features.CognitiveEngine;
+namespace AIdentities.Shared.Features.CognitiveEngine.Engines.Reflexive;
 
-public class MithrilCognitiveEngineFactory : ICognitiveEngineFactory
+public class DefaultReflexiveCognitiveEngineFactory : ICognitiveEngineFactory
 {
    readonly IServiceProvider _serviceProvider;
    readonly IDefaultConnectors _defaultConnectors;
 
-   public Type CognitiveEngineType { get; } = typeof(MithrilCognitiveEngine);
+   public Type CognitiveEngineType { get; } = typeof(DefaultReflexiveCognitiveEngine);
 
-   public MithrilCognitiveEngineFactory(
+   public DefaultReflexiveCognitiveEngineFactory(
       IServiceProvider serviceProvider,
       IDefaultConnectors defaultConnectors)
    {
@@ -21,12 +20,12 @@ public class MithrilCognitiveEngineFactory : ICognitiveEngineFactory
 
    public ICognitiveEngine CreateCognitiveEngine(AIdentity aIdentity)
    {
-      var cognitiveEngine = new MithrilCognitiveEngine(
-         logger: _serviceProvider.GetRequiredService<ILogger<MithrilCognitiveEngine>>(),
+      var cognitiveEngine = new DefaultReflexiveCognitiveEngine(
+         logger: _serviceProvider.GetRequiredService<ILogger<DefaultReflexiveCognitiveEngine>>(),
          aIdentity: aIdentity,
          defaultConversationalConnector: _defaultConnectors.DefaultConversationalConnector,
          defaultCompletionConnector: _defaultConnectors.DefaultCompletionConnector,
-         skillActionsManager: _serviceProvider.GetRequiredService<ISkillManager>()
+         skillManager: _serviceProvider.GetRequiredService<ISkillManager>()
          );
 
       return cognitiveEngine;

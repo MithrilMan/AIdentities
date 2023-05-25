@@ -1,4 +1,5 @@
-﻿global using System.Text.Json;
+﻿global using System.Runtime.CompilerServices;
+global using System.Text.Json;
 global using AIdentities.Chat.AIdentiy;
 global using AIdentities.Chat.Missions;
 global using AIdentities.Chat.Models;

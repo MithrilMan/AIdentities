@@ -4,7 +4,7 @@ namespace AIdentities.Chat.Skills.ReplyToPrompt;
 
 [SkillDefinition(
    Name = NAME,
-   Description = "The AIdenity has to introduce itself to the conversation",
+   Description = "The AIdenity has to reply to a prompt",
    Tags = new[] { SkillTags.TAG_CHAT }
    )]
 [SkillInputDefinition(
@@ -13,7 +13,7 @@ namespace AIdentities.Chat.Skills.ReplyToPrompt;
    )]
 [SkillOutputDefinition(
    Name = OUT_REPLY, Type = SkillVariableType.String,
-   Description = "The sentence that the AIdentity is using to introduce itself to the conversation"
+   Description = "The sentence that the AIdentity replied to the prompt."
    )]
 public partial class ReplyToPrompt : Skill
 {

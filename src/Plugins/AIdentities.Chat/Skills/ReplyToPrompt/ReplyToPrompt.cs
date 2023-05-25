@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
+﻿using System.Runtime.CompilerServices;
 using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 
 namespace AIdentities.Chat.Skills.ReplyToPrompt;

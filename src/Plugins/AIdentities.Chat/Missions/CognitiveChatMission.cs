@@ -1,6 +1,8 @@
 ﻿using System.Threading.Channels;
+using AIdentities.Chat.CognitiveEngine;
 using AIdentities.Chat.Skills.IntroduceYourself;
 using AIdentities.Chat.Skills.InviteFriend.Events;
+using AIdentities.Shared.Features.CognitiveEngine.Engines.Conversational;
 using AIdentities.Shared.Services.EventBus;
 
 namespace AIdentities.Chat.Missions;
@@ -63,7 +65,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       {
          foreach (var skillName in settings.EnabledSkills)
          {
-            var skill = _skillManager.Get(skillName);
+            var skill = _skillManager.GetSkillDefinition(skillName);
             if (skill is null)
             {
                _logger.LogWarning("The skill {skillName} is not available and will not be used.", skillName);
@@ -80,7 +82,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
 
    public void Start(CancellationToken cancellationToken)
    {
-      Start(_cognitiveEngineProvider.CreateCognitiveEngine(ChatKeeper), cancellationToken);
+      Start(_cognitiveEngineProvider.CreateCognitiveEngine<ChatKeeperCognitiveEngine>(ChatKeeper), cancellationToken);
    }
 
 
@@ -113,7 +115,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
          // we create a new cognitive engine for each AIdentity that participate to the conversation.
          Context.PartecipatingAIdentities.Add(
             aidentityId,
-            new PartecipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine(aidentity))
+            new PartecipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity))
             );
       }
 
@@ -168,7 +170,8 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       var aidentity = message.AIdentity;
       if (!Context.PartecipatingAIdentities.ContainsKey(aidentity.Id))
       {
-         var partecipatingAIdentity = new PartecipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine(aidentity));
+         // all the AIdentities that participate to the conversation are using ConversationalCognitiveEngine
+         var partecipatingAIdentity = new PartecipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity));
          // we create a new cognitive engine for each AIdentity that participate to the conversation.
          Context.PartecipatingAIdentities.Add(aidentity.Id, partecipatingAIdentity);
 

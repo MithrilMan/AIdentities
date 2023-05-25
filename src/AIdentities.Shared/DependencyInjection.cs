@@ -1,5 +1,7 @@
 ﻿using AIdentities.Shared.Features.AIdentities.Services;
 using AIdentities.Shared.Features.CognitiveEngine;
+using AIdentities.Shared.Features.CognitiveEngine.Components;
+using AIdentities.Shared.Features.CognitiveEngine.Engines.Reflexive;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors;
 using AIdentities.Shared.Services.EventBus;
@@ -34,6 +36,10 @@ public static class DependencyInjection
       return services;
    }
 
+   /// <summary>
+   /// Registers the cognitive engines related services.
+   /// </summary>
+   /// <param name="services"></param>
    private static void RegisterCogntiveEngines(IServiceCollection services)
    {
       // this service has to be used by whoever wants to create a cognitive engine for a specific AIdentity.
@@ -41,6 +47,10 @@ public static class DependencyInjection
       services.AddScoped<ICognitiveEngineProvider, CognitiveEngineProvider>();
 
       services
-         .AddScoped<ICognitiveEngineFactory, MithrilCognitiveEngineFactory>();
+         .AddScoped<ICognitiveEngineFactory, DefaultReflexiveCognitiveEngineFactory>();
+
+      // register the AIdentity skills feature and its tab to allow users
+      // to enable or disable skills for an AIdentity and customize the settings for each skill that have customizable settings.
+      services.AddSingleton(new AIdentityFeatureRegistration(typeof(AIdentityFeatureSkills), typeof(TabAIdentityFeatureSkills), "Skills"));
    }
 }

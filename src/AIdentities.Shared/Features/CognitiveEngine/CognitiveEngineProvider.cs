@@ -42,4 +42,15 @@ public class CognitiveEngineProvider : ICognitiveEngineProvider
 
       return _cognitiveEngineFactories[type].CreateCognitiveEngine(aIdentity);
    }
+
+   /// <inheritdoc/>
+   public ICognitiveEngine CreateCognitiveEngine<TCognitiveEngine>(AIdentity aIdentity)
+   {
+      if (!_cognitiveEngineFactories.TryGetValue(typeof(TCognitiveEngine), out var factory))
+      {
+         throw new ArgumentException($"The cognitive engine type {typeof(TCognitiveEngine).Name} is not registered.");
+      }
+
+      return factory.CreateCognitiveEngine(aIdentity);
+   }
 }

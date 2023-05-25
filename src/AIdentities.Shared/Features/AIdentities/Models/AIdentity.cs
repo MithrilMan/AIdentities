@@ -1,4 +1,4 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
+﻿using AIdentities.Shared.Features.CognitiveEngine.Engines.Reflexive;
 using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Shared.Features.AIdentities.Models;
@@ -71,7 +71,7 @@ public record AIdentity
    /// <summary>
    /// Defines the default cognitive engine type name for this AIdentity.
    /// </summary>
-   public string DefaultCognitiveEngine { get; set; } = nameof(MithrilCognitiveEngine);
+   public string DefaultCognitiveEngine { get; set; } = nameof(DefaultReflexiveCognitiveEngine);
 
    /// <summary>
    /// returns an URL that can be fetched by the Controller that generate a cacheable image.

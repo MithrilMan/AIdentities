@@ -5,6 +5,11 @@ public class CognitiveContext
    public AIdentity AIdentity { get; }
    public Dictionary<string, object?> State { get; set; } = new();
 
+   public CognitiveContext(AIdentity aIdentity)
+   {
+      AIdentity = aIdentity;
+   }
+
    /// <summary>
    /// Get the value of the given key in the State dictionary.
    /// If the key is not present or the value is not of the given type, return the default value (cannot be null).
@@ -16,7 +21,7 @@ public class CognitiveContext
    /// </param>
    /// <returns>The value of the given key in the State dictionary or the default (non null) value.</returns>
    /// <exception cref="ArgumentNullException"></exception>
-   protected T GetOrDefault<T>(string key, T defaultValue)
+   public T GetOrDefault<T>(string key, T defaultValue)
    {
       if (defaultValue is null) throw new ArgumentNullException(nameof(defaultValue));
 
@@ -36,7 +41,7 @@ public class CognitiveContext
    /// <typeparam name="T">The type of the value to get.</typeparam>
    /// <param name="key">The key of the value to get.</param>
    /// <returns>The value of the given key in the State dictionary or the default value of the type.</returns>
-   protected T? GetOrDefault<T>(string key)
+   public T? GetOrDefault<T>(string key)
    {
       if (!State.TryGetValue(key, out var obj) || obj is not T value)
       {
@@ -53,7 +58,7 @@ public class CognitiveContext
    /// <typeparam name="T">The type of the value to set.</typeparam>
    /// <param name="key">The key of the value to set.</param>
    /// <param name="value">The value to set.</param>
-   protected void SetOrRemove<T>(string key, T? value)
+   public void SetOrRemove<T>(string key, T? value)
    {
       if (value is null)
       {
@@ -63,10 +68,5 @@ public class CognitiveContext
       {
          State[key] = value;
       }
-   }
-
-   public CognitiveContext(AIdentity aIdentity)
-   {
-      AIdentity = aIdentity;
    }
 }

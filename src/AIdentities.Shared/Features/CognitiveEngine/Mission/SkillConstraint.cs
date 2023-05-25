@@ -5,7 +5,7 @@ public record SkillConstraint
    /// <summary>
    /// The available skill.
    /// </summary>
-   public ISkill Skill { get; set; }
+   public SkillDefinition Skill { get; set; }
 
    /// <summary>
    /// The preferred AIdentity for the skill.
@@ -13,7 +13,7 @@ public record SkillConstraint
    /// </summary>
    public AIdentity? PreferredAIdentity { get; set; }
 
-   public SkillConstraint(ISkill skill, AIdentity? preferredAIdentity)
+   public SkillConstraint(SkillDefinition skill, AIdentity? preferredAIdentity)
    {
       Skill = skill;
       PreferredAIdentity = preferredAIdentity;

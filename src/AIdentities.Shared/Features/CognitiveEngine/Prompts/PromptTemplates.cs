@@ -1,10 +1,10 @@
 ﻿using System.Text;
-using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 
-namespace AIdentities.Shared.Features.CognitiveEngine.Engines.Mithril;
+namespace AIdentities.Shared.Features.CognitiveEngine.Prompts;
 
 public static class PromptTemplates
 {
+   public const string UNKNOWN_SKILL = "DUNNO";
    const string TOKEN_USER_PROMPT = $"{nameof(TOKEN_USER_PROMPT)}";
    const string TOKEN_SKILL_ARGUMENTS = $"{nameof(TOKEN_SKILL_ARGUMENTS)}";
    const string TOKEN_DETECTED_SKILL = $"{nameof(TOKEN_DETECTED_SKILL)}";
@@ -26,7 +26,7 @@ public static class PromptTemplates
 
       Find the skill that best matches the user prompt.
       You have to return just the skill name that matches better the user prompt.
-      If you can't find any skill, just return the word "DUNNO".
+      If you can't find any skill, just return the word "{UNKNOWN_SKILL}".
 
       <START Examples>
       UserRequest: I don't like the color of the background, I'd like it to be blue
@@ -35,7 +35,7 @@ public static class PromptTemplates
 
       UserRequest: I want to know the weather in Rome
       Reasoning : The user is asking for the weather in Rome, no available skill satisfy the request.
-      Skill: DUNNO
+      Skill: {UNKNOWN_SKILL}
 
       UserRequest: I'd like a colorful theme for the application
       Reasoning : The user is asking to change the theme of the application, ChangeTheme satisfies the request.
