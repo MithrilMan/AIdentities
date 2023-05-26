@@ -1,4 +1,6 @@
-﻿namespace AIdentities.Chat.Pages;
+﻿using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+
+namespace AIdentities.Chat.Pages;
 
 public partial class CognitiveChat
 {
@@ -40,6 +42,13 @@ public partial class CognitiveChat
       public IConversationalConnector? Connector { get; set; }
 
       /// <summary>
+      /// Holds the reference to the default Text To Speech Connector.
+      /// Depending on the installed Text To Speech Connectors, an AIdentity can override this value
+      /// and use its own connector with its own voice.
+      /// </summary>
+      public ITextToSpeechConnector? TextToSpeechConnector { get; internal set; }
+
+      /// <summary>
       /// A collection of all the AIdentities that are partecipating in the current conversation.
       /// </summary>
       public HashSet<AIdentity> PartecipatingAIdentities { get; set; } = new HashSet<AIdentity>();
@@ -58,6 +67,7 @@ public partial class CognitiveChat
       public CancellationTokenSource MessageGenerationCancellationTokenSource { get; set; } = new CancellationTokenSource();
 
       public List<Thought> ChatKeeperThoughts { get; } = new();
+
 
       public void Initialize(Func<IEnumerable<ChatMessage>, ValueTask<IEnumerable<ChatMessage>>> messageFilter, IChatPromptGenerator chatPromptGenerator, IAIdentityProvider aidentityProvider)
       {

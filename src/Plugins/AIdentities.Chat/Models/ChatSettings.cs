@@ -5,6 +5,18 @@ public class ChatSettings : IPluginSettings
    public string? DefaultConnector { get; set; }
 
    /// <summary>
+   /// True if the chat plugin should use text to speech to read messages.
+   /// The voice of each AIdentity can be configured in the AIdentity settings.
+   /// Not every Text To Speech connector supports voice selection.
+   /// </summary>
+   public bool EnableTextToSpeech { get; set; }
+
+   /// <summary>
+   /// The default text to speech connector to use when no connector is specified in the AIdentity settings.
+   /// </summary>
+   public string? DefaultTextToSpeechConnector { get; set; }
+
+   /// <summary>
    /// A list of skills that are enabled for the chat plugin.
    /// This set of skills will be used by the chat plugin to manage conversations through the Chat Keeper AIdentity.
    /// </summary>

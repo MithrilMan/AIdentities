@@ -150,11 +150,26 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
          modelId = _settings.DefaultTextToSpeechModel;
       }
 
+      float? stability = null;
+      if (request.CustomOptions.TryGetValue(nameof(ElevenLabsSettings.VoiceSettings.Stability), out object? stabilityvalue))
+      {
+         stability = stabilityvalue as float?;
+      }
+
+      float? similarityBoost = null;
+      if (request.CustomOptions.TryGetValue(nameof(ElevenLabsSettings.VoiceSettings.SimilarityBoost), out object? similarityBoostValue))
+      {
+         similarityBoost = similarityBoostValue as float?;
+      }
+
       return new ElevenLabsTextToSpeechRequest
       {
          Text = request.Text,
          Model = modelId,
-         VoiceSettings = new VoiceSettings(0, 0)
+         VoiceSettings = new VoiceSettings(
+            stability: stability ?? _settings.DefaultVoiceSettings.Stability,
+            similarityBoost: similarityBoost ?? _settings.DefaultVoiceSettings.SimilarityBoost
+            )
       };
    }
 

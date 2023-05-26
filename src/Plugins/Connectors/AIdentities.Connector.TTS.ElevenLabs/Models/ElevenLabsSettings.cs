@@ -1,6 +1,6 @@
 ﻿namespace AIdentities.Connector.TTS.ElevenLabs.Models;
 
-public class ElevenLabsSettings : IPluginSettings
+public record ElevenLabsSettings : IPluginSettings
 {
    public const bool DEFAULT_ENABLED = true;
    public const string DEFAULT_TEXT_TO_SPEECH_MODEL = "eleven_multilingual_v1";
@@ -37,4 +37,21 @@ public class ElevenLabsSettings : IPluginSettings
    /// The default timeout for the API.
    /// </summary>
    public int Timeout { get; set; } = DEFAULT_TIMEOUT;
+
+   /// <summary>
+   /// Default Voice Settings used when no voice settings are specified in the request.
+   /// </summary>
+   public VoiceSettings DefaultVoiceSettings { get; set; } = new();
+
+   /// <summary>
+   /// Default Voice Settings used when no voice settings are specified in the request.
+   /// </summary>
+   public record VoiceSettings
+   {
+      const float DEFAULT_STABILITY = 0.5f;
+      const float DEFAULT_SIMILARITY_BOOST = 0.5f;
+
+      public float Stability { get; set; } = DEFAULT_STABILITY;
+      public float SimilarityBoost { get; set; } = DEFAULT_SIMILARITY_BOOST;
+   }
 }

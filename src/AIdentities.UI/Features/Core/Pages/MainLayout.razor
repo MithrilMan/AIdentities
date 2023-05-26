@@ -7,14 +7,13 @@
 <MudSnackbarProvider />
 
 <MudLayout Class="d-flex flex-column">
-   <MudAppBar Elevation="1" DisableGutters="true" Dense="true">
+   <MudAppBar Elevation="1" DisableGutters="true" Dense="true" Style="flex-wrap:nowrap">
       <MudIconButton Icon="@Icons.Material.Filled.Menu" Class="px-7" Color="Color.Inherit" Edge="Edge.Start" OnClick="@((e) => DrawerToggle())" />
-      <MudText Typo="Typo.h5">@AppConstants.APP_TITLE</MudText>
+      <MudText Typo="Typo.h5" Class="text-ellipsis">@AppConstants.APP_TITLE</MudText>
       <MudSpacer />
       <MudToggleIconButton @bind-Toggled="@_state.IsDarkMode" @bind-Toggled:after="@SaveTheme"
                            Icon="@Icons.Material.Filled.DarkMode" Title="Dark"
                            ToggledIcon="@Icons.Material.Filled.LightMode" ToggledTitle="Light" />
-      @*<MudIconButton Icon="@Icons.Material.Filled.MoreVert" Color="Color.Inherit" Edge="Edge.End" />*@
    </MudAppBar>
 
    <MudHidden Breakpoint="Breakpoint.LgAndUp">

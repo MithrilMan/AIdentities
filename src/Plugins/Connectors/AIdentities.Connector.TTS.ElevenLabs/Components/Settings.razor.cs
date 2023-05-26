@@ -22,7 +22,8 @@ public partial class Settings : BasePluginSettingsTab<ElevenLabsSettings, Settin
          DefaultVoiceId = _state.DefaultVoiceId ?? ElevenLabsSettings.DEFAULT_VOICE_ID,
          Enabled = _state.Enabled ?? ElevenLabsSettings.DEFAULT_ENABLED,
          TextToSpeechEndpoint = new Uri(_state.TextToSpeechEndpoint ?? ElevenLabsSettings.DEFAULT_TEXT_TO_SPEECH_ENDPOINT),
-         Timeout = _state.Timeout ?? ElevenLabsSettings.DEFAULT_TIMEOUT
+         Timeout = _state.Timeout ?? ElevenLabsSettings.DEFAULT_TIMEOUT,
+         DefaultVoiceSettings = _state.DefaultVoiceSettings with { }
       });
    }
 }

@@ -7,7 +7,7 @@ public partial class Settings
    {
       readonly IEnumerable<IConversationalConnector> _connectors;
 
-      public Validator(IEnumerable<IConversationalConnector> connectors)
+      public Validator(IEnumerable<IConversationalConnector> connectors, IEnumerable<Shared.Plugins.Connectors.TextToSpeech.ITextToSpeechConnector> textToSpeechConnectors)
       {
          _connectors = connectors.ToList();
 

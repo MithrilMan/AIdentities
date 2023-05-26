@@ -2,11 +2,11 @@
 
 <MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix gap-2 overflow-y-auto ">
    <MudPaper Class="d-flex flex-column pa-2">
-      <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2">Default Connector</MudText>
+      <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2">Default Conversational Connector</MudText>
       <MudSelectExtended T="string" ItemCollection="@_state.AvailableConnectors.Keys" @bind-Value="_state.DefaultConnector"
                          AutoFocus="true" ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium">
          <ItemTemplate>
-            @if (IsConnectorDisabled(context.Value))
+            @if (IsConnectorDisabled(context.Value, ConversationalConnectors))
             {
                <MudText Typo="Typo.body2" Color="Color.Warning">@context.Value</MudText>
             }
@@ -17,17 +17,50 @@
          </ItemTemplate>
       </MudSelectExtended>
       <MudText Typo="Typo.subtitle1" Class="mb-2">
-         <p>This parameters specify which connector to use, by default, to perform chat completion.</p>
+         <p>This parameters specify which conversational connector to use, by default, to perform chat completion.</p>
          <p>Note that if the specified connector is Disabled it will not be used.</p>
       </MudText>
-      @if (IsConnectorDisabled(_state.DefaultConnector))
+      @if (IsConnectorDisabled(_state.DefaultConnector, ConversationalConnectors))
       {
          <MudAlert Severity="MudBlazor.Severity.Warning" Class="mb-2">
             The default connector is disabled. Chat completion will not work.
          </MudAlert>
       }
    </MudPaper>
-   <MudPaper Class="d-flex flex-column overflow-y-auto pa-2">
+   <MudPaper Class="d-flex flex-column pa-2">
+      <MudText Typo="Typo.h6" Color="Color.Primary" Class="">Default Text To Speech Connector</MudText>
+
+      <MudSwitchM3 Label="Enable Text To Speeck" @bind-Checked="_state.EnableTextToSpeech" Class="mb-2" />
+      @if (_state.EnableTextToSpeech)
+      {
+         <MudSelectExtended T="string" ItemCollection="@_state.AvailableTTSConnectors.Keys" @bind-Value="_state.DefaultTextToSpeechConnector"
+                         Disabled="@(!_state.EnableTextToSpeech)"
+                         AutoFocus="true" ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium">
+            <ItemTemplate>
+               @if (IsConnectorDisabled(context.Value, TextToSpeechConnectors))
+               {
+                  <MudText Typo="Typo.body2" Color="Color.Warning">@context.Value</MudText>
+               }
+               else
+               {
+                  <MudText Typo="Typo.body2">@context.Value</MudText>
+               }
+            </ItemTemplate>
+         </MudSelectExtended>
+      }
+      <MudText Typo="Typo.subtitle1" Class="mb-2">
+         <p>This parameters specify which Text To Speech connector to use, by default, to perform chat completion.</p>
+         <p>Depending on the used connector, each AIdentity may chose its own settings to customize the voice and other parameters.</p>
+         <p>Note that if the specified connector is Disabled it will not be used.</p>
+      </MudText>
+      @if (IsConnectorDisabled(_state.DefaultTextToSpeechConnector, TextToSpeechConnectors))
+      {
+         <MudAlert Severity="MudBlazor.Severity.Warning" Class="mb-2">
+            The default connector is disabled. Text To Speech will not work.
+         </MudAlert>
+      }
+   </MudPaper>
+   <MudPaper Class="d-flex flex-column pa-2">
       <MudText Typo="Typo.h6" Color="Color.Primary" Class="mb-2">Enable skills</MudText>
       <MudText Typo="Typo.subtitle1" Class="mb-2">
          <p>You can select which skill to enable in the Chat.</p>

@@ -1,7 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-using AIdentities.Shared.Features.CognitiveEngine.Mission;
-using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
-using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+﻿using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Toolbelt.Blazor.HotKeys2;
@@ -27,7 +24,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    [Inject] private IPluginSettingsManager PluginSettingsManager { get; set; } = null!;
    [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
    [Inject] private IPluginResourcePath PluginResourcePath { get; set; } = null!;
-   [Inject] private ITextToSpeechConnector TextToSpeechConnector { get; set; } = null!;
+   [Inject] private IEnumerable<ITextToSpeechConnector> TextToSpeechConnectors { get; set; } = null!;
    [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
    /// <summary>
@@ -41,14 +38,16 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    readonly Dictionary<Guid, ChatMessage> _unfinisheMessages = new();
 
    MudTextFieldExtended<string?> _messageTextField = default!;
+   private ChatSettings _chatSettings = default!;
 
    protected override void OnInitialized()
    {
       base.OnInitialized();
       _state.Initialize(Filter, ChatPromptGenerator, AIdentityProvider);
 
-      var settings = PluginSettingsManager.Get<ChatSettings>();
-      _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled && c.Name == settings.DefaultConnector);
+      _chatSettings = PluginSettingsManager.Get<ChatSettings>();
+      _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled && c.Name == _chatSettings.DefaultConnector);
+      _state.TextToSpeechConnector = TextToSpeechConnectors.FirstOrDefault(c => c.Enabled && c.Name == _chatSettings.DefaultTextToSpeechConnector);
 
       CognitiveChatMission.Start(PageCancellationToken);
       _ = StartConsumingThoughts(PageCancellationToken);
@@ -325,7 +324,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       await foreach (var thought in thoughts)
       {
          // at the moment let show just the final thoughts
-         if (!thought.IsFinalThought()) continue;
+         if (!thought.IsFinalThought() && thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id) continue;
 
          // if we receive a streamed thought, we create a new message and we add it to the list
          // subsequent streamed thoughts with same id will just replace the content of the temporary
@@ -393,15 +392,24 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          //final thought are saved in the database because are meaningful conversation messages
          await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, message).ConfigureAwait(false);
 
-         await TextToSpeechConnector.RequestTextToSpeechAsStreamAsync(
-            new DefaultTextToSpeechRequest(message.Message ?? ""),
-            async (stream) =>
-            {
-               using var streamRef = new DotNetStreamReference(stream: stream);
-               await JSRuntime.InvokeVoidAsync("PlayAudioFileStream", streamRef).ConfigureAwait(false);
-            },
-            PageCancellationToken
-            ).ConfigureAwait(false);
+         if (!_chatSettings.EnableTextToSpeech || _state.TextToSpeechConnector is null) return; //TODO use AIdentity specific TextToSpeechConnector
+
+         try
+         {
+            await _state.TextToSpeechConnector.RequestTextToSpeechAsStreamAsync(
+                  new DefaultTextToSpeechRequest(message.Message ?? ""),
+                  async (stream) =>
+                  {
+                     using var streamRef = new DotNetStreamReference(stream: stream);
+                     await JSRuntime.InvokeVoidAsync("PlayAudioFileStream", streamRef).ConfigureAwait(false);
+                  },
+                  PageCancellationToken
+                  ).ConfigureAwait(false);
+         }
+         catch (Exception ex)
+         {
+            NotificationService.ShowError($"Error while playing audio: {ex.Message}");
+         }
 
       }
    }
