@@ -49,8 +49,15 @@
                      <MudImage Src="@(PluginResourcePath.GetContentPath<PluginEntry>("chat-keeper.jpeg"))" />
                   </MudAvatar>
                   <MudPopover AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopLeft" Open="@_areChatKeeperThoughtsVisible">
-                     <MudListExtended Virtualize=" true" T="Thought"
-                              ItemCollection="(((IEnumerable<Thought>)_state.ChatKeeperThoughts).Reverse().ToList())" ToStringFunc="@(f => f.Content)" />
+                     @if (_state.ChatKeeperThoughts.Count > 0)
+                     {
+                        <MudListExtended Virtualize=" true" T="Thought"
+                                      ItemCollection="(((IEnumerable<Thought>)_state.ChatKeeperThoughts).Reverse().ToList())" ToStringFunc="@(f => f.Content)" />
+                     }
+                     else
+                     {
+                        <MudText Typo="Typo.body2">No thoughts yet.</MudText>
+                     }
                   </MudPopover>
                </div>
 

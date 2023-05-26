@@ -1,7 +1,9 @@
 ﻿using System.Runtime.CompilerServices;
 using AIdentities.Shared.Features.CognitiveEngine.Mission;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
+using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using Toolbelt.Blazor.HotKeys2;
 
 namespace AIdentities.Chat.Pages;
@@ -25,6 +27,8 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    [Inject] private IPluginSettingsManager PluginSettingsManager { get; set; } = null!;
    [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
    [Inject] private IPluginResourcePath PluginResourcePath { get; set; } = null!;
+   [Inject] private ITextToSpeechConnector TextToSpeechConnector { get; set; } = null!;
+   [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
 
    /// <summary>
    /// The mission that will be assigned to the <see cref="_chatKeeper"/> instance.
@@ -60,7 +64,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
             // subsequent streamed thoughts with same id will just replace the content of the temporary
             // message until we receive a IsStreamComplete that signal that our message is finally complete
             // and we can add it to the list
-            if (thought is StreamedThought streamedThought)
+            if (thought.IsStreamedThought(out var streamedThought))
             {
                if (!_unfinisheMessages.TryGetValue(thought.ThoughtId, out var message))
                {
@@ -317,13 +321,17 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    public async Task HandleThoughts(IAsyncEnumerable<Thought> thoughtsProducer)
    {
       var thoughts = thoughtsProducer.ConfigureAwait(false);
+
       await foreach (var thought in thoughts)
       {
+         // at the moment let show just the final thoughts
+         if (!thought.IsFinalThought()) continue;
+
          // if we receive a streamed thought, we create a new message and we add it to the list
          // subsequent streamed thoughts with same id will just replace the content of the temporary
          // message until we receive a IsStreamComplete that signal that our message is finally complete
          // and we can add it to the list
-         if (thought is StreamedThought streamedThought)
+         if (thought.IsStreamedThought(out var streamedThought))
          {
             if (!_unfinisheMessages.TryGetValue(thought.ThoughtId, out var message))
             {
@@ -380,10 +388,21 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
    public async Task UpdateChatStorageIfNeeded(Thought generatingThought, ChatMessage message)
    {
-      if (generatingThought is FinalThought)
+      if (generatingThought.IsFinalThought())
       {
          //final thought are saved in the database because are meaningful conversation messages
          await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, message).ConfigureAwait(false);
+
+         await TextToSpeechConnector.RequestTextToSpeechAsStreamAsync(
+            new DefaultTextToSpeechRequest(message.Message ?? ""),
+            async (stream) =>
+            {
+               using var streamRef = new DotNetStreamReference(stream: stream);
+               await JSRuntime.InvokeVoidAsync("PlayAudioFileStream", streamRef).ConfigureAwait(false);
+            },
+            PageCancellationToken
+            ).ConfigureAwait(false);
+
       }
    }
 

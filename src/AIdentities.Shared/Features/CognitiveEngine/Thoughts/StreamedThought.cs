@@ -11,7 +11,7 @@
 /// <param name="AIdentity"></param>
 /// <param name="Content"></param>
 /// <param name="IsStreamComplete"></param>
-public abstract record StreamedThought : Thought
+public abstract record StreamedThought : Thought, IStreamedThought
 {
    /// <summary>
    /// Specifies if the current streamed thought is completed.

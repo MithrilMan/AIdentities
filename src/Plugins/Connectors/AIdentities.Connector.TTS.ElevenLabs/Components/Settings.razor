@@ -1,0 +1,24 @@
+@inherits BasePluginSettingsTab<ElevenLabsSettings, Settings.State>
+
+<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix overflow-y-auto gap-2">
+   <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-2">
+      <MudCard>
+         <MudSwitchM3 @bind-Checked="_state.Enabled" Label="Enabled" For="()=>_state.Enabled" />
+      </MudCard>
+      <MudCard>
+         <MudTextField @bind-Value="_state.TextToSpeechEndpoint" Label="Text to Speech Endpoint" Variant="Variant.Text" For="()=>_state.TextToSpeechEndpoint" />
+      </MudCard>
+      <MudCard>
+         <MudTextField @bind-Value="_state.DefaultTextToSpeechModel" Label="Default Text to Speech Model Id" Variant="Variant.Text" For="()=>_state.DefaultTextToSpeechModel" />
+      </MudCard>
+      <MudCard>
+         <MudTextField @bind-Value="_state.DefaultVoiceId" Label="Default Voice Id" Variant="Variant.Text" For="()=>_state.DefaultVoiceId" />
+      </MudCard>
+      <MudCard>
+         <MudPasswordField @bind-Value="_state.ApiKey" Label="API Key" Variant="Variant.Text" For="()=>_state.ApiKey" />
+      </MudCard>
+      <MudCard>
+         <MudNumericField @bind-Value="_state.Timeout" Label="Timeout" Variant="Variant.Text" For="()=>_state.Timeout" />
+      </MudCard>
+   </MudPaper>
+</MudForm>

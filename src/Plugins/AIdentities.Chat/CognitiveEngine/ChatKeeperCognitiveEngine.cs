@@ -39,7 +39,7 @@ public class ChatKeeperCognitiveEngine : ReflexiveCognitiveEngine<CognitiveConte
       IMissionContext? missionContext,
       CancellationToken cancellationToken) => KeepConversationGoing(prompt, missionContext, cancellationToken);
 
-      /// <summary>
+   /// <summary>
    /// Keep the conversation going.
    /// It works if missionContext is a <see cref="CognitiveChatMissionContext"/> and there are
    /// <see cref="PartecipatingAIdentities"/> in the conversation.

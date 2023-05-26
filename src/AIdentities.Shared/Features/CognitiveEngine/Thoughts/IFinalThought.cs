@@ -2,9 +2,6 @@
 
 /// <summary>
 /// A final thought is something that returns a semantic result that should be returned to the user.
+/// To not have to check both streamed and non-streamed results, we use this interface to mark the final thoughts.
 /// </summary>
-public record FinalThought : Thought, IFinalThought
-{
-   public FinalThought(string? skillName, AIdentity aIdentity, string content)
-      : base(skillName, aIdentity.Id, content) { }
-}
+public interface IFinalThought : IThought { }

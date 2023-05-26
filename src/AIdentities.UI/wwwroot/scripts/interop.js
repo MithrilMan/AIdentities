@@ -37,3 +37,22 @@ window.downloadFileFromStream = async (fileName, contentStreamReference) => {
    anchorElement.remove();
    URL.revokeObjectURL(url);
 }
+
+
+window.PlayAudioFileStream = async (contentStreamReference) => {
+
+   const arrayBuffer = await contentStreamReference.arrayBuffer();
+   const blob = new Blob([arrayBuffer]);
+   const url = URL.createObjectURL(blob);
+
+   var sound = document.createElement('audio');
+   sound.src = url;
+   sound.type = 'audio/mpeg';
+   document.body.appendChild(sound);
+   sound.load();
+   sound.play();
+   sound.onended = function () {
+      document.body.removeChild(sound);
+      URL.revokeObjectURL(url);
+   };
+}

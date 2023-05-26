@@ -1,0 +1,14 @@
+{
+   "Signature": {
+      "Name": "ElevenLabsTTSConnector",
+      "Version": "1.0.0-alpha",
+      "Author": "Mithril Man",
+      "Entry": "lib/net7.0/AIdentities.Connector.TTS.ElevenLabs.dll"
+   },
+   "Description": "Allows to connect to ElevenLabs Text To Speech connector",
+   "Website": "",
+   "Email": "",
+   "License": "MIT",
+   "LicenseUrl": "",
+   "Icon": "icon.png"
+}

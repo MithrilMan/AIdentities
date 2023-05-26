@@ -27,6 +27,7 @@
     <ProjectReference Include="..\Plugins\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
     <ProjectReference Include="..\Plugins\Connectors\AIdentities.Connector.OpenAI\AIdentities.Connector.OpenAI.csproj" />
     <ProjectReference Include="..\Plugins\Connectors\AIdentities.Connector.TextGeneration\AIdentities.Connector.TextGeneration.csproj" />
+    <ProjectReference Include="..\Plugins\Connectors\AIdentities.Connector.TTS.ElevenLabs\AIdentities.Connector.TTS.ElevenLabs.csproj" />
   </ItemGroup>
   <Target Name="Restore Local Tools" BeforeTargets="Compile">
     <Exec Command="dotnet tool restore" />

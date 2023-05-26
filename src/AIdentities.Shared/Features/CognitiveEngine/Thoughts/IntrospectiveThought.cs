@@ -6,7 +6,7 @@
 /// An introspective thought can be handled by the cognitive engine itself or by the user/ AIdentities and can generate
 /// other actions to execute, or even sub-missions.
 /// </summary>
-public record IntrospectiveThought : Thought
+public record IntrospectiveThought : Thought, IIntrospectiveThought
 {
    public IntrospectiveThought(string? skillName, AIdentity aIdentity, string content)
       : base(skillName, aIdentity.Id, content)

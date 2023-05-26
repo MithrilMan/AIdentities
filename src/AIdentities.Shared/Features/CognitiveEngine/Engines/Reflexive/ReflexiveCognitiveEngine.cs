@@ -39,7 +39,7 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
          bool lastThoughtWasFinal = false;
          await foreach (var thought in HandleFirstPrompt(prompt, missionContext, cancellationToken).ConfigureAwait(false))
          {
-            lastThoughtWasFinal = thought is FinalThought;
+            lastThoughtWasFinal = thought.IsFinalThought();
             yield return thought;
          }
          if (lastThoughtWasFinal) yield break;
