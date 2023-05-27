@@ -7,5 +7,14 @@
 /// </summary>
 public interface IStreamedThought : IThought
 {
+   /// <summary>
+   /// The thought Id.
+   /// Useful to identify the same thought chunk in a streamed thought.
+   /// </summary>
+   Guid Id { get; init; }
+
+   /// <summary>
+   /// Specifies if the current streamed thought is completed.
+   /// </summary>
    bool IsStreamComplete { get; }
 }

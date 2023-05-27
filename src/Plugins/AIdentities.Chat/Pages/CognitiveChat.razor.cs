@@ -65,7 +65,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
             // and we can add it to the list
             if (thought.IsStreamedThought(out var streamedThought))
             {
-               if (!_unfinisheMessages.TryGetValue(thought.ThoughtId, out var message))
+               if (!_unfinisheMessages.TryGetValue(streamedThought.Id, out var message))
                {
                   message = new ChatMessage
                   {
@@ -73,7 +73,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
                      IsGenerated = true,
                      Message = "",
                   };
-                  _unfinisheMessages[thought.ThoughtId] = message;
+                  _unfinisheMessages[streamedThought.Id] = message;
 
                   if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
                   {
@@ -90,7 +90,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
                if (streamedThought.IsStreamComplete)
                {
-                  _unfinisheMessages.Remove(thought.ThoughtId);
+                  _unfinisheMessages.Remove(streamedThought.Id);
                   await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
                }
             }
@@ -332,7 +332,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          // and we can add it to the list
          if (thought.IsStreamedThought(out var streamedThought))
          {
-            if (!_unfinisheMessages.TryGetValue(thought.ThoughtId, out var message))
+            if (!_unfinisheMessages.TryGetValue(streamedThought.Id, out var message))
             {
                message = new ChatMessage
                {
@@ -340,7 +340,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
                   IsGenerated = true,
                   Message = "",
                };
-               _unfinisheMessages[thought.ThoughtId] = message;
+               _unfinisheMessages[streamedThought.Id] = message;
 
                if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
                {
@@ -357,7 +357,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
             if (streamedThought.IsStreamComplete)
             {
-               _unfinisheMessages.Remove(thought.ThoughtId);
+               _unfinisheMessages.Remove(streamedThought.Id);
                await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
             }
          }

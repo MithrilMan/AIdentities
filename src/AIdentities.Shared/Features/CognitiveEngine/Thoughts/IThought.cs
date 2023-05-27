@@ -3,12 +3,6 @@
 public interface IThought
 {
    /// <summary>
-   /// An unique identifier for the thought.
-   /// Especially useful to manage streamed thoughts.
-   /// </summary>
-   Guid ThoughtId { get; }
-
-   /// <summary>
    /// The skill action that created the thought.
    /// </summary>
    string? SkillName { get; set; }

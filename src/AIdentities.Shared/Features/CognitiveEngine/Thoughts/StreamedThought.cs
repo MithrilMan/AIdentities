@@ -6,17 +6,16 @@
 /// just its text is updated.
 /// This way the consumer doesn't have to build the final thought by itself but can just look at the flag
 /// IsStreamComplete to know if the thought is complete.
+/// The Id property is used to identify the same thought chunk in a streamed thought so the consumer knows if
+/// an incoming thought chunk belongs to a new thought or is a continuation of the previous one.
 /// </summary>
-/// <param name="SkillActionId"></param>
-/// <param name="AIdentity"></param>
-/// <param name="Content"></param>
-/// <param name="IsStreamComplete"></param>
 public abstract record StreamedThought : Thought, IStreamedThought
 {
-   /// <summary>
-   /// Specifies if the current streamed thought is completed.
-   /// </summary>
-   public bool IsStreamComplete { get; set; }
+   /// <inheritdoc />
+   public Guid Id { get; init; } = Guid.NewGuid();
+
+   /// <inheritdoc />
+   public bool IsStreamComplete { get; private set; }
 
    public StreamedThought(string? skillName, AIdentity aIdentity, string content, bool isStreamComplete)
       : base(skillName, aIdentity.Id, content)
@@ -36,15 +35,17 @@ public abstract record StreamedThought : Thought, IStreamedThought
       Content += content;
    }
 
-
    /// <summary>
-   /// Mark the stramed thought as completed.
+   /// Return a new StreamThought Mark the stramed thought as completed.
    /// Subsequent calls to AppendContent will throw an exception.
    /// </summary>
    /// <returns></returns>
    public StreamedThought Completed()
    {
-      IsStreamComplete = true;
-      return this;
+
+      return this with
+      {
+         IsStreamComplete = true
+      };
    }
 }

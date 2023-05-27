@@ -14,12 +14,6 @@
 public abstract record Thought(string? SkillName, Guid AIdentityId, string Content) : IThought
 {
    /// <summary>
-   /// An unique identifier for the thought.
-   /// Especially useful to manage streamed thoughts.
-   /// </summary>
-   public Guid ThoughtId { get; } = Guid.NewGuid();
-
-   /// <summary>
    /// The skill action that created the thought.
    /// </summary>
    public string? SkillName { get; set; } = SkillName;

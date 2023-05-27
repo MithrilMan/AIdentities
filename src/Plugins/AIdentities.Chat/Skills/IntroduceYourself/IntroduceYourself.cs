@@ -48,10 +48,9 @@ public partial class IntroduceYourself : Skill
          streamedFinalThought.AppendContent(thought.GeneratedMessage ?? "");
          yield return streamedFinalThought;
       }
-      streamedFinalThought.IsStreamComplete = true;
 
       SetPresentation(context, streamedFinalThought.Content);
 
-      yield return streamedFinalThought;
+      yield return streamedFinalThought.Completed();
    }
 }
