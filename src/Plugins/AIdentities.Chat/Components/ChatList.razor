@@ -1,0 +1,84 @@
+﻿<div class="d-flex flex-column gap-1 overflow-y-auto @Class">
+   <MudTextField T="string" Placeholder="Search a conversation..." @bind-Value="_state.ConversationSearchText" @bind-Value:after="@ApplyFilterAsync"
+                 Variant="Variant.Outlined" Label="" Clearable="true"
+                 DebounceInterval="250" Class="ma-2 flex-grow-0"
+                 Adornment="Adornment.End" AdornmentIcon="@Icons.Material.Filled.Search"
+                 AdornmentColor="Color.Secondary" />
+
+   <MudContainer MaxWidth="MaxWidth.False" Class="d-flex flex-column gap-2 px-2 flex-grow-1 overflow-y-auto">
+      <MudList Clickable="true" DisableGutters="true" Dense="true" DisablePadding="true" Color="Color.Secondary"
+               SelectedValue="_state.SelectedConversation" SelectedValueChanged="@(v => OnSelectConversation((ChatMetadata)v))">
+         @foreach (var conversation in _state.Conversations.Items.ToList())
+         {
+            bool isSelected = _state.SelectedConversation == conversation;
+            bool isEditingThisConversation = _state.IsEditingConversation && isSelected;
+            <MudListItem Value="conversation" @key="conversation" Class="ma-0 pa-0" Inset="false">
+               <MudCard Class="@(isSelected ? "mud-theme-primary" : "conversation-list")">
+                  <MudCardHeader>
+                     <CardHeaderContent>
+                        @if (isEditingThisConversation)
+                        {
+                           <MudTextField Class="pa-0" Margin="Margin.Dense" AutoFocus="true" Required @bind-Value="_state.EditingTitle" Variant="Variant.Filled" Label="Title" OnKeyUp="SaveOnEnterPressed" />
+                        }
+                        else
+                        {
+                           <MudText Typo="Typo.h6">@conversation.Title</MudText>
+                        }
+
+                     </CardHeaderContent>
+                     <CardHeaderActions>
+                        @if (isEditingThisConversation)
+                        {
+                           <MudIconButton Size="Size.Medium" Class="pa-0" Icon="@Icons.Material.Filled.Done" OnClick="()=>RenameConversation(conversation)" />
+                        }
+                        else
+                        {
+                           <MudIconButton Size="Size.Medium" Class="pa-0" Icon="@Icons.Material.Filled.Edit" OnClick="()=>EnableRenameConversation(conversation)" />
+                        }
+                        <MudIconButton Size="Size.Medium" Class="pa-0" Icon="@Icons.Material.Filled.Delete" OnClick="()=>DeleteConversation(conversation)" />
+                     </CardHeaderActions>
+                  </MudCardHeader>
+                  <MudCardContent Class="pt-0 d-flex align-end">
+                     <MudStack>
+                        <MudBadge Origin="Origin.TopLeft" Content="@conversation.MessageCount" Color="Color.Secondary" Overlap="true">
+                           <MudAvatarGroup Max="5" Spacing="2" MaxColor="Color.Primary">
+                              @foreach (var aidentityId in conversation.AIdentityIds)
+                              {
+                                 var aIdentity = AIdentityProvider.Get(aidentityId);
+                                 @if (conversation.AIdentityIds.Count == 1)
+                                 {
+                                    <MudTooltip Text="@aIdentity?.Name" Arrow="true" Placement="Placement.Left">
+                                       <MudAvatar Size="Size.Medium" Elevation="3" Variant="Variant.Outlined">
+                                          <MudImage Src="@aIdentity?.Image" />
+                                       </MudAvatar>
+                                    </MudTooltip>
+                                 }
+                                 else
+                                 {
+                                    <MudAvatar Size="Size.Medium" Elevation="3" Variant="Variant.Outlined">
+                                       <MudImage Src="@aIdentity?.Image" />
+                                    </MudAvatar>
+                                 }
+                              }
+                           </MudAvatarGroup>
+                        </MudBadge>
+                        <MudText Typo="Typo.caption">Last edited on @conversation.UpdatedAt.LocalDateTime</MudText>
+                     </MudStack>
+                     <MudSpacer />
+                     <MudIconButton Icon="@Icons.Material.Filled.FileDownload" Size="Size.Small" Color="Color.Secondary" Variant="Variant.Filled"
+                                 OnClick="()=> ExportConversation(conversation)" />
+                  </MudCardContent>
+               </MudCard>
+            </MudListItem>
+         }
+      </MudList>
+   </MudContainer>
+
+   <MudPaper Elevation="3" Class="mud-theme-transparent flex-grow-0">
+      <MudToolBar>
+         <MudSpacer />
+         <MudButton Variant="Variant.Filled" OnClick="StartNewConversationAsync" StartIcon="@Icons.Material.Filled.Add">Start a new chat</MudButton>
+         <MudSpacer />
+      </MudToolBar>
+   </MudPaper>
+</div>

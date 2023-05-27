@@ -1,0 +1,72 @@
+﻿@if (Message is null) return;
+
+<div class="">
+   @if (Message.IsAIGenerated)
+   {
+      <MudStack Row="true" Justify="Justify.FlexStart" AlignItems="AlignItems.End">
+         <MudItem xs="11">
+            @if (NewGroup)
+            {
+               <MudStack Row="true" AlignItems="AlignItems.Center">
+                  <MudAvatar Color="Color.Tertiary" Size="Size.Medium">
+                     <MudImage Src="@($"/api/AIdentity/Image/{Message.AuthorId}")" />
+                  </MudAvatar>
+                  <MudText Typo="Typo.subtitle1"><b>@Message.AuthorName</b></MudText>
+                  <MudText>@Message.CreationDate.ToString("HH:mm")</MudText>
+                  <MudSpacer />
+               </MudStack>
+            }
+            <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@MessageStyle">
+               <MudMarkdown Value="@Message.Text" />
+            </MudPaper>
+            <MudSpacer />
+         </MudItem>
+         <MudItem xs="1">
+            @if (IsSelected)
+            {
+               <MudStack Row="true" Spacing="1" Justify="Justify.FlexEnd" Class="px-2 pb-1">
+                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
+                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="Delete" />
+               </MudStack>
+            }
+         </MudItem>
+      </MudStack>
+   }
+   else
+   {
+      <MudStack Row="true" Justify="Justify.FlexEnd" AlignItems="AlignItems.End">
+         <MudItem xs="1">
+            @if (IsSelected)
+            {
+               <MudStack Row="true" Spacing="1" Justify="Justify.FlexStart" Class="px-2 pb-1">
+                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="Delete" />
+                  <MudIconButton Class="pa-0" Icon="@Icons.Material.Filled.ContentCopy" OnClick="CopyToClipboard" />
+               </MudStack>
+            }
+         </MudItem>
+         <MudItem xs="11">
+            @if (NewGroup)
+            {
+               <MudStack Row="true" AlignItems="AlignItems.Center">
+                  <MudSpacer />
+                  <MudText Typo="Typo.subtitle1"><b>@Message.AuthorName</b></MudText>
+                  <MudText>@Message.CreationDate.ToString("HH:mm")</MudText>
+                  <MudAvatar Color="Color.Secondary" Size="Size.Medium">@Message.AuthorName</MudAvatar>
+               </MudStack>
+            }
+            <MudPaper Class="pa-1 overflow-x-auto mud-theme-primary" Elevation="2" Style="@MessageStyle">
+               <MudMarkdown Value="@Message.Text" />
+            </MudPaper>
+         </MudItem>
+      </MudStack>
+   }
+</div>
+
+@code {
+   protected string MessageStyle => StyleBuilder
+      .Empty()
+      .AddStyle("user-select", "text", IsSelected)
+      .AddStyle("margin-left", "46px", Message.IsAIGenerated)
+      .AddStyle("margin-right", "46px", !Message.IsAIGenerated)
+      .Build();
+}

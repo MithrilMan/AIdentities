@@ -9,7 +9,7 @@
                <MudAvatar Color="Color.Tertiary" Size="Size.Medium">
                   <MudImage Src="@($"/api/AIdentity/Image/{ChatMessage.AIDentityId}")" />
                </MudAvatar>
-               <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@GetMessageStyle()">
+               <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@MessageStyle">
                   <MudMarkdown Value="@ChatMessage.Message" />
                </MudPaper>
                <MudSpacer />
@@ -41,7 +41,7 @@
          <MudItem xs="11">
             <MudStack Row="true">
                <MudSpacer />
-               <MudPaper Class="pa-1 overflow-x-auto mud-theme-primary" Elevation="2" Style="@GetMessageStyle()">
+               <MudPaper Class="pa-1 overflow-x-auto mud-theme-primary" Elevation="2" Style="@MessageStyle">
                   <MudMarkdown Value="@ChatMessage.Message" />
                </MudPaper>
                <MudAvatar Color="Color.Secondary" Size="Size.Medium">@ChatMessage.User?.ToUpper() </MudAvatar>
@@ -52,5 +52,10 @@
 </div>
 
 @code {
-   string GetMessageStyle() => IsSelected ? "user-select:text" : "";
+   protected string MessageStyle => StyleBuilder
+      .Empty()
+      .AddStyle("user-select", "text", IsSelected)
+      .AddStyle("margin-left", "46px", ChatMessage.IsGenerated)
+      .AddStyle("margin-right", "46px", !ChatMessage.IsGenerated)
+      .Build();
 }

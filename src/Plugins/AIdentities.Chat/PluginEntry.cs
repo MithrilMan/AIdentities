@@ -12,7 +12,10 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
    {
       services
          .AddScoped<IChatStorage, ChatStorage>()
-         .AddScoped<IConversationExporter, ConversationExporter>();
+         .AddScoped<IChatExporter, ChatExporter>();
+
+      services
+         .AddScoped<ICognitiveChatStorage, CognitiveChatStorage>();
 
       services.AddTransient<IChatPromptGenerator, ChatPromptGenerator>();
 

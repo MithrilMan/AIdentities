@@ -6,7 +6,7 @@ public partial class Chat
    {
       public string? MessageSearchText { get; set; }
 
-      public ConversationMetadata? SelectedConversation { get; set; }
+      public ChatMetadata? SelectedConversation { get; set; }
       /// <summary>
       /// True if no conversation is selected.
       /// </summary>
@@ -65,7 +65,7 @@ public partial class Chat
          MessageSearchText = null;
       }
 
-      public async Task InitializeConversation(Conversation conversation, bool loadMessages = true)
+      public async Task InitializeConversation(ChatBlock conversation, bool loadMessages = true)
       {
          ChatPromptGenerator.InitializeConversation(conversation);
          // if the last message is not generated, we need to generate a reply so we enable the "resend" button

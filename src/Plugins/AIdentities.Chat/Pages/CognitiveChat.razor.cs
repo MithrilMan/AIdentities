@@ -17,10 +17,9 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
    [Inject] private IDialogService DialogService { get; set; } = null!;
    [Inject] private IEnumerable<IConversationalConnector> ChatConnectors { get; set; } = null!;
-   [Inject] private IChatStorage ChatStorage { get; set; } = null!;
+   [Inject] private ICognitiveChatStorage ChatStorage { get; set; } = null!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
-   [Inject] private IChatPromptGenerator ChatPromptGenerator { get; set; } = null!;
-   [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
+   [Inject] private IChatExporter ConversationExporter { get; set; } = null!;
    [Inject] private IPluginSettingsManager PluginSettingsManager { get; set; } = null!;
    [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
    [Inject] private IPluginResourcePath PluginResourcePath { get; set; } = null!;
@@ -35,7 +34,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    /// <summary>
    /// reference to the _chatKeeper instance
    /// </summary>
-   readonly Dictionary<Guid, ChatMessage> _unfinisheMessages = new();
+   readonly Dictionary<Guid, ConversationMessage> _unfinisheMessages = new();
 
    MudTextFieldExtended<string?> _messageTextField = default!;
    private ChatSettings _chatSettings = default!;
@@ -43,7 +42,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    protected override void OnInitialized()
    {
       base.OnInitialized();
-      _state.Initialize(Filter, ChatPromptGenerator, AIdentityProvider);
+      _state.Initialize(Filter, AIdentityProvider);
 
       _chatSettings = PluginSettingsManager.Get<ChatSettings>();
       _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled && c.Name == _chatSettings.DefaultConnector);
@@ -67,11 +66,12 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
             {
                if (!_unfinisheMessages.TryGetValue(streamedThought.Id, out var message))
                {
-                  message = new ChatMessage
+                  message = new ConversationMessage
                   {
-                     AIDentityId = thought.AIdentityId,
-                     IsGenerated = true,
-                     Message = "",
+                     AuthorId = thought.AIdentityId,
+                     AuthorName = AIdentityProvider.Get(thought.AIdentityId)?.Name,
+                     IsAIGenerated = true,
+                     Text = "",
                   };
                   _unfinisheMessages[streamedThought.Id] = message;
 
@@ -85,7 +85,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
                   }
                }
 
-               message.Message = streamedThought.Content;
+               message.Text = streamedThought.Content;
                await ScrollToEndOfMessageList().ConfigureAwait(false);
 
                if (streamedThought.IsStreamComplete)
@@ -97,11 +97,12 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
             else
             {
                // if the thought is not streamed, we just add it to the list
-               var message = new ChatMessage
+               var message = new ConversationMessage
                {
-                  AIDentityId = thought.AIdentityId,
-                  IsGenerated = true,
-                  Message = thought.Content,
+                  AuthorId = thought.AIdentityId,
+                  AuthorName = AIdentityProvider.Get(thought.AIdentityId)?.Name,
+                  IsAIGenerated = true,
+                  Text = thought.Content,
                };
 
                if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
@@ -158,14 +159,14 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       await InvokeAsync(StateHasChanged).ConfigureAwait(false);
    }
 
-   public async ValueTask<IEnumerable<ChatMessage>> Filter(IEnumerable<ChatMessage> unfilteredItems)
+   public async ValueTask<IEnumerable<ConversationMessage>> Filter(IEnumerable<ConversationMessage> unfilteredItems)
    {
       if (_state.MessageSearchText is null) return unfilteredItems;
 
       await ValueTask.CompletedTask.ConfigureAwait(false);
 
       unfilteredItems = unfilteredItems
-         .Where(item => item.Message?.Contains(_state.MessageSearchText, StringComparison.OrdinalIgnoreCase) ?? false);
+         .Where(item => item.Text?.Contains(_state.MessageSearchText, StringComparison.OrdinalIgnoreCase) ?? false);
 
       return unfilteredItems;
    }
@@ -180,11 +181,12 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
       if (!string.IsNullOrEmpty(_state.Message))
       {
-         var message = new ChatMessage()
+         var message = new ConversationMessage()
          {
-            Message = _state.Message,
-            IsGenerated = false,
-            User = "ME"
+            Text = _state.Message,
+            IsAIGenerated = false,
+            //AuthorId = userid //TODO: handle user
+            AuthorName = "ME"
          };
 
          await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, message).ConfigureAwait(false);
@@ -196,16 +198,17 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
          await ScrollToEndOfMessageList().ConfigureAwait(false);
 
-         ChatPromptGenerator.AppendMessage(message);
-
+         _state.IsWaitingReply = true;
+         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
          await HandlePrompt(message).ConfigureAwait(false);
+         _state.IsWaitingReply = false;
       }
    }
 
-   private Task HandlePrompt(ChatMessage message)
+   private Task HandlePrompt(ConversationMessage message)
    {
       return HandleThoughts(CognitiveChatMission.TalkToMissionRunnerAsync(
-         prompt: new UserPrompt(Guid.Empty, message.Message ?? ""), // TODO handle the user id
+         prompt: new UserPrompt(Guid.Empty, message.Text ?? ""), // TODO handle the user id
          cancellationToken: _state.MessageGenerationCancellationTokenSource.Token
          ));
    }
@@ -266,9 +269,9 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       }
    }
 
-   Task Resend() => HandlePrompt(_state.Messages.UnfilteredItems.Last(m => m.AIDentityId != CognitiveChatMission.ChatKeeper.Id));
+   Task Resend() => HandlePrompt(_state.Messages.UnfilteredItems.Last(m => m.AuthorId != CognitiveChatMission.ChatKeeper.Id));
 
-   async Task OnDeleteMessage(ChatMessage message)
+   async Task OnDeleteMessage(ConversationMessage message)
    {
       bool? result = await DialogService.ShowMessageBox(
          "Do you want to REMOVE the message?",
@@ -334,11 +337,12 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          {
             if (!_unfinisheMessages.TryGetValue(streamedThought.Id, out var message))
             {
-               message = new ChatMessage
+               message = new ConversationMessage
                {
-                  AIDentityId = thought.AIdentityId,
-                  IsGenerated = true,
-                  Message = "",
+                  AuthorId = thought.AIdentityId,
+                  AuthorName = AIdentityProvider.Get(thought.AIdentityId)?.Name,
+                  IsAIGenerated = true,
+                  Text = "",
                };
                _unfinisheMessages[streamedThought.Id] = message;
 
@@ -352,7 +356,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
                }
             }
 
-            message.Message = streamedThought.Content;
+            message.Text = streamedThought.Content;
             await ScrollToEndOfMessageList().ConfigureAwait(false);
 
             if (streamedThought.IsStreamComplete)
@@ -364,11 +368,12 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          else
          {
             // if the thought is not streamed, we just add it to the list
-            var message = new ChatMessage
+            var message = new ConversationMessage
             {
-               AIDentityId = thought.AIdentityId,
-               IsGenerated = true,
-               Message = thought.Content,
+               AuthorId = thought.AIdentityId,
+               AuthorName = AIdentityProvider.Get(thought.AIdentityId)?.Name,
+               IsAIGenerated = true,
+               Text = thought.Content,
             };
 
             if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
@@ -385,7 +390,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       }
    }
 
-   public async Task UpdateChatStorageIfNeeded(Thought generatingThought, ChatMessage message)
+   public async Task UpdateChatStorageIfNeeded(Thought generatingThought, ConversationMessage message)
    {
       if (generatingThought.IsFinalThought())
       {
@@ -397,7 +402,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          try
          {
             await _state.TextToSpeechConnector.RequestTextToSpeechAsStreamAsync(
-                  new DefaultTextToSpeechRequest(message.Message ?? ""),
+                  new DefaultTextToSpeechRequest(message.Text ?? ""),
                   async (stream) =>
                   {
                      using var streamRef = new DotNetStreamReference(stream: stream);

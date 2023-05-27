@@ -37,6 +37,11 @@ public record ConversationMessage
    public Guid AuthorId { get; set; }
 
    /// <summary>
+   /// The message author name.
+   /// </summary>
+   public string? AuthorName { get; set; }
+
+   /// <summary>
    /// The message text.
    /// </summary>
    public string? Text { get; set; }

@@ -38,7 +38,7 @@ Craft your responses to be consistent with {TOKEN_AIDENTITY_NAME}'s personality!
    /// This is used to generate the prompt.
    /// </summary>
    private readonly List<IConversationalMessage> _history = new();
-   private ConversationMetadata? _conversationMetadata;
+   private ChatMetadata? _conversationMetadata;
    private AIdentity? _currentAIdentity;
    private AIdentityChatFeature? _chatFeature;
 
@@ -61,7 +61,7 @@ Craft your responses to be consistent with {TOKEN_AIDENTITY_NAME}'s personality!
       _aIdentityProvider = aIdentityProvider;
    }
 
-   public void InitializeConversation(Conversation? conversation)
+   public void InitializeConversation(ChatBlock? conversation)
    {
       if (conversation is null)
       {

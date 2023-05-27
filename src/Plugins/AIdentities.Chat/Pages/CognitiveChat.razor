@@ -21,21 +21,45 @@
                <MudMenuItem OnClick="ExportConversation" Icon="@IconsEx.EXPORT" Disabled="_state.NoConversation">Export</MudMenuItem>
             </MudMenu>
          </MudToolBar>
-
-         @if (_showAddAIdentityDialog)
+         @if (_state.NoConversation == false)
          {
-            <MudStack Row="true">
-               <MudTooltip Text="@_state.PartecipatingAIdentitiesTooltip" Placement="Placement.Right" Arrow="true">
-                  <MudAvatarGroup Class="px-2" Spacing="2" Max="5">
-                     @foreach (var aid in _state.PartecipatingAIdentities)
-                     {
+            <MudStack Row="true" Class="">
+               <div class="d-flex flex-row animate__animated animate__backInDown animate__jello">
+                  <div class="cursor-pointer" @onclick="@(() => _areChatKeeperThoughtsVisible = !_areChatKeeperThoughtsVisible)">
+                     <MudTooltip Text="@CognitiveChatMission.MissionRunner?.AIdentity.Name" Placement="Placement.Bottom" Arrow="true">
+                        <MudAvatar Size="Size.Medium">
+                           <MudImage Src="@(PluginResourcePath.GetContentPath<PluginEntry>("chat-keeper.jpeg"))" />
+                        </MudAvatar>
+                     </MudTooltip>
+
+                     <MudPopover AnchorOrigin="Origin.BottomLeft" TransformOrigin="Origin.TopLeft" Open="@_areChatKeeperThoughtsVisible">
+                        <MudPaper Class="pa-2 mud-theme-secondary" Elevation="10">
+                           @if (_state.ChatKeeperThoughts.Count > 0)
+                           {
+                              <MudListExtended Virtualize=" true" T="Thought" MaxItems="5" Dense="true" DisableGutters="true"
+                                         ItemCollection="(((IEnumerable<Thought>)_state.ChatKeeperThoughts).Reverse().ToList())" ToStringFunc="@(f => f.Content)" />
+                           }
+                           else
+                           {
+                              <MudText Typo="Typo.body2">No thoughts yet.</MudText>
+                           }
+                        </MudPaper>
+                     </MudPopover>
+                  </div>
+
+                  @foreach (var aid in _state.PartecipatingAIdentities)
+                  {
+                     <MudTooltip Text="@aid.Name" Placement="Placement.Bottom" Arrow="true">
                         <MudAvatar Size="Size.Medium"><MudImage Src="@aid.GetImageUri()" /></MudAvatar>
-                     }
-                  </MudAvatarGroup>
-               </MudTooltip>
-               <AIdentitySelector AutoFocus="true" Class="ma-0" Placeholder="Select an AIdentity to invite." Style="border-radius:0"
+                     </MudTooltip>
+                  }
+               </div>
+               @if (_showAddAIdentityDialog)
+               {
+                  <AIdentitySelector AutoFocus="true" Class="ma-0" Placeholder="Select an AIdentity to invite." Style="border-radius:0"
                                Margin="Margin.Dense" Variant="Variant.Text" Filter="(aid => !_state.PartecipatingAIdentities.Contains(aid))"
                                SelectedAIdentityChanged="AddAIdentityToConversation" />
+               }
             </MudStack>
          }
       </MudPaper>
@@ -44,36 +68,26 @@
          <MudPaper Class="d-flex flex-column flex-grow-1 pa-2 gap-1" Outlined="true">
             <MudList Class="list d-flex flex-column flex-grow-1" DisablePadding="true" DisableGutters="true" Dense="true"
                      Clickable="true" SelectedItemChanged="OnSelectedMessageChanged">
-               <div class="absolute top-0 left-0 cursor-pointer" @onclick="@(() => _areChatKeeperThoughtsVisible = !_areChatKeeperThoughtsVisible)">
-                  <MudAvatar Elevation="10" Size="Size.Large">
-                     <MudImage Src="@(PluginResourcePath.GetContentPath<PluginEntry>("chat-keeper.jpeg"))" />
-                  </MudAvatar>
-                  <MudPopover AnchorOrigin="Origin.TopRight" TransformOrigin="Origin.TopLeft" Open="@_areChatKeeperThoughtsVisible">
-                     @if (_state.ChatKeeperThoughts.Count > 0)
-                     {
-                        <MudListExtended Virtualize=" true" T="Thought"
-                                      ItemCollection="(((IEnumerable<Thought>)_state.ChatKeeperThoughts).Reverse().ToList())" ToStringFunc="@(f => f.Content)" />
-                     }
-                     else
-                     {
-                        <MudText Typo="Typo.body2">No thoughts yet.</MudText>
-                     }
-                  </MudPopover>
-               </div>
-
                <MudSpacer />
+               @{
+                  Guid? lastAIdentity = null;
+                  var lastMessageWasGenerated = false;
+               }
                @foreach (var message in _state.Messages.Items)
                {
+                  var newMessageGroup = lastMessageWasGenerated != message.IsAIGenerated || (message.IsAIGenerated && lastAIdentity != message.AuthorId);
+                  lastAIdentity = message.AuthorId;
+                  lastMessageWasGenerated = message.IsAIGenerated;
                   <MudListItem Class="flex-shrink-0" @key="message" Value="message">
-                     <Message ChatMessage="message" IsSelected="@(_state.SelectedMessage == message)" OnDelete="OnDeleteMessage" />
+                     <GenerativeChatMessage NewGroup="@newMessageGroup" Message="message" IsSelected="@(_state.SelectedMessage == message)" OnDelete="OnDeleteMessage" />
                   </MudListItem>
                }
                @if (_state.IsWaitingReply)
                {
-                  if (_state.StreamedResponse is { Message.Length: > 0 })
+                  if (_state.StreamedResponse is { Text.Length: > 0 })
                   {
                      <MudListItem Class="flex-shrink-0" Value="_state.StreamedResponse">
-                        <Message ChatMessage="_state.StreamedResponse" IsSelected="@(_state.SelectedMessage == _state.StreamedResponse)" OnDelete="OnDeleteMessage" />
+                        <GenerativeChatMessage Message="_state.StreamedResponse" IsSelected="@(_state.SelectedMessage == _state.StreamedResponse)" OnDelete="OnDeleteMessage" />
                      </MudListItem>
                   }
                   else
@@ -162,6 +176,6 @@
       return AIdentityProvider.All().Where(a => !_state.SelectedConversation!.AIdentityIds.Contains(a.Id)).ToList();
    }
 
-   void OnSelectedMessageChanged(MudListItem item) => _state.SelectedMessage = item.Value as ChatMessage;
+   void OnSelectedMessageChanged(MudListItem item) => _state.SelectedMessage = item.Value as ConversationMessage;
 }
 

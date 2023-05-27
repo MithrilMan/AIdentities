@@ -3,7 +3,7 @@
 /// <summary>
 /// Allows to export a conversation to a file.
 /// </summary>
-public interface IConversationExporter
+public interface IChatExporter
 {
    /// <summary>
    /// Exports the conversation with the given id to a file.

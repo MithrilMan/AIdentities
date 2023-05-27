@@ -1,4 +1,5 @@
 ﻿namespace AIdentities.Chat.Missions;
+
 public class CognitiveChatMissionContext : MissionContext
 {
    public Conversation? CurrentConversation

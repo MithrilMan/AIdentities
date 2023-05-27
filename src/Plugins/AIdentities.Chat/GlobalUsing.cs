@@ -9,6 +9,7 @@ global using AIdentities.Shared.Features.AIdentities.Abstracts;
 global using AIdentities.Shared.Features.AIdentities.Models;
 global using AIdentities.Shared.Features.AIdentities.Services;
 global using AIdentities.Shared.Features.CognitiveEngine;
+global using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 global using AIdentities.Shared.Features.CognitiveEngine.Mission;
 global using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 global using AIdentities.Shared.Features.CognitiveEngine.Skills;

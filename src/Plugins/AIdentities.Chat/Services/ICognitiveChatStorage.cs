@@ -1,31 +1,32 @@
-﻿namespace AIdentities.Chat.Services;
+﻿using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
+namespace AIdentities.Chat.Services;
 
-public interface IChatStorage
+public interface ICognitiveChatStorage
 {
    /// <summary>
    /// Gets all stored conversations metadata.
    /// </summary>
    /// <returns>A list of stored conversations metadata.</returns>
-   ValueTask<IEnumerable<ChatMetadata>> GetConversationsAsync();
+   ValueTask<IEnumerable<ConversationMetadata>> GetConversationsAsync();
 
    /// <summary>
    /// Gets all stored conversations metadata for a given AIdentity.
    /// </summary>
    /// <returns>A list of stored conversations metadata held by the given AIdentity.</returns>
-   ValueTask<IEnumerable<ChatMetadata>> GetConversationsByAIdentityAsync(AIdentity aIdentity);
+   ValueTask<IEnumerable<ConversationMetadata>> GetConversationsByAIdentityAsync(AIdentity aIdentity);
 
    /// <summary>
    /// Loads a complete conversation by its id.
    /// </summary>
    /// <param name="conversationId">The conversation id.</param>
    /// <returns>The loaded conversation.</returns>
-   ValueTask<ChatBlock> LoadConversationAsync(Guid conversationId);
+   ValueTask<Conversation> LoadConversationAsync(Guid conversationId);
 
    /// <summary>
    /// Starts a new conversation.
    /// </summary>
    /// <param name="conversation">The conversation to start.</param>
-   ValueTask StartConversationAsync(ChatBlock conversation);
+   ValueTask StartConversationAsync(Conversation conversation);
 
    /// <summary>
    /// Updates a conversation with a new message.
@@ -35,7 +36,7 @@ public interface IChatStorage
    /// If null, the conversation metadata only will be updated.
    /// </param>
    /// <returns>True if the conversation was updated, false otherwise.</returns>
-   ValueTask<bool> UpdateConversationAsync(ChatMetadata conversationMetadata, ChatMessage? message);
+   ValueTask<bool> UpdateConversationAsync(ConversationMetadata conversationMetadata, ConversationMessage? message);
 
    /// <summary>
    /// Deletes a conversation.
@@ -50,5 +51,5 @@ public interface IChatStorage
    /// <param name="conversationMetadata">The conversation metadata.</param>
    /// <param name="message">The message to delete.</param>
    /// <returns>True if the message was deleted, false otherwise.</returns>
-   ValueTask<bool> DeleteMessageAsync(ChatMetadata conversationMetadata, ChatMessage message);
+   ValueTask<bool> DeleteMessageAsync(ConversationMetadata conversationMetadata, ConversationMessage message);
 }

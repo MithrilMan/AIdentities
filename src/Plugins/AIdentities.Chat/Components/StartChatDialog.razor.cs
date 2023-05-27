@@ -1,6 +1,6 @@
 ﻿namespace AIdentities.Chat.Components;
 
-public partial class StartConversationDialog : ComponentBase
+public partial class StartChatDialog : ComponentBase
 {
    [Inject] public IChatStorage ChatStorage { get; set; } = default!;
    [Inject] public INotificationService NotificationService { get; set; } = default!;
@@ -21,15 +21,12 @@ public partial class StartConversationDialog : ComponentBase
          return;
       }
 
-      var conversation = new Conversation()
+      var conversation = new ChatBlock();
+      conversation.Metadata = new()
       {
-         Metadata = new()
-         {
-            Title = "New Conversation"
-         }
+         ConversationId = conversation.Id,
+         Title = "New Conversation"
       };
-
-      conversation.Metadata.ConversationId = conversation.Id;
       conversation.Metadata.AIdentityIds.Add(_state.SelectedAIdentity!.Id);
 
       MudDialog.Close(DialogResult.Ok(conversation));

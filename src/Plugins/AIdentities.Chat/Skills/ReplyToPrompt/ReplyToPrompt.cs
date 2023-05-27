@@ -53,6 +53,7 @@ public partial class ReplyToPrompt : Skill
          {
             new ConversationMessage{
                AuthorId = authorId,
+               AuthorName = aidentity.Name,
                IsAIGenerated = !isAiGenerated,
                Text=prompt.Text
             }

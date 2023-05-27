@@ -1,0 +1,47 @@
+﻿<MudDialog>
+   <DialogContent>
+      <MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0">
+         <MudStack Row="true">
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+               <MudAvatar Size="Size.Medium"><MudImage Src="@_state.SelectedAIdentity?.Image" /></MudAvatar>
+            </MudStack>
+            <MudAutocomplete T="AIdentity" AutoFocus="true" Immediate="true" Variant="Variant.Filled"
+                             @bind-Value="_state.SelectedAIdentity" For="@(() => _state.SelectedAIdentity)"
+                             SearchFunc="@Search" ToStringFunc="@AIdentityConverter"
+                             Placeholder="Select the AIdentity you want to talk with">
+               <ItemTemplate>
+                  <MudStack Row="true" AlignItems="AlignItems.Center">
+                     <MudAvatar Size="Size.Medium"><MudImage Src="@context.Image" /></MudAvatar>
+                     <MudText>@context.Name</MudText>
+                  </MudStack>
+               </ItemTemplate>
+            </MudAutocomplete>
+         </MudStack>
+      </MudForm>
+   </DialogContent>
+
+   <DialogActions>
+      <MudButton OnClick="Cancel">Cancel</MudButton>
+      <MudButton Color="Color.Primary" OnClick="StartConversation" ButtonType="ButtonType.Submit">Start Conversation!</MudButton>
+   </DialogActions>
+</MudDialog>
+
+@code {
+   string AIdentityConverter(AIdentity aIdentity)
+   {
+      return aIdentity?.Name ?? string.Empty;
+   }
+
+   private Task<IEnumerable<AIdentity>> Search(string value)
+   {
+      var allItems = AIdentityProvider.All();
+      if (string.IsNullOrWhiteSpace(value))
+      {
+         return Task.FromResult(allItems);
+      }
+
+      allItems = allItems.Where(i => i.Name?.Contains(value, StringComparison.OrdinalIgnoreCase) ?? false);
+
+      return Task.FromResult(allItems);
+   }
+}

@@ -1,4 +1,5 @@
-﻿using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+﻿using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
+using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 
 namespace AIdentities.Chat.Pages;
 
@@ -15,8 +16,8 @@ public partial class CognitiveChat
       public bool NoConversation => SelectedConversation is null;
 
       public string? Message { get; set; }
-      public ChatMessage? SelectedMessage { get; set; } = default!;
-      public FilteredObservableCollection<ChatMessage> Messages { get; private set; } = default!;
+      public ConversationMessage? SelectedMessage { get; set; } = default!;
+      public FilteredObservableCollection<ConversationMessage> Messages { get; private set; } = default!;
 
       /// <summary>
       /// This is used to prevent the user from sending multiple messages before the first one has been replied to.
@@ -33,7 +34,7 @@ public partial class CognitiveChat
       /// During the streaming, this is used to store the response, and when the streaming is done, it is 
       /// cleared and the response is added to the <see cref="Messages"/> collection.
       /// </summary>
-      public ChatMessage? StreamedResponse { get; set; }
+      public ConversationMessage? StreamedResponse { get; set; }
 
       /// <summary>
       /// Holds the reference to the current Conversational Connector.
@@ -55,10 +56,6 @@ public partial class CognitiveChat
 
       public string PartecipatingAIdentitiesTooltip => string.Join(", ", PartecipatingAIdentities.Select(aidentity => aidentity.Name));
 
-      /// <summary>
-      /// The chat prompt generator used to generate the chat prompts.
-      /// </summary>
-      public IChatPromptGenerator ChatPromptGenerator { get; private set; } = default!;
       public IAIdentityProvider AIdentityProvider { get; private set; } = default!;
 
       /// <summary>
@@ -69,19 +66,17 @@ public partial class CognitiveChat
       public List<Thought> ChatKeeperThoughts { get; } = new();
 
 
-      public void Initialize(Func<IEnumerable<ChatMessage>, ValueTask<IEnumerable<ChatMessage>>> messageFilter, IChatPromptGenerator chatPromptGenerator, IAIdentityProvider aidentityProvider)
+      public void Initialize(Func<IEnumerable<ConversationMessage>, ValueTask<IEnumerable<ConversationMessage>>> messageFilter, IAIdentityProvider aidentityProvider)
       {
          Messages = new(messageFilter);
-         ChatPromptGenerator = chatPromptGenerator;
          AIdentityProvider = aidentityProvider;
          MessageSearchText = null;
       }
 
       public async Task InitializeConversation(Conversation conversation, bool loadMessages = true)
       {
-         ChatPromptGenerator.InitializeConversation(conversation);
          // if the last message is not generated, we need to generate a reply so we enable the "resend" button
-         HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsGenerated == false;
+         HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsAIGenerated == false;
          if (loadMessages)
          {
             await Messages.LoadItemsAsync(conversation.Messages).ConfigureAwait(false);
@@ -100,7 +95,6 @@ public partial class CognitiveChat
          HasMessageGenerationFailed = false;
          await Messages.LoadItemsAsync(null).ConfigureAwait(false);
 
-         ChatPromptGenerator.InitializeConversation(null);
          PartecipatingAIdentities.Clear();
       }
    }

@@ -5,7 +5,7 @@ public interface IChatPromptGenerator
    /// Sets the current conversation to generate a prompt for.
    /// </summary>
    /// <param name="conversation">The conversation to generate a prompt for.</param>
-   void InitializeConversation(Conversation? conversation);
+   void InitializeConversation(ChatBlock? conversation);
 
    /// <summary>
    /// Add a message to the conversation history.

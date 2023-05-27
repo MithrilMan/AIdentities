@@ -89,8 +89,16 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    protected virtual void EnsureAIdentityIsValid()
    {
       if (AIdentity is null) throw new ArgumentNullException(nameof(AIdentity));
-      if (AIdentity.Name is null) throw new ArgumentNullException(nameof(AIdentity.Name));
-      if (AIdentity.Personality is null) throw new ArgumentNullException(nameof(AIdentity.Personality));
+      if (AIdentity.Name is null)
+      {
+         _logger.LogError("The AIdentity {AIdentityId} doesn't have a name.", AIdentity.Id);
+         throw new ArgumentNullException(nameof(AIdentity.Name));
+      }
+      if (AIdentity.Personality is null)
+      {
+         _logger.LogError("The AIdentity {AIdentity} ({AIdentityId}) doesn't have a personality.", AIdentity.Name, AIdentity.Id);
+         throw new ArgumentNullException(nameof(AIdentity.Personality));
+      }
    }
 
    /// <summary>

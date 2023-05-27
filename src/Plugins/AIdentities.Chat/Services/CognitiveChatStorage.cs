@@ -1,14 +1,16 @@
-﻿namespace AIdentities.Chat.Services;
+﻿using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 
-public class ChatStorage : IChatStorage
+namespace AIdentities.Chat.Services;
+
+public class CognitiveChatStorage : ICognitiveChatStorage
 {
-   const string CONVERSATION_POSTFIX = ".conv.json";
-   const string CONVERSATION_MESSAGES_POSTFIX = ".conv.messages";
+   const string CONVERSATION_POSTFIX = ".conversation.json";
+   const string CONVERSATION_MESSAGES_POSTFIX = ".conversation.messages";
 
-   readonly ILogger<ChatStorage> _logger;
+   readonly ILogger<CognitiveChatStorage> _logger;
    readonly IPluginStorage<PluginEntry> _pluginStorage;
 
-   public ChatStorage(ILogger<ChatStorage> logger, IPluginStorage<PluginEntry> pluginStorage)
+   public CognitiveChatStorage(ILogger<CognitiveChatStorage> logger, IPluginStorage<PluginEntry> pluginStorage)
    {
       _logger = logger;
       _pluginStorage = pluginStorage;
@@ -21,11 +23,11 @@ public class ChatStorage : IChatStorage
       return new ValueTask<bool>(true);
    }
 
-   public async ValueTask<IEnumerable<ChatMetadata>> GetConversationsAsync()
+   public async ValueTask<IEnumerable<ConversationMetadata>> GetConversationsAsync()
    {
       var files = await _pluginStorage.ListAsync().ConfigureAwait(false);
 
-      var conversations = new List<ChatMetadata>();
+      var conversations = new List<ConversationMetadata>();
       foreach (var fileName in files.Where(f => f.EndsWith(CONVERSATION_POSTFIX)))
       {
          var conversation = await LoadConversationMetadata(fileName).ConfigureAwait(false);
@@ -34,17 +36,17 @@ public class ChatStorage : IChatStorage
       return conversations;
    }
 
-   public async ValueTask<IEnumerable<ChatMetadata>> GetConversationsByAIdentityAsync(AIdentity aIdentity)
+   public async ValueTask<IEnumerable<ConversationMetadata>> GetConversationsByAIdentityAsync(AIdentity aIdentity)
    {
       var files = await _pluginStorage.ListAsync().ConfigureAwait(false);
 
-      var conversations = new List<ChatMetadata>();
+      var conversations = new List<ConversationMetadata>();
       foreach (var fileName in files)
       {
          if (fileName.EndsWith(CONVERSATION_POSTFIX)) continue;
 
          //search if file contains the AIdentity id
-         var conversation= await LoadConversationMetadata(fileName).ConfigureAwait(false);
+         var conversation = await LoadConversationMetadata(fileName).ConfigureAwait(false);
          if (conversation!.AIdentityIds.Contains(aIdentity.Id))
          {
             conversations.Add(conversation);
@@ -53,16 +55,15 @@ public class ChatStorage : IChatStorage
       return conversations;
    }
 
-   public async ValueTask<ChatBlock> LoadConversationAsync(Guid conversationId)
+   public async ValueTask<Conversation> LoadConversationAsync(Guid conversationId)
    {
       var fileName = $"{conversationId}{CONVERSATION_POSTFIX}";
       var conversationMetadata = await LoadConversationMetadata(fileName).ConfigureAwait(false);
 
-      var conversation = new ChatBlock
+      var conversation = new Conversation
       {
          Id = conversationMetadata.ConversationId,
-         Metadata = conversationMetadata,
-         Messages = new List<ChatMessage>()
+         Metadata = conversationMetadata
       };
 
       var messagesFileName = GetConversationMessagesFileName(conversationId);
@@ -82,8 +83,8 @@ public class ChatStorage : IChatStorage
             {
                continue;
             }
-            var chatMessage = JsonSerializer.Deserialize<ChatMessage>(message);
-            conversation.Messages.Add(chatMessage!);
+            var ConversationMessage = JsonSerializer.Deserialize<ConversationMessage>(message);
+            conversation.AddMessage(ConversationMessage!);
          }
       }
       catch (Exception ex)
@@ -95,9 +96,9 @@ public class ChatStorage : IChatStorage
       return conversation!;
    }
 
-   private async Task<ChatMetadata> LoadConversationMetadata(string fileName)
+   private async Task<ConversationMetadata> LoadConversationMetadata(string fileName)
    {
-      var conversationMetadata = await _pluginStorage.ReadAsJsonAsync<ChatMetadata>(fileName).ConfigureAwait(false)
+      var conversationMetadata = await _pluginStorage.ReadAsJsonAsync<ConversationMetadata>(fileName).ConfigureAwait(false)
             ?? throw new ArgumentException($"Conversation with file name {fileName} not found.");
 
       //if I don't have any AIdentityIds it's because I'm on the old version that had just a single AIdentityId conversation.
@@ -119,7 +120,7 @@ public class ChatStorage : IChatStorage
 
    private static string GetConversationMessagesFileName(Guid conversationId) => $"{conversationId}{CONVERSATION_MESSAGES_POSTFIX}";
 
-   public async ValueTask<bool> UpdateConversationAsync(ChatMetadata conversationMetadata, ChatMessage? message)
+   public async ValueTask<bool> UpdateConversationAsync(ConversationMetadata conversationMetadata, ConversationMessage? message)
    {
       var fileName = $"{conversationMetadata.ConversationId}{CONVERSATION_POSTFIX}";
       conversationMetadata.UpdatedAt = DateTimeOffset.UtcNow;
@@ -146,7 +147,7 @@ public class ChatStorage : IChatStorage
       }
    }
 
-   public async ValueTask<bool> DeleteMessageAsync(ChatMetadata conversationMetadata, ChatMessage message)
+   public async ValueTask<bool> DeleteMessageAsync(ConversationMetadata conversationMetadata, ConversationMessage message)
    {
       var fileName = $"{conversationMetadata.ConversationId}{CONVERSATION_POSTFIX}";
       conversationMetadata.UpdatedAt = DateTimeOffset.UtcNow;
@@ -179,7 +180,7 @@ public class ChatStorage : IChatStorage
       return deletedMessage > 0;
    }
 
-   public ValueTask StartConversationAsync(ChatBlock conversation)
+   public ValueTask StartConversationAsync(Conversation conversation)
    {
       if (conversation is null or { Metadata: null })
       {
@@ -202,7 +203,7 @@ public class ChatStorage : IChatStorage
    }
 
 
-   public record ConversationMetadataOld : ChatMetadata
+   public record ConversationMetadataOld : ConversationMetadata
    {
       public Guid? AIdentityId { get; set; }
    }

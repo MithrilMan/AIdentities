@@ -18,7 +18,7 @@ public partial class Chat : AppPage<Chat>
    [Inject] private IChatStorage ChatStorage { get; set; } = null!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
    [Inject] private IChatPromptGenerator ChatPromptGenerator { get; set; } = null!;
-   [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
+   [Inject] private IChatExporter ConversationExporter { get; set; } = null!;
    [Inject] private IPluginSettingsManager PluginSettingsManager { get; set; } = null!;
    [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
 
@@ -187,7 +187,7 @@ public partial class Chat : AppPage<Chat>
          return;
       }
 
-      Conversation conversation;
+      ChatBlock conversation;
 
       try
       {
