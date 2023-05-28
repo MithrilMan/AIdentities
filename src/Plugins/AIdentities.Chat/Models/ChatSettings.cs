@@ -2,6 +2,7 @@
 
 public class ChatSettings : IPluginSettings
 {
+
    public string? DefaultConnector { get; set; }
 
    /// <summary>
@@ -10,6 +11,11 @@ public class ChatSettings : IPluginSettings
    /// Not every Text To Speech connector supports voice selection.
    /// </summary>
    public bool EnableTextToSpeech { get; set; }
+
+   /// <summary>
+   /// If TextToSpeech is enabled, this property will determine when the text to speech will be used.
+   /// </summary>
+   public TextToSpeechMode TextToSpeechMode { get; set; }
 
    /// <summary>
    /// The default text to speech connector to use when no connector is specified in the AIdentity settings.

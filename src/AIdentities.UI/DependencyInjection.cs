@@ -66,6 +66,7 @@ public static class DependencyInjection
       // JS Interop services
       services
          .AddScoped<IScrollService, ScrollService>()
+         .AddScoped<IPlayAudioStream, PlayAudioStream>()
          .AddScoped<IDownloadService, DownloadService>();
 
       startupLogger = RegisterPlugins(services, webHostEnvironment, out pluginStaticWebProvider);

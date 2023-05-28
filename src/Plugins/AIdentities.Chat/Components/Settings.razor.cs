@@ -34,7 +34,8 @@ public partial class Settings : BasePluginSettingsTab<ChatSettings, Settings.Sta
          EnableSkills = _state.EnableSkills,
          EnabledSkills = _state.EnabledSkills.ToList(),
          EnableTextToSpeech = _state.EnableTextToSpeech,
-         DefaultTextToSpeechConnector = _state.DefaultTextToSpeechConnector
+         DefaultTextToSpeechConnector = _state.DefaultTextToSpeechConnector,
+         TextToSpeechMode = _state.TextToSpeechMode
       });
    }
 

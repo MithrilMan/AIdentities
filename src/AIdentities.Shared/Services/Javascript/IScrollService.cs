@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
-
-namespace AIdentities.Shared.Services.Javascript;
+﻿namespace AIdentities.Shared.Services.Javascript;
 
 /// <summary>
 /// Service to scroll elements into view.

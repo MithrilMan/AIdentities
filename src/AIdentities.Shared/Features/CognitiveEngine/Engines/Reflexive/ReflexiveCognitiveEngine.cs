@@ -46,10 +46,11 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
       }
 
 
-      // try to detect a skill that can handle the prompt, excluding the skills that are disabled
-      bool missionHasSkillConstraints = missionContext is { SkillConstraints.Count: > 0 };
-      var availableSkills = missionHasSkillConstraints ? missionContext!.SkillConstraints.Select(s => s.Skill) : EnabledSkills;
 
+      // availableSkills are the skills that are constrained by the missionContext or, if no mission exists, the enabled AIdentity skills
+      var availableSkills = missionContext?.SkillConstraints.Select(s => s.Skill) ?? EnabledSkills;
+
+      // try to detect a skill that can handle the prompt using the available skills
       // if no skills are available, bypass the detection and go straight to the no command detected handler
       if (!availableSkills.Any())
       {
@@ -74,7 +75,7 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
       }
 
       yield return ActionThought($"I detected the skill {detectedSkill}.");
-      if (_skillManager.Get(detectedSkill) is { } skill)
+      if (_skillManager.Get(detectedSkill) is ISkill skill)
       {
          var skillExecutionContext = new SkillExecutionContext(skill, Context, missionContext);
 

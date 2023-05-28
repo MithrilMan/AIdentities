@@ -165,6 +165,14 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       base.Dispose();
    }
 
+
+   /// <summary>
+   /// When a new AIdentity is invited to the conversation, we create a new cognitive engine for it.
+   /// This makes use of event bus to be notified when a new AIdentity is invited to the conversation.
+   /// The event is raised by the <see cref="Skills.InviteFriend.InviteFriend"/>skill.
+   /// </summary>
+   /// <param name="message"></param>
+   /// <returns></returns>
    public async Task HandleAsync(InviteToConversation message)
    {
       var aidentity = message.AIdentity;

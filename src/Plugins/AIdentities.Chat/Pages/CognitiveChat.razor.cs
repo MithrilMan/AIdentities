@@ -24,7 +24,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
    [Inject] private IPluginResourcePath PluginResourcePath { get; set; } = null!;
    [Inject] private IEnumerable<ITextToSpeechConnector> TextToSpeechConnectors { get; set; } = null!;
-   [Inject] private IJSRuntime JSRuntime { get; set; } = null!;
+   [Inject] private IPlayAudioStream PlayAudioStream { get; set; } = null!;
 
    /// <summary>
    /// The mission that will be assigned to the <see cref="_chatKeeper"/> instance.
@@ -399,23 +399,33 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
          if (!_chatSettings.EnableTextToSpeech || _state.TextToSpeechConnector is null) return; //TODO use AIdentity specific TextToSpeechConnector
 
-         try
-         {
-            await _state.TextToSpeechConnector.RequestTextToSpeechAsStreamAsync(
-                  new DefaultTextToSpeechRequest(message.Text ?? ""),
-                  async (stream) =>
-                  {
-                     using var streamRef = new DotNetStreamReference(stream: stream);
-                     await JSRuntime.InvokeVoidAsync("PlayAudioFileStream", streamRef).ConfigureAwait(false);
-                  },
-                  PageCancellationToken
-                  ).ConfigureAwait(false);
-         }
-         catch (Exception ex)
-         {
-            NotificationService.ShowError($"Error while playing audio: {ex.Message}");
-         }
+         await PlayAudio(message).ConfigureAwait(false);
+      }
+   }
 
+   private async Task PlayAudio(ConversationMessage message)
+   {
+      if (_state.TextToSpeechConnector is null)
+      {
+         NotificationService.ShowError("TextToSpeechConnector not available");
+         return;
+      }
+
+      try
+      {
+         await _state.TextToSpeechConnector.RequestTextToSpeechAsStreamAsync(
+               new DefaultTextToSpeechRequest(message.Text ?? ""),
+               async (stream) =>
+               {
+                  using var streamRef = new DotNetStreamReference(stream: stream);
+                  await PlayAudioStream.PlayAudioFileStream(streamRef).ConfigureAwait(false);
+               },
+               PageCancellationToken
+               ).ConfigureAwait(false);
+      }
+      catch (Exception ex)
+      {
+         NotificationService.ShowError($"Error while playing audio: {ex.Message}");
       }
    }
 

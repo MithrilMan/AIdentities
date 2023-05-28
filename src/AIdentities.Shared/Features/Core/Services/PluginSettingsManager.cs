@@ -1,5 +1,5 @@
-﻿using AIdentities.Shared.Features.Core.Abstracts;
-using AIdentities.Shared.Plugins.Storage;
+﻿using System.Collections.Concurrent;
+using AIdentities.Shared.Features.Core.Abstracts;
 
 namespace AIdentities.Shared.Features.Core.Services;
 
@@ -7,7 +7,7 @@ public class PluginSettingsManager : IPluginSettingsManager
 {
    readonly ILogger<PluginSettingsManager> _logger;
    private readonly Dictionary<Type, PluginSettingRegistration> _pluginSettingsRegistrations;
-   private readonly Dictionary<Type, IPluginSettings> _pluginSettings = new();
+   private readonly ConcurrentDictionary<Type, IPluginSettings> _pluginSettings = new();
 
    public PluginSettingsManager(ILogger<PluginSettingsManager> logger, IEnumerable<PluginSettingRegistration> pluginSettingsRegistrations)
    {
@@ -19,7 +19,7 @@ public class PluginSettingsManager : IPluginSettingsManager
 
    public TPluginSettings Get<TPluginSettings>()
       where TPluginSettings : class, IPluginSettings, new()
-      => (TPluginSettings)GetAsync(typeof(TPluginSettings)).Result;
+      => (TPluginSettings)GetAsync(typeof(TPluginSettings)).AsTask().Result;
 
    public async ValueTask<TPluginSettings> GetAsync<TPluginSettings>()
       where TPluginSettings : class, IPluginSettings, new()

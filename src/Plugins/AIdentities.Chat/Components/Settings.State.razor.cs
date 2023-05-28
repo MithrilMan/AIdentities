@@ -12,6 +12,7 @@ public partial class Settings
       public string? DefaultConnector { get; set; } = default!;
       public ICollection<string> EnabledSkills { get; set; } = new HashSet<string>();
       public bool EnableTextToSpeech { get; set; }
+      public TextToSpeechMode TextToSpeechMode { get; set; }
       public string? DefaultTextToSpeechConnector { get; set; } = default!;
       public bool EnableSkills { get; set; }
 
@@ -24,6 +25,7 @@ public partial class Settings
          EnabledSkills = pluginSettings.EnabledSkills.ToHashSet();
          EnableTextToSpeech = pluginSettings.EnableTextToSpeech;
          DefaultTextToSpeechConnector = pluginSettings.DefaultTextToSpeechConnector;
+         TextToSpeechMode = pluginSettings.TextToSpeechMode;
       }
    }
 }
