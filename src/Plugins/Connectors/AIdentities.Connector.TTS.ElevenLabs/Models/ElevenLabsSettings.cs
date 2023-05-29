@@ -4,11 +4,12 @@ public record ElevenLabsSettings : IPluginSettings
 {
    public const bool DEFAULT_ENABLED = true;
    public const string DEFAULT_TEXT_TO_SPEECH_MODEL = "eleven_multilingual_v1";
-   public const string DEFAULT_TEXT_TO_SPEECH_ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech/";
+   public const string DEFAULT_API_ENDPOINT = "https://api.elevenlabs.io/v1/";
    public const string DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
    public const int DEFAULT_TIMEOUT = 30000;
    public const float DEFAULT_VOICE_STABILITY = 0.4f;
    public const float DEFAULT_VOICE_SIMILARITY_BOOST = 0.75f;
+   public const StreamingLatencyOptimization DEFAULT_STREAMING_LATENCY_OPTIMIZATION = StreamingLatencyOptimization.Default;
 
    /// <summary>
    /// Enable or disable the ElevenLabs API.
@@ -18,7 +19,7 @@ public record ElevenLabsSettings : IPluginSettings
    /// <summary>
    /// ElevenLabs API Chat Endpoint.
    /// </summary>
-   public Uri TextToSpeechEndpoint { get; set; } = new Uri(DEFAULT_TEXT_TO_SPEECH_ENDPOINT);
+   public Uri ApiEndpoint { get; set; } = new Uri(DEFAULT_API_ENDPOINT);
 
    /// <summary>
    /// The default model to use if no model has been specified in the request.
@@ -40,6 +41,8 @@ public record ElevenLabsSettings : IPluginSettings
    /// </summary>
    public int Timeout { get; set; } = DEFAULT_TIMEOUT;
 
+   public StreamingLatencyOptimization StreamingLatencyOptimization { get; set; } = DEFAULT_STREAMING_LATENCY_OPTIMIZATION;
+
    /// <summary>
    /// The stability determines how stable the voice is and the randomness of each new generation.
    /// Lowering this slider introduces a broader emotional range for the character (also influenced
@@ -56,4 +59,11 @@ public record ElevenLabsSettings : IPluginSettings
    /// or background noise when trying to mimic the voice if those were present in the original recording.
    /// </summary>
    public float VoiceSimilarityBoost { get; set; } = DEFAULT_VOICE_SIMILARITY_BOOST;
+
+
+   /// <summary>
+   /// Caches the available voices from the API.
+   /// This property isn't actively used by the plugin, but is used by the UI to display the available voices.
+   /// </summary>
+   public List<GetVoicesResponse.Voice>? AvailableVoices { get; set; }
 }

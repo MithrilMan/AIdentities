@@ -29,7 +29,7 @@ public static class DependencyInjection
       services
          .AddScoped<ISkillManager, SkillManager>();
 
-      services.AddScoped<IDefaultConnectors, DefaultConnectors>();
+      services.AddScoped(typeof(IConnectorsManager<>), typeof(ConnectorsManager<>));
 
       RegisterCogntiveEngines(services);
 

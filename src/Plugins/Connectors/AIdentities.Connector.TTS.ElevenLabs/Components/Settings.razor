@@ -1,34 +1,51 @@
 @inherits BasePluginSettingsTab<ElevenLabsSettings, Settings.State>
 
 <MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix overflow-y-auto gap-2">
-   <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-2">
-      <MudCard>
-         <MudSwitchM3 @bind-Checked="_state.Enabled" Label="Enabled" For="()=>_state.Enabled" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.TextToSpeechEndpoint" Label="Text to Speech Endpoint" Variant="Variant.Text" For="()=>_state.TextToSpeechEndpoint" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.DefaultTextToSpeechModel" Label="Default Text to Speech Model Id" Variant="Variant.Text" For="()=>_state.DefaultTextToSpeechModel" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.DefaultVoiceId" Label="Default Voice Id" Variant="Variant.Text" For="()=>_state.DefaultVoiceId" />
-      </MudCard>
-      <MudCard>
-         <MudPasswordField @bind-Value="_state.ApiKey" Label="API Key" Variant="Variant.Text" For="()=>_state.ApiKey" />
-      </MudCard>
-      <MudCard>
-         <MudNumericField @bind-Value="_state.Timeout" Label="Timeout" Variant="Variant.Text" For="()=>_state.Timeout" />
-      </MudCard>
-      <MudCard>
-         <MudText>Default Voice Settings</MudText>
-         <MudStack Row="true">
-            <MudSlider Min="0f" Max="1f" @bind-Value="_state.VoiceStability" ValueLabel="true" Size="Size.Medium"
-                       Immediate="true" Variant="Variant.Filled" Step="0.05f">Stability: @_state.VoiceStability</MudSlider>
+   <PluginSettingsSection Title="ElevenLabs API" TooltipText="ElevenLabs Text to Speech API configuration"
+                          CanBeDisabled="true" @bind-IsEnabled="_state.Enabled">
+      <MudText Typo="Typo.h6" Color="Color.Primary">End Point</MudText>
+      <MudTextField @bind-Value="_state.ApiEndpoint" Variant="Variant.Text" For="()=>_state.ApiEndpoint" Label="Text to Speech Endpoint" />
+      <MudPasswordField @bind-Value="_state.ApiKey" Label="API Key" Variant="Variant.Text" For="()=>_state.ApiKey" />
+      <MudComboBox Label="Latency Optimization" @bind-Value="_state.StreamingLatencyOptimization">
+         @foreach (var value in Enum.GetValues<StreamingLatencyOptimization>())
+         {
+            <MudComboBoxItem Value="@value" Text="@value.ToString()" />
+         }
+      </MudComboBox>
+      <MudNumericField @bind-Value="_state.Timeout" Label="Timeout" Variant="Variant.Text" For="()=>_state.Timeout" />
 
-            <MudSlider Min="0f" Max="1f" @bind-Value="_state.VoiceSimilarityBoost" ValueLabel="true" Size="Size.Medium"
-                       Immediate="true" Variant="Variant.Filled" Step="0.05f">Similarity Boost: @_state.VoiceSimilarityBoost</MudSlider>
-         </MudStack>
-      </MudCard>
-   </MudPaper>
+      <MudText Typo="Typo.h6" Color="Color.Primary">Default Parameters</MudText>
+      <MudTextField @bind-Value="_state.DefaultTextToSpeechModel" Label="Default Text to Speech Model Id" Variant="Variant.Text" For="()=>_state.DefaultTextToSpeechModel" />
+
+      <MudStack Row="true" AlignItems="AlignItems.Center">
+         <MudIconButton Title="Refresh the voice list" Icon="@Icons.Material.Filled.Refresh" Variant="Variant.Filled" OnClick="RefreshAvailableVoices" />
+         <MudComboBox @bind-Value="_state.DefaultVoiceId" Label="Default Voice Id" Variant="Variant.Text" For="()=>_state.DefaultVoiceId">
+            @foreach (var voice in _state.AvailableVoices ?? Enumerable.Empty<GetVoicesResponse.Voice>())
+            {
+               <MudComboBoxItem Value="@voice.Id" Text="@voice.Name">@voice.Name cavolo</MudComboBoxItem>
+            }
+         </MudComboBox>
+      </MudStack>
+
+      <MudText Typo="Typo.h6" Color="Color.Primary">Default Voice Settings</MudText>
+      <MudStack Row="true">
+         <MudSlider Min="0f" Max="1f" @bind-Value="_state.VoiceStability" ValueLabel="true" Size="Size.Medium"
+                    Immediate="true" Variant="Variant.Filled" Step="0.05f">Stability: @_state.VoiceStability</MudSlider>
+
+         <MudSlider Min="0f" Max="1f" @bind-Value="_state.VoiceSimilarityBoost" ValueLabel="true" Size="Size.Medium"
+                    Immediate="true" Variant="Variant.Filled" Step="0.05f">Similarity Boost: @_state.VoiceSimilarityBoost</MudSlider>
+      </MudStack>
+   </PluginSettingsSection>
+   <PluginSettingsSection Title="Try the voice" TooltipText="Try the voice by using current settings.">
+      <MudStack Row="true">
+         <MudButton StartIcon="@Icons.Material.Filled.Speaker" Color="Color.Success" Variant="Variant.Filled" OnClick="TryVoice">
+            Try the voice
+         </MudButton>
+         <MudText Typo="Typo.subtitle2">
+            <p>If you try the voice, current settings will be saved.</p>
+            <p>Testing a voice costs credits, so use it wisely.</p>
+         </MudText>
+         <MudTextField @bind-Value="_state.TestingText" Label="Message to speech" Placeholder="Type a text to speech with current settings."></MudTextField>
+      </MudStack>
+   </PluginSettingsSection>
 </MudForm>

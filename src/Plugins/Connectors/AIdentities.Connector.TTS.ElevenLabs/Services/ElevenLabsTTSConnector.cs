@@ -1,14 +1,8 @@
-﻿using System.Diagnostics;
-using System.Net.Http.Headers;
+﻿using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using AIdentities.Connector.TTS.ElevenLabs.Models;
-using AIdentities.Connector.TTS.ElevenLabs.Models.API;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 using Microsoft.AspNetCore.Http.Features;
-using Microsoft.JSInterop;
 
 namespace AIdentities.Connector.TTS.ElevenLabs.Services;
 public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
@@ -24,17 +18,18 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
    readonly ILogger<ElevenLabsTTSConnector> _logger;
    readonly IPluginSettingsManager _settingsManager;
 
-   public bool Enabled => _settingsManager.Get<ElevenLabsSettings>().Enabled;
+   public bool Enabled => _settings.Enabled;
    public string Name => NAME;
    public string Description => DESCRIPTION;
    public IFeatureCollection Features => new FeatureCollection();
 
-   protected Uri EndPoint => _settingsManager.Get<ElevenLabsSettings>().TextToSpeechEndpoint;
-   protected string DefaultModel => _settingsManager.Get<ElevenLabsSettings>().DefaultTextToSpeechModel;
+   protected Uri EndPoint => _endPoint;
+   protected string DefaultModel => _settings.DefaultTextToSpeechModel;
 
    private HttpClient _client = default!;
    private readonly JsonSerializerOptions _serializerOptions;
    private ElevenLabsSettings _settings = default!;
+   private Uri _endPoint = default!;
 
    public ElevenLabsTTSConnector(ILogger<ElevenLabsTTSConnector> logger, IPluginSettingsManager settingsManager)
    {
@@ -67,6 +62,9 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
    {
       _settings = settings;
 
+      // remove the trailing slash if any
+      _endPoint = new Uri(_settings.ApiEndpoint.ToString().TrimEnd('/'));
+
       // we can't modify a HttpClient once it's created, so we need to dispose it and create a new one
       _client?.Dispose();
       _client = new HttpClient
@@ -74,43 +72,32 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
          Timeout = TimeSpan.FromMilliseconds(settings.Timeout)
       };
       _client.DefaultRequestHeaders.Add("xi-api-key", settings.ApiKey);
-      _client.DefaultRequestHeaders.Add("accept", "audio/mpeg");
    }
 
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<ITextToSpeechResponse> RequestTextToSpeechAsync(ITextToSpeechRequest request, CancellationToken cancellationToken)
+   public async Task<byte[]> RequestTextToSpeechAsync(ITextToSpeechRequest request, CancellationToken cancellationToken)
    {
-      //ChatCompletionRequest apiRequest = BuildTTSRequest(request, false);
+      var apiRequest = BuildTTSRequest(request);
 
-      //_logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
-      //var sw = Stopwatch.StartNew();
+      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Text);
 
-      //using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
+      string? voiceId = request.VoiceId;
+      if (string.IsNullOrWhiteSpace(voiceId))
+      {
+         _logger.LogDebug("No voice id specified, using default voice id: {DefaultVoiceId}", _settings.DefaultVoiceId);
+         voiceId = _settings.DefaultVoiceId;
+      }
 
-      //_logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+      var endpoint = $"{EndPoint}/text-to-speech/{voiceId}?optimize_streaming_latency=0";
+      using var response = await _client.PostAsJsonAsync(endpoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
 
-      //if (response.IsSuccessStatusCode)
-      //{
-      //   var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
+      // ensure all is ok
+      response.EnsureSuccessStatusCode();
 
-      //   sw.Stop();
-      //   return new DefaultConversationalResponse
-      //   {
-      //      GeneratedMessage = responseData?.Choices.FirstOrDefault()?.Message?.Content,
-      //      PromptTokens = responseData?.Usage?.PromptTokens,
-      //      TotalTokens = responseData?.Usage?.TotalTokens,
-      //      CompletionTokens = responseData?.Usage?.CompletionTokens,
-      //      ResponseTime = sw.Elapsed
-      //   };
-      //}
-      //else
-      //{
-      //   _logger.LogError("Request failed: {Error}", response.StatusCode);
-      //   throw new Exception($"Request failed with status code {response.StatusCode}");
-      //}
-      throw new NotImplementedException();
+      // read audio stream
+      return await response.Content.ReadAsByteArrayAsync(cancellationToken).ConfigureAwait(false);
    }
 
    public async Task RequestTextToSpeechAsStreamAsync(ITextToSpeechRequest request, Func<Stream, Task> streamConsumer, CancellationToken cancellationToken)
@@ -125,9 +112,14 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
          _logger.LogDebug("No voice id specified, using default voice id: {DefaultVoiceId}", _settings.DefaultVoiceId);
          voiceId = _settings.DefaultVoiceId;
       }
-      //'https://api.elevenlabs.io/v1/text-to-speech/21m00Tcm4TlvDq8ikWAM/stream?optimize_streaming_latency=0'
-      var endpoint = $"{EndPoint}{voiceId}/stream?optimize_streaming_latency=0";
-      using var response = await _client.PostAsJsonAsync(endpoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
+
+      var endpoint = $"{EndPoint}/text-to-speech/{voiceId}/stream?optimize_streaming_latency={(int)_settings.StreamingLatencyOptimization}";
+      var postRequest = new HttpRequestMessage(HttpMethod.Post, endpoint);
+      postRequest.Headers.Accept.Clear();
+      postRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("audio/mpeg"));
+      postRequest.Content = JsonContent.Create(apiRequest, null, _serializerOptions);
+      using var response = await _client.SendAsync(postRequest, cancellationToken).ConfigureAwait(false);
+      //using var response = await _client.PostAsJsonAsync(endpoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
 
       // ensure all is ok
       response.EnsureSuccessStatusCode();
@@ -171,6 +163,26 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
             similarityBoost: similarityBoost ?? _settings.VoiceSimilarityBoost
             )
       };
+   }
+
+   public async Task<GetVoicesResponse?> GetVoices()
+   {
+      var endpoint = $"{EndPoint}/voices";
+      using var response = _client.GetAsync(endpoint).Result;
+      response.EnsureSuccessStatusCode();
+      return await response.Content.ReadFromJsonAsync<GetVoicesResponse>().ConfigureAwait(false);
+   }
+
+   public static async Task<ReadOnlyMemory<byte>> ReadAsStreamAsyncToReadOnlyMemory(Stream stream, CancellationToken cancellationToken)
+   {
+      byte[] buffer = new byte[4096];
+      using var ms = new MemoryStream();
+      int bytesRead;
+      while ((bytesRead = await stream.ReadAsync(buffer, cancellationToken).ConfigureAwait(false)) > 0)
+      {
+         await ms.WriteAsync(buffer.AsMemory(0, bytesRead), cancellationToken).ConfigureAwait(false);
+      }
+      return new ReadOnlyMemory<byte>(ms.ToArray());
    }
 
    public void Dispose()

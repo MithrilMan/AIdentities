@@ -5,28 +5,27 @@ public partial class ReplyToPrompt : Skill
    static readonly JsonSerializerOptions _jsonOptionExample = new() { WriteIndented = true };
 
    readonly ILogger<ReplyToPrompt> _logger;
-   readonly IDefaultConnectors _defaultConnectors;
+   readonly IConnectorsManager<IConversationalConnector> _conversationalConnectors;
    readonly IPluginStorage<PluginEntry> _pluginStorage;
    readonly IAIdentityProvider _aIdentityProvider;
 
    public ReplyToPrompt(ILogger<ReplyToPrompt> logger,
-                             IDefaultConnectors defaultConnectors,
-                             IPluginStorage<PluginEntry> pluginStorage,
-                             IAIdentityProvider aIdentityProvider
-                             )
+                        IConnectorsManager<IConversationalConnector> conversationalConnectors,
+                        IPluginStorage<PluginEntry> pluginStorage,
+                        IAIdentityProvider aIdentityProvider)
    {
       _logger = logger;
-      _defaultConnectors = defaultConnectors;
+      _conversationalConnectors = conversationalConnectors;
       _pluginStorage = pluginStorage;
       _aIdentityProvider = aIdentityProvider;
 
    }
-  
+
    protected override async IAsyncEnumerable<Thought> ExecuteAsync(
       SkillExecutionContext context,
       [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      var connector = _defaultConnectors.DefaultConversationalConnector
+      var connector = _conversationalConnectors.GetFirstEnabled()
          ?? throw new InvalidOperationException("No completion connector is enabled");
 
       var aidentity = context.AIdentity;

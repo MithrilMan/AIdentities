@@ -5,7 +5,13 @@
 /// </summary>
 public interface ITextToSpeechConnector : IConnector
 {
-   Task<ITextToSpeechResponse> RequestTextToSpeechAsync(ITextToSpeechRequest request, CancellationToken cancellationToken);
+   /// <summary>
+   /// Returns the generated audio as a byte array.
+   /// </summary>
+   /// <param name="request">The request to be sent to the connector.</param>
+   /// <param name="cancellationToken">The cancellation token.</param>
+   /// <returns>The audio as a byte array.</returns>
+   Task<byte[]> RequestTextToSpeechAsync(ITextToSpeechRequest request, CancellationToken cancellationToken);
 
    /// <summary>
    /// Returns the audio stream of the text to speech conversion.

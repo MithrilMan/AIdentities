@@ -16,13 +16,15 @@
       </CardHeaderActions>
    </MudCardHeader>
    <MudCardContent Class="py-1">
-      @if (!CanBeDisabled || _isEnabled)
-      {
-         @(EnabledTemplate ?? ChildContent)
-      }
-      else
-      {
-         @DisabledTemplate
-      }
+      <div class="wrapper">
+         @if (!CanBeDisabled || _isEnabled)
+         {
+            @(EnabledTemplate ?? ChildContent)
+         }
+         else
+         {
+            @DisabledTemplate
+         }
+      </div>
    </MudCardContent>
 </MudCard>

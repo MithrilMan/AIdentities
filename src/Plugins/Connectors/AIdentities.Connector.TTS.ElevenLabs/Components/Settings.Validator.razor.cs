@@ -10,7 +10,7 @@ public partial class Settings
       {
          RuleFor(x => x.Enabled).NotNull();
 
-         RuleFor(x => x.TextToSpeechEndpoint)
+         RuleFor(x => x.ApiEndpoint)
             .Must(BeAValidUri)
             .WithMessage("You must provide a valid URI.");
 

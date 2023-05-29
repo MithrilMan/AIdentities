@@ -1,17 +1,16 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using System.Runtime.CompilerServices;
 
 namespace AIdentities.Chat.Skills.IntroduceYourself;
 
 public partial class IntroduceYourself : Skill
 {
    readonly ILogger<IntroduceYourself> _logger;
-   readonly IDefaultConnectors _defaultConnectors;
+   readonly IConnectorsManager<IConversationalConnector> _conversationalConnectors;
 
-   public IntroduceYourself(ILogger<IntroduceYourself> logger, IDefaultConnectors defaultConnectors)
+   public IntroduceYourself(ILogger<IntroduceYourself> logger, IConnectorsManager<IConversationalConnector> conversationalConnectors)
    {
       _logger = logger;
-      _defaultConnectors = defaultConnectors;
+      _conversationalConnectors = conversationalConnectors;
    }
 
    protected override bool ValidateInputs(
@@ -30,7 +29,7 @@ public partial class IntroduceYourself : Skill
    {
       SetPresentation(context, null);
 
-      var connector = _defaultConnectors.DefaultConversationalConnector
+      var connector = _conversationalConnectors.GetFirstEnabled()
          ?? throw new InvalidOperationException("No completion connector is enabled");
 
       var aidentity = context.AIdentity;
