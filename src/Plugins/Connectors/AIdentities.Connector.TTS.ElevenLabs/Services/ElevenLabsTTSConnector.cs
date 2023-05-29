@@ -151,13 +151,13 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
       }
 
       float? stability = null;
-      if (request.CustomOptions.TryGetValue(nameof(ElevenLabsSettings.VoiceSettings.Stability), out object? stabilityvalue))
+      if (request.CustomOptions.TryGetValue(nameof(ElevenLabsSettings.VoiceStability), out object? stabilityvalue))
       {
          stability = stabilityvalue as float?;
       }
 
       float? similarityBoost = null;
-      if (request.CustomOptions.TryGetValue(nameof(ElevenLabsSettings.VoiceSettings.SimilarityBoost), out object? similarityBoostValue))
+      if (request.CustomOptions.TryGetValue(nameof(ElevenLabsSettings.VoiceSimilarityBoost), out object? similarityBoostValue))
       {
          similarityBoost = similarityBoostValue as float?;
       }
@@ -167,8 +167,8 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
          Text = request.Text,
          Model = modelId,
          VoiceSettings = new VoiceSettings(
-            stability: stability ?? _settings.DefaultVoiceSettings.Stability,
-            similarityBoost: similarityBoost ?? _settings.DefaultVoiceSettings.SimilarityBoost
+            stability: stability ?? _settings.VoiceStability,
+            similarityBoost: similarityBoost ?? _settings.VoiceSimilarityBoost
             )
       };
    }

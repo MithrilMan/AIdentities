@@ -1,0 +1,60 @@
+﻿<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix gap-2">
+   <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-2">
+      <MudGrid Spacing="1" Class="">
+         <MudItem xs="12">
+            <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.Center">
+               <MudText Typo="Typo.body1" Class="mr-2">Wizard</MudText>
+               <MudSwitchM3 @bind-Checked="@_state.UseFullPrompt" Color="Color.Primary" />
+               <MudText Typo="Typo.body1" Class="ml-2">Full Prompt</MudText>
+            </MudStack>
+         </MudItem>
+         @if (_state.UseFullPrompt)
+         {
+            <MudItem xs="12">
+               <MudTextField @bind-Value="@_state.FullPrompt" Immediate="true" For="() => _state.FullPrompt"
+                             Label="Full Prompt" Variant="Variant.Filled" Lines="16"
+                             Placeholder="@HELP_FULL_PROMPT" Disabled="!_state.UseFullPrompt" />
+            </MudItem>
+         }
+         else
+         {
+            <MudItem xs="12">
+               <MudTextField @bind-Value="@_state.Background" Immediate="true" For="() => _state.Background"
+                             Label="Background" Variant="Variant.Filled" Lines="7"
+                             Placeholder="@HELP_BACKGROUND" Disabled="_state.UseFullPrompt" />
+            </MudItem>
+
+            <MudItem xs="12">
+               <AIdentityFeatureSection Title="Sample Messages"
+                                        Info="Write an example of a dialog between the bot and the user.">
+                  <MudButton OnClick="@AddExample" Variant="Variant.Filled"
+                             Disabled="_state.ExampleMessages.Count >= MAX_EXAMPLES">Add Example</MudButton>
+                  <MudTextField Style="display: none;" For="@(() => _state.ExampleMessages)" />
+                  <MudDataGrid T="AIdentityUserExchange" Items="@_state.ExampleMessages" EditMode="DataGridEditMode.Cell"
+                               ReadOnly="false" SortMode="SortMode.None"
+                               Bordered="true" Dense="true" Striped="true"
+                               CommittedItemChanges="(()=> _validator.Validate(_state))">
+                     <Columns>
+                        <PropertyColumn Property="x => x!.UserMessage" Title="User Message" />
+                        <PropertyColumn Property="x => x!.AIdentityMessage" Title="AIdentity Message" />
+                        <TemplateColumn CellStyle="width:50px">
+                           <CellTemplate>
+                              <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error" Size="@Size.Medium"
+                                             OnClick="()=>_state.ExampleMessages.Remove(context.Item!)" />
+                           </CellTemplate>
+                           <EditTemplate>
+                              <MudIconButton Icon="@Icons.Material.Outlined.Delete" Color="Color.Error" Size="@Size.Medium"
+                                             OnClick="()=>_state.ExampleMessages.Remove(context.Item!)" />
+                           </EditTemplate>
+                        </TemplateColumn>
+                     </Columns>
+                     <NoRecordsContent>
+                        <MudText Typo="Typo.body1">No examples yet.</MudText>
+                     </NoRecordsContent>
+                  </MudDataGrid>
+               </AIdentityFeatureSection>
+            </MudItem>
+         }
+      </MudGrid>
+   </MudPaper>
+</MudForm>

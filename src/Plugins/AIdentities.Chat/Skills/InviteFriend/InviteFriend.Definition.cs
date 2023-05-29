@@ -24,7 +24,7 @@ namespace AIdentities.Chat.Skills.InviteFriend;
 [SkillExample(Example = """
    UserRequest: Hey let's invite a friend, I'm feeling lonely
    Reasoning: The user is asking to invite another friend to the chat because he feels lonely.
-   JSON: { "WhoToInvite": "Anyone that can alleviate the loneliness." }
+   JSON: { "CharacteristicToHave": "Anyone that can alleviate the loneliness." }
    """)]
 [SkillExample(Example = """
    UserRequest: I'd like to talk with Ciccio Pasticcio

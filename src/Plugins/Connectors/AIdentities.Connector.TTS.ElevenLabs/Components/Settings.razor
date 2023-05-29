@@ -23,11 +23,11 @@
       <MudCard>
          <MudText>Default Voice Settings</MudText>
          <MudStack Row="true">
-            <MudSlider Min="0f" Max="1f" @bind-Value="_state.DefaultVoiceSettings.Stability" ValueLabel="true" Size="Size.Medium"
-                       Immediate="true" Variant="Variant.Filled" Step="0.05f">Stability: @_state.DefaultVoiceSettings.Stability</MudSlider>
+            <MudSlider Min="0f" Max="1f" @bind-Value="_state.VoiceStability" ValueLabel="true" Size="Size.Medium"
+                       Immediate="true" Variant="Variant.Filled" Step="0.05f">Stability: @_state.VoiceStability</MudSlider>
 
-            <MudSlider Min="0f" Max="1f" @bind-Value="_state.DefaultVoiceSettings.SimilarityBoost" ValueLabel="true" Size="Size.Medium"
-                       Immediate="true" Variant="Variant.Filled" Step="0.05f">Similarity Boost: @_state.DefaultVoiceSettings.SimilarityBoost</MudSlider>
+            <MudSlider Min="0f" Max="1f" @bind-Value="_state.VoiceSimilarityBoost" ValueLabel="true" Size="Size.Medium"
+                       Immediate="true" Variant="Variant.Filled" Step="0.05f">Similarity Boost: @_state.VoiceSimilarityBoost</MudSlider>
          </MudStack>
       </MudCard>
    </MudPaper>

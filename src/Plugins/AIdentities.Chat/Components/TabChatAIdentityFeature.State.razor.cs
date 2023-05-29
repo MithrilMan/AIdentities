@@ -1,5 +1,5 @@
 ﻿namespace AIdentities.Chat.Components;
-public partial class TabAIdentityFeatureChat
+public partial class TabChatAIdentityFeature
 {
    class State
    {
@@ -7,7 +7,8 @@ public partial class TabAIdentityFeatureChat
 
       public string? Background { get; set; }
       public string? FullPrompt { get; set; }
-      public string? FirstMessage { get; set; }
+
+      public List<AIdentityUserExchange> ExampleMessages { get; set; } = new();
 
       public bool UseFullPrompt { get; set; } = false;
 
@@ -15,8 +16,8 @@ public partial class TabAIdentityFeatureChat
       {
          Background = chatFeature?.Background;
          FullPrompt = chatFeature?.FullPrompt;
-         FirstMessage = chatFeature?.FirstMessage;
          UseFullPrompt = chatFeature?.UseFullPrompt ?? false;
+         ExampleMessages = chatFeature?.ExampleMessages ?? new();
       }
    }
 

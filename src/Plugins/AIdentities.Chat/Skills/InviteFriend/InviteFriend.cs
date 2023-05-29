@@ -25,14 +25,16 @@ public partial class InviteFriend : Skill
    {
       SetFriendInvited(context, null);
 
-      var whoToInvite = WhoToInvite(context);
-      if (whoToInvite is not null)
+      var characteristicsToHave = CharacteristicToHave(context);
+      if (characteristicsToHave != null)
       {
-         var aidentity = _aIdentityProvider.Get(whoToInvite);
+         var aidentity = _aIdentityProvider.
+            All()
+            .FirstOrDefault(a => a.Personality?.Contains(characteristicsToHave, StringComparison.InvariantCultureIgnoreCase) ?? false);
 
          if (aidentity is null)
          {
-            yield return context.InvalidArgumentsThought($"Cannot find the AIdentity named {whoToInvite}");
+            yield return context.InvalidArgumentsThought($"Cannot find the AIdentity with characteristics {characteristicsToHave}");
             yield break;
          }
 
@@ -40,6 +42,25 @@ public partial class InviteFriend : Skill
          yield return context.IntrospectiveThought($"I've inserted the AIdentity to invite in the cognitive key {OUT_FRIEND_INVITED}");
 
          await _eventBus.PublishAsync(new InviteToConversation(aidentity)).ConfigureAwait(false);
+      }
+      else
+      {
+         var whoToInvite = WhoToInvite(context);
+         if (whoToInvite is not null)
+         {
+            var aidentity = _aIdentityProvider.Get(whoToInvite);
+
+            if (aidentity is null)
+            {
+               yield return context.InvalidArgumentsThought($"Cannot find the AIdentity named {whoToInvite}");
+               yield break;
+            }
+
+            SetFriendInvited(context, aidentity);
+            yield return context.IntrospectiveThought($"I've inserted the AIdentity to invite in the cognitive key {OUT_FRIEND_INVITED}");
+
+            await _eventBus.PublishAsync(new InviteToConversation(aidentity)).ConfigureAwait(false);
+         }
       }
    }
 }

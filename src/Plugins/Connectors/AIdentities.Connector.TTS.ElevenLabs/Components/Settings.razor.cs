@@ -1,6 +1,4 @@
-﻿using AIdentities.Connector.TTS.ElevenLabs.Models;
-using AIdentities.Shared.Features.Core.Components;
-using MudBlazor;
+﻿using AIdentities.Shared.Features.Core.Components;
 
 namespace AIdentities.Connector.TTS.ElevenLabs.Components;
 public partial class Settings : BasePluginSettingsTab<ElevenLabsSettings, Settings.State>
@@ -23,7 +21,9 @@ public partial class Settings : BasePluginSettingsTab<ElevenLabsSettings, Settin
          Enabled = _state.Enabled ?? ElevenLabsSettings.DEFAULT_ENABLED,
          TextToSpeechEndpoint = new Uri(_state.TextToSpeechEndpoint ?? ElevenLabsSettings.DEFAULT_TEXT_TO_SPEECH_ENDPOINT),
          Timeout = _state.Timeout ?? ElevenLabsSettings.DEFAULT_TIMEOUT,
-         DefaultVoiceSettings = _state.DefaultVoiceSettings with { }
+
+         VoiceStability = _state.VoiceStability ?? ElevenLabsSettings.DEFAULT_VOICE_STABILITY,
+         VoiceSimilarityBoost = _state.VoiceSimilarityBoost ?? ElevenLabsSettings.DEFAULT_VOICE_SIMILARITY_BOOST,
       });
    }
 }

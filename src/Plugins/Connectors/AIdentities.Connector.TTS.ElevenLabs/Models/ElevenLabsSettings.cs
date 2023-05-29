@@ -7,6 +7,8 @@ public record ElevenLabsSettings : IPluginSettings
    public const string DEFAULT_TEXT_TO_SPEECH_ENDPOINT = "https://api.elevenlabs.io/v1/text-to-speech/";
    public const string DEFAULT_VOICE_ID = "21m00Tcm4TlvDq8ikWAM";
    public const int DEFAULT_TIMEOUT = 30000;
+   public const float DEFAULT_VOICE_STABILITY = 0.4f;
+   public const float DEFAULT_VOICE_SIMILARITY_BOOST = 0.75f;
 
    /// <summary>
    /// Enable or disable the ElevenLabs API.
@@ -39,19 +41,19 @@ public record ElevenLabsSettings : IPluginSettings
    public int Timeout { get; set; } = DEFAULT_TIMEOUT;
 
    /// <summary>
-   /// Default Voice Settings used when no voice settings are specified in the request.
+   /// The stability determines how stable the voice is and the randomness of each new generation.
+   /// Lowering this slider introduces a broader emotional range for the character (also influenced
+   /// by the original voice itself).
+   /// Setting the slider too low may result in odd performances that are overly random and cause the 
+   /// character to speak too quickly.
+   /// On the other hand, setting it too high can lead to a monotonous voice with limited emotion.
    /// </summary>
-   public VoiceSettings DefaultVoiceSettings { get; set; } = new();
+   public float VoiceStability { get; set; } = DEFAULT_VOICE_STABILITY;
 
    /// <summary>
-   /// Default Voice Settings used when no voice settings are specified in the request.
+   /// The similarity dictates how closely the AI should adhere to the original voice when attempting to replicate it.
+   /// If the original audio is of poor quality and the similarity slider is set too high, the AI may reproduce artefacts 
+   /// or background noise when trying to mimic the voice if those were present in the original recording.
    /// </summary>
-   public record VoiceSettings
-   {
-      const float DEFAULT_STABILITY = 0.5f;
-      const float DEFAULT_SIMILARITY_BOOST = 0.5f;
-
-      public float Stability { get; set; } = DEFAULT_STABILITY;
-      public float SimilarityBoost { get; set; } = DEFAULT_SIMILARITY_BOOST;
-   }
+   public float VoiceSimilarityBoost { get; set; } = DEFAULT_VOICE_SIMILARITY_BOOST;
 }

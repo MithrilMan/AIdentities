@@ -1,7 +1,5 @@
-﻿using System.Runtime.CompilerServices;
-using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
+﻿namespace AIdentities.Chat.Skills.ReplyToPrompt;
 
-namespace AIdentities.Chat.Skills.ReplyToPrompt;
 public partial class ReplyToPrompt : Skill
 {
    static readonly JsonSerializerOptions _jsonOptionExample = new() { WriteIndented = true };

@@ -198,19 +198,22 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
          await ScrollToEndOfMessageList().ConfigureAwait(false);
 
-         _state.IsWaitingReply = true;
-         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
          await HandlePrompt(message).ConfigureAwait(false);
-         _state.IsWaitingReply = false;
       }
    }
 
-   private Task HandlePrompt(ConversationMessage message)
+   private async Task HandlePrompt(ConversationMessage message)
    {
-      return HandleThoughts(CognitiveChatMission.TalkToMissionRunnerAsync(
+      _state.IsWaitingReply = true;
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+
+      await HandleThoughts(CognitiveChatMission.TalkToMissionRunnerAsync(
          prompt: new UserPrompt(Guid.Empty, message.Text ?? ""), // TODO handle the user id
          cancellationToken: _state.MessageGenerationCancellationTokenSource.Token
-         ));
+         )).ConfigureAwait(false);
+
+      _state.IsWaitingReply = false;
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
    }
 
    private async Task ScrollToEndOfMessageList()
@@ -294,6 +297,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    void StopMessageGeneration()
    {
       _state.MessageGenerationCancellationTokenSource.Cancel();
+      _state.IsWaitingReply = false;
       _state.MessageGenerationCancellationTokenSource = new CancellationTokenSource();
    }
 

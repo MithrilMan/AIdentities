@@ -1,7 +1,4 @@
-﻿using AIdentities.Connector.TTS.ElevenLabs.Models;
-using AIdentities.Connector.TTS.ElevenLabs.Models.API;
-
-namespace AIdentities.Connector.TTS.ElevenLabs.Components;
+﻿namespace AIdentities.Connector.TTS.ElevenLabs.Components;
 
 public partial class Settings
 {
@@ -14,7 +11,8 @@ public partial class Settings
       public string? ApiKey { get; set; } = default!;
       public int? Timeout { get; set; }
 
-      public ElevenLabsSettings.VoiceSettings DefaultVoiceSettings { get; set; } = new();
+      public float? VoiceStability { get; set; }
+      public float? VoiceSimilarityBoost { get; set; }
 
       public override void SetFormFields(ElevenLabsSettings pluginSettings)
       {
@@ -26,7 +24,8 @@ public partial class Settings
          TextToSpeechEndpoint = pluginSettings.TextToSpeechEndpoint?.ToString();
          Timeout = pluginSettings.Timeout;
 
-         DefaultVoiceSettings = pluginSettings.DefaultVoiceSettings with { };
+         VoiceStability = pluginSettings.VoiceStability;
+         VoiceSimilarityBoost = pluginSettings.VoiceSimilarityBoost;
       }
    }
 }

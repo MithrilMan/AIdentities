@@ -26,7 +26,7 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
 
 
       // Register the AIdentity feature to expose an editor in the AIdentity management page.
-      RegisterAIdentityFeature<AIdentityChatFeature, TabAIdentityFeatureChat>("Chat");
+      RegisterAIdentityFeature<AIdentityChatFeature, TabChatAIdentityFeature>("Chat");
 
       RegisterAIdentitySafetyChecker<ChatAIdentitySafetyChecker>();
 

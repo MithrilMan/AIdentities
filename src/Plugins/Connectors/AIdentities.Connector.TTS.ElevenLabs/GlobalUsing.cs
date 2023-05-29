@@ -1,8 +1,15 @@
 ﻿global using System.Text.Json;
 global using System.Text.Json.Serialization;
+global using AIdentities.Connector.TTS.ElevenLabs.Models;
+global using AIdentities.Connector.TTS.ElevenLabs.Models.API;
+global using AIdentities.Shared.Features.AIdentities.Abstracts;
+global using AIdentities.Shared.Features.AIdentities.Services;
 global using AIdentities.Shared.Features.Core.Abstracts;
 global using AIdentities.Shared.Plugins;
-global using AIdentities.Shared.Plugins.Connectors.Conversational;
+global using AIdentities.Shared.Services;
+global using AIdentities.Shared.Validation;
+global using Microsoft.AspNetCore.Components;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
+global using MudBlazor;

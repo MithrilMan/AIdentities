@@ -1,14 +1,14 @@
 ﻿namespace AIdentities.Chat.Components;
-public partial class TabAIdentityFeatureChat : IAIdentityFeatureTab<AIdentityChatFeature>
+public partial class TabChatAIdentityFeature : IAIdentityFeatureTab<AIdentityChatFeature>
 {
+   const int MAX_EXAMPLES = 5;
+
    const string HELP_BACKGROUND = @"AIdentity's background.
 You can for example specify where the AIdentity is from, or what it does for a living.";
 
    const string HELP_FULL_PROMPT = @"The full prompt passed to the LLM to start the conversation.
 When specified, the LLM will use this prompt to start the conversation.
 ";
-   const string HELP_FIRST_MESSAGE = @"The first message sent by the AIdentity when a new conversation starts.
-It has no impact on how it responds, It's purely cosmetic.";
 
    [Inject] protected INotificationService NotificationService { get; set; } = default!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
@@ -46,8 +46,8 @@ It has no impact on how it responds, It's purely cosmetic.";
       {
          Background = _state.Background,
          FullPrompt = _state.FullPrompt!,
-         FirstMessage = _state.FirstMessage,
-         UseFullPrompt = _state.UseFullPrompt
+         UseFullPrompt = _state.UseFullPrompt,
+         ExampleMessages = _state.ExampleMessages,
       };
    }
 
@@ -62,5 +62,10 @@ It has no impact on how it responds, It's purely cosmetic.";
       var result = await SaveAsync().ConfigureAwait(false);
       await InvokeAsync(StateHasChanged).ConfigureAwait(false);
       return result;
+   }
+
+   void AddExample()
+   {
+      _state.ExampleMessages.Add(new AIdentityUserExchange());
    }
 }
