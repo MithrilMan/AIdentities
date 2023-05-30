@@ -103,7 +103,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       Context.CurrentConversation = conversation;
       Context.PartecipatingAIdentities.Clear();
 
-      foreach (var aidentityId in conversation.Metadata.AIdentityIds)
+      foreach (var aidentityId in conversation.AIdentityIds)
       {
          var aidentity = _aIdentityProvider.Get(aidentityId);
          if (aidentity is null)

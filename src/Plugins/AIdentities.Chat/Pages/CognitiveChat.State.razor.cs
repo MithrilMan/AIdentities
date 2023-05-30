@@ -9,7 +9,7 @@ public partial class CognitiveChat
    {
       public string? MessageSearchText { get; set; }
 
-      public ConversationMetadata? SelectedConversation { get; set; }
+      public Conversation? SelectedConversation { get; set; }
       /// <summary>
       /// True if no conversation is selected.
       /// </summary>
@@ -75,7 +75,7 @@ public partial class CognitiveChat
 
       public async Task InitializeConversation(Conversation conversation, bool loadMessages = true)
       {
-         SelectedConversation = conversation.Metadata;
+         SelectedConversation = conversation;
          // if the last message is not generated, we need to generate a reply so we enable the "resend" button
          HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsAIGenerated == false;
          if (loadMessages)
@@ -83,7 +83,7 @@ public partial class CognitiveChat
             await Messages.LoadItemsAsync(conversation.Messages).ConfigureAwait(false);
          }
 
-         PartecipatingAIdentities = conversation.Metadata.AIdentityIds
+         PartecipatingAIdentities = conversation.AIdentityIds
             .Select(AIdentityProvider.Get)
             .Where(aidentity => aidentity is not null)
             .Select(aidentity => aidentity!)

@@ -1,4 +1,6 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using AIdentities.Chat.Persistence.EntityConfigurations;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 
 namespace AIdentities.Chat.Persistence;
 public class ConversationDbContext : DbContext
@@ -13,8 +15,7 @@ public class ConversationDbContext : DbContext
    }
 
    public DbSet<Conversation> Conversations { get; set; }
-   public DbSet<ConversationMessage> ConversationMessages { get; set; }
-   public DbSet<ConversationMetadata> ConversationMetadata { get; set; }
+   //public DbSet<ConversationMessage> ConversationMessages { get; set; }
 
    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
    {
@@ -23,6 +24,7 @@ public class ConversationDbContext : DbContext
 
    protected override void OnModelCreating(ModelBuilder modelBuilder)
    {
+      base.OnModelCreating(modelBuilder);
       //modelBuilder.Entity<Conversation>()
       //   .HasOne<ConversationMetadata>(c => c.Metadata)
       //   .WithOne<Conversation>(c => c.ConversationId)
@@ -34,32 +36,12 @@ public class ConversationDbContext : DbContext
 
       //    );
 
+      modelBuilder.ApplyConfiguration(new ConversationTypeConfiguration());
+      modelBuilder.ApplyConfiguration(new ConversationMessageTypeConfiguration());
+   }
 
-
-      modelBuilder.Entity<ConversationMetadata>().HasKey(x => x.ConversationId);
-
-      modelBuilder.Entity<ConversationMetadata>()
-         .Property(e => e.AIdentityIds)
-         .HasConversion(
-               v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-               v => JsonSerializer.Deserialize<ICollection<Guid>>(v, (JsonSerializerOptions?)null)!
-         );
-
-      modelBuilder.Entity<ConversationMetadata>()
-         .HasOne<Conversation>()
-         .WithOne(c => c.Metadata)
-         .HasForeignKey<ConversationMetadata>(cm => cm.ConversationId);
-
-      modelBuilder.Entity<ConversationMetadata>()
-         .Property(e => e.Humans)
-         .HasConversion(
-               v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null),
-               v => JsonSerializer.Deserialize<ICollection<Guid>>(v, (JsonSerializerOptions?)null)!
-         );
-
-
-      modelBuilder.Entity<ConversationMetadata>().Ignore(c => c.Features);
-
-      modelBuilder.Entity<ConversationMessage>().Ignore(c => c.Features);
+   protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
+   {
+      configurationBuilder.Properties<Guid>().HaveConversion<string>();
    }
 }

@@ -1,19 +1,18 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
-namespace AIdentities.Chat.Services;
+﻿namespace AIdentities.Chat.Services;
 
 public interface ICognitiveChatStorage
 {
    /// <summary>
-   /// Gets all stored conversations metadata.
+   /// Gets all stored conversations.
    /// </summary>
-   /// <returns>A list of stored conversations metadata.</returns>
-   ValueTask<IEnumerable<ConversationMetadata>> GetConversationsAsync();
+   /// <returns>A list of stored conversations.</returns>
+   ValueTask<IEnumerable<Conversation>> GetConversationsAsync();
 
    /// <summary>
-   /// Gets all stored conversations metadata for a given AIdentity.
+   /// Gets all stored conversations for a given AIdentity.
    /// </summary>
-   /// <returns>A list of stored conversations metadata held by the given AIdentity.</returns>
-   ValueTask<IEnumerable<ConversationMetadata>> GetConversationsByAIdentityAsync(AIdentity aIdentity);
+   /// <returns>A list of stored conversations held by the given AIdentity.</returns>
+   ValueTask<IEnumerable<Conversation>> GetConversationsByAIdentityAsync(AIdentity aIdentity);
 
    /// <summary>
    /// Loads a complete conversation by its id.
@@ -31,12 +30,12 @@ public interface ICognitiveChatStorage
    /// <summary>
    /// Updates a conversation with a new message.
    /// </summary>
-   /// <param name="conversationMetadata">The conversation metadata.</param>
+   /// <param name="conversation">The conversation.</param>
    /// <param name="message">The message to add.
-   /// If null, the conversation metadata only will be updated.
+   /// If null, the conversation only will be updated.
    /// </param>
    /// <returns>True if the conversation was updated, false otherwise.</returns>
-   ValueTask<bool> UpdateConversationAsync(ConversationMetadata conversationMetadata, ConversationMessage? message);
+   ValueTask<bool> UpdateConversationAsync(Conversation conversation, ConversationMessage? message);
 
    /// <summary>
    /// Deletes a conversation.
@@ -46,10 +45,10 @@ public interface ICognitiveChatStorage
    ValueTask<bool> DeleteConversationAsync(Guid conversationId);
 
    /// <summary>
-   /// Deletes a message from a conversation and update the metadata.
+   /// Deletes a message from a conversation and update the.
    /// </summary>
-   /// <param name="conversationMetadata">The conversation metadata.</param>
+   /// <param name="conversation">The conversation.</param>
    /// <param name="message">The message to delete.</param>
    /// <returns>True if the message was deleted, false otherwise.</returns>
-   ValueTask<bool> DeleteMessageAsync(ConversationMetadata conversationMetadata, ConversationMessage message);
+   ValueTask<bool> DeleteMessageAsync(Conversation conversation, ConversationMessage message);
 }

@@ -70,7 +70,8 @@ public partial class Settings : BasePluginSettingsTab<ElevenLabsSettings, Settin
    {
       if (_state.DefaultVoiceId != null)
       {
-         await PluginSettingsManager.SetAsync(await PerformSavingAsync().ConfigureAwait(false)).ConfigureAwait(false);
+         var savedSettings = await PerformSavingAsync().ConfigureAwait(false);
+         await PluginSettingsManager.SetAsync(savedSettings).ConfigureAwait(false);
 
          try
          {

@@ -21,16 +21,8 @@ public partial class StartConversationDialog : ComponentBase
          return;
       }
 
-      var conversation = new Conversation()
-      {
-         Metadata = new()
-         {
-            Title = "New Conversation"
-         }
-      };
-
-      conversation.Metadata.ConversationId = conversation.Id;
-      conversation.Metadata.AIdentityIds.Add(_state.SelectedAIdentity!.Id);
+      var conversation = new Conversation("New Conversation");
+      conversation.AddAIdentity(_state.SelectedAIdentity!);
 
       MudDialog.Close(DialogResult.Ok(conversation));
    }

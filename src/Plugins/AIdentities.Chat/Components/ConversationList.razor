@@ -7,7 +7,7 @@
 
    <MudContainer MaxWidth="MaxWidth.False" Class="d-flex flex-column gap-2 px-2 flex-grow-1 overflow-y-auto">
       <MudList Clickable="true" DisableGutters="true" Dense="true" DisablePadding="true" Color="Color.Secondary"
-               SelectedValue="_state.SelectedConversation" SelectedValueChanged="@(v => OnSelectConversation((ConversationMetadata)v))">
+               SelectedValue="_state.SelectedConversation" SelectedValueChanged="@(v => OnSelectConversation((Conversation)v))">
          @foreach (var conversation in _state.Conversations.Items.ToList())
          {
             bool isSelected = _state.SelectedConversation == conversation;

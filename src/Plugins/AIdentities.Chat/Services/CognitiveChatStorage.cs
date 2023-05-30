@@ -1,6 +1,4 @@
 ﻿using AIdentities.Chat.Persistence;
-using AIdentities.Shared.Features.AIdentities.Models;
-using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 using Microsoft.EntityFrameworkCore;
 
 namespace AIdentities.Chat.Services;
@@ -20,7 +18,10 @@ public class CognitiveChatStorage : ICognitiveChatStorage
    {
       using var trx = _dbContext.Database.BeginTransaction();
 
-      _dbContext.Conversations.Remove(new Conversation { Id = conversationId });
+      var convesation = _dbContext.Conversations.Find(conversationId);
+      if (convesation == null) return false;
+
+      _dbContext.Conversations.Remove(convesation);
       await _dbContext.SaveChangesAsync().ConfigureAwait(false);
 
       await trx.CommitAsync().ConfigureAwait(false);
@@ -28,14 +29,14 @@ public class CognitiveChatStorage : ICognitiveChatStorage
       return true;
    }
 
-   public async ValueTask<IEnumerable<ConversationMetadata>> GetConversationsAsync()
+   public async ValueTask<IEnumerable<Conversation>> GetConversationsAsync()
    {
-      return await _dbContext.ConversationMetadata.ToListAsync().ConfigureAwait(false);
+      return await _dbContext.Conversations.ToListAsync().ConfigureAwait(false);
    }
 
-   public async ValueTask<IEnumerable<ConversationMetadata>> GetConversationsByAIdentityAsync(AIdentity aIdentity)
+   public async ValueTask<IEnumerable<Conversation>> GetConversationsByAIdentityAsync(AIdentity aIdentity)
    {
-      return await _dbContext.ConversationMetadata
+      return await _dbContext.Conversations
          .Where(m => m.AIdentityIds.Contains(aIdentity.Id))
          .ToListAsync()
          .ConfigureAwait(false);
@@ -48,7 +49,6 @@ public class CognitiveChatStorage : ICognitiveChatStorage
          return (await _dbContext
             .Conversations
             .Include(c => c.Messages)
-            .Include(c => c.Metadata)
             .FirstOrDefaultAsync(c => c.Id == conversationId)
             .ConfigureAwait(false)
             )!;
@@ -60,35 +60,35 @@ public class CognitiveChatStorage : ICognitiveChatStorage
       }
    }
 
-   public async ValueTask<bool> UpdateConversationAsync(ConversationMetadata conversationMetadata, ConversationMessage? message)
+   public async ValueTask<bool> UpdateConversationAsync(Conversation conversation, ConversationMessage? message)
    {
       using var trx = _dbContext.Database.BeginTransaction();
 
       if (message != null)
       {
-         conversationMetadata.MessageCount++;
-         _dbContext.ConversationMessages.Add(message);
+         conversation.AddMessage(message);
       }
 
-      _dbContext.ConversationMetadata.Update(conversationMetadata);
+      _dbContext.Conversations.Update(conversation);
       await _dbContext.SaveChangesAsync().ConfigureAwait(false);
       await trx.CommitAsync().ConfigureAwait(false);
 
       return true;
    }
 
-   public async ValueTask<bool> DeleteMessageAsync(ConversationMetadata conversationMetadata, ConversationMessage message)
+   public async ValueTask<bool> DeleteMessageAsync(Conversation Conversation, ConversationMessage message)
    {
       using var trx = _dbContext.Database.BeginTransaction();
 
       if (message != null)
       {
-         bool removed = _dbContext.ConversationMessages.Remove(message) != null;
-         if (removed)
-         {
-            conversationMetadata.MessageCount--;
-         }
-         _dbContext.ConversationMetadata.Update(conversationMetadata);
+         //bool removed = _dbContext.ConversationMessages.Remove(message) != null;
+         //if (removed)
+         //{
+         //   Conversation.MessageCount--;
+         //}
+         Conversation.RemoveMessage(message.Id);
+         _dbContext.Conversations.Update(Conversation);
       }
       await _dbContext.SaveChangesAsync().ConfigureAwait(false);
       await trx.CommitAsync().ConfigureAwait(false);

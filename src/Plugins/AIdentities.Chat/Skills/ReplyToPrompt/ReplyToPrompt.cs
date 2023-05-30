@@ -46,15 +46,7 @@ public partial class ReplyToPrompt : Skill
 
       var history = conversationHistory is not null ?
          conversationHistory.GetConversationHistory(aidentity)
-         : new List<ConversationMessage>()
-         {
-            new ConversationMessage{
-               AuthorId = authorId,
-               AuthorName = aidentity.Name,
-               IsAIGenerated = !isAiGenerated,
-               Text=prompt.Text
-            }
-         };
+         : new List<ConversationMessage>() { new ConversationMessage(prompt.Text, aidentity) };
 
       var streamedResult = connector.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest
       {

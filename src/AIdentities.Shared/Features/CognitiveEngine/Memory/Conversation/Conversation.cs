@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.AspNetCore.Http.Features;
 
 namespace AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 
@@ -11,22 +12,67 @@ public class Conversation
    /// <summary>
    /// The unique identifier of the conversation.
    /// </summary>
-   public Guid Id { get; init; } = Guid.NewGuid();
+   public Guid Id { get; private set; }
 
    /// <summary>
-   /// The metadata of the conversation.
-   /// It contains statistics about the conversation and the participants.
+   /// The date and time the conversation was created.
    /// </summary>
-   public ConversationMetadata Metadata { get; init; } = default!;
+   public DateTimeOffset CreatedAt { get; private set; }
+
+   private readonly HashSet<Guid> _humans = new();
+   /// <summary>
+   /// Contains a list of human Ids that are part of this conversation.
+   /// It's technically an hashset so we don't have to bother with duplicates.
+   /// </summary>
+   public IReadOnlyCollection<Guid> Humans => _humans;
+
+   private readonly HashSet<Guid> _aIdentityIds = new();
+   /// <summary>
+   /// Contains a list of AIdentity Ids that are part of this conversation.
+   /// It's technically an hashset so we don't have to bother with duplicates.
+   /// </summary>
+   public IReadOnlyCollection<Guid> AIdentityIds => _aIdentityIds;
 
    /// <summary>
-   /// The messages of the conversation.
+   /// The title of the conversation.
    /// </summary>
+   public string Title { get; private set; }
+
+   /// <summary>
+   /// The date and time the conversation was last updated.
+   /// </summary>
+   public DateTimeOffset UpdatedAt { get; private set; }
+
+   /// <summary>
+   /// The number of messages in the conversation.
+   /// </summary>
+   public int MessageCount { get; private set; }
+
+   private readonly FeatureCollection? _features;
+   /// <summary>
+   /// The features of the Conversation.
+   /// This is an extension point Plugin developers can use this to manage custom features
+   /// to conversations or access other plugins' features.
+   /// </summary>
+   public IEnumerable<KeyValuePair<Type, object>> Features => _features ?? Enumerable.Empty<KeyValuePair<Type, object>>();
+
    private List<ConversationMessage> _messages { get; init; } = new();
    /// <summary>
    /// The messages of the conversation.
    /// </summary>
    public IReadOnlyCollection<ConversationMessage> Messages => _messages;
+
+   /// <summary>
+   /// An open door to ORM that can take advantage of this constructor (e.g. EF Core).
+   /// </summary>
+   private Conversation() { }
+
+   public Conversation(string title)
+   {
+      Id = Guid.NewGuid();
+      Title = title;
+      CreatedAt = UpdatedAt = DateTimeOffset.UtcNow;
+   }
 
    /// <summary>
    /// Allows to add a message to the conversation and update the statistics.
@@ -35,8 +81,8 @@ public class Conversation
    public void AddMessage(ConversationMessage message)
    {
       _messages.Add(message);
-      Metadata.MessageCount++;
-      Metadata.UpdatedAt = DateTimeOffset.UtcNow;
+      MessageCount++;
+      UpdatedAt = DateTimeOffset.UtcNow;
    }
 
    /// <summary>
@@ -52,8 +98,8 @@ public class Conversation
       }
 
       _messages.Remove(message);
-      Metadata.MessageCount--;
-      Metadata.UpdatedAt = DateTimeOffset.UtcNow;
+      MessageCount--;
+      UpdatedAt = DateTimeOffset.UtcNow;
       return true;
    }
 
@@ -64,13 +110,13 @@ public class Conversation
    /// <returns>True if the AIdentity was added, false if it was already present.</returns>
    public bool AddAIdentity(AIdentity aIdentity)
    {
-      if (Metadata.AIdentityIds.Contains(aIdentity.Id))
+      if (_aIdentityIds.Contains(aIdentity.Id))
       {
          return false;
       }
 
-      Metadata.AIdentityIds.Add(aIdentity.Id);
-      Metadata.UpdatedAt = DateTimeOffset.UtcNow;
+      _aIdentityIds.Add(aIdentity.Id);
+      UpdatedAt = DateTimeOffset.UtcNow;
       return true;
    }
 
@@ -92,13 +138,13 @@ public class Conversation
    /// <returns>True if the human was added, false if it was already present.</returns>
    public bool AddHuman(Guid humanId)
    {
-      if (Metadata.Humans.Contains(humanId))
+      if (_humans.Contains(humanId))
       {
          return false;
       }
 
-      Metadata.Humans.Add(humanId);
-      Metadata.UpdatedAt = DateTimeOffset.UtcNow;
+      _humans.Add(humanId);
+      UpdatedAt = DateTimeOffset.UtcNow;
       return true;
    }
 
@@ -123,11 +169,11 @@ public class Conversation
       bool hasRemoved;
       if (isAiGenerated)
       {
-         hasRemoved = Metadata.AIdentityIds.Remove(authorId);
+         hasRemoved = _aIdentityIds.Remove(authorId);
       }
       else
       {
-         hasRemoved = Metadata.Humans.Remove(authorId);
+         hasRemoved = _humans.Remove(authorId);
       }
 
       if (!hasRemoved)
@@ -136,9 +182,19 @@ public class Conversation
          return false;
       }
 
-      Metadata.UpdatedAt = DateTimeOffset.UtcNow;
+      UpdatedAt = DateTimeOffset.UtcNow;
 
       errorReason = null;
       return true;
+   }
+
+   /// <summary>
+   /// Updates the title of the conversation.
+   /// </summary>
+   /// <param name="title">The new title of the conversation.</param>
+   public void UpdateTitle(string title)
+   {
+      Title = title;
+      UpdatedAt = DateTimeOffset.UtcNow;
    }
 }
