@@ -7,6 +7,11 @@
 public interface ITextToSpeechRequest
 {
    /// <summary>
+   /// The AIdentity to use for the conversion.
+   /// </summary>
+   AIdentity? AIdentity { get; }
+
+   /// <summary>
    /// The text to be converted to speech.
    /// </summary>
    string Text { get; }

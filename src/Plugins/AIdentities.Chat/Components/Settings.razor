@@ -2,7 +2,7 @@
 
 <MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix gap-2 overflow-y-auto ">
    <PluginSettingsSection Title="Text Generation"
-                          TooltipText="Text Generation is the core feature of this plugin. It allows you to generate text from a given prompt.">
+                          Info="Text Generation is the core feature of this plugin. It allows you to generate text from a given prompt.">
       <MudText Typo="Typo.h6" Color="Color.Primary">Default Conversational Connector</MudText>
       <MudSelectExtended T="string" ItemCollection="@_state.AvailableConnectors.Keys" @bind-Value="_state.DefaultConnector"
                          ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium"
@@ -31,7 +31,7 @@
    </PluginSettingsSection>
 
    <PluginSettingsSection Title="Text To Speech" CanBeDisabled="true" @bind-IsEnabled="_state.EnableTextToSpeech"
-                          TooltipText="Text To Speech allows you to hear the messages sent by the AIdentities.">
+                          Info="Text To Speech allows you to hear the messages sent by the AIdentities.">
       <MudRadioGroup @bind-SelectedOption="@_state.TextToSpeechMode" Class="py-2">
          <MudTooltip Arrow="true" Text="Every message sent by an AIdentity will be read out loud">
             <MudRadio Option="@TextToSpeechMode.Automatic" Color="Color.Primary" Dense="true">Automatic</MudRadio>
@@ -70,7 +70,7 @@
    </PluginSettingsSection>
 
    <PluginSettingsSection Title="Skills" CanBeDisabled="true" @bind-IsEnabled="_state.EnableSkills"
-                          TooltipText="Skills are used to perform teorethical any kind of task.">
+                          Info="Skills are used to perform teorethical any kind of task.">
       <MudText Typo="Typo.subtitle1">
          <p>You can select which skill to enable in the Chat.</p>
          <p>If you disable skills completly, the conversation will be generated faster and will be cheaper (if you use paid connectors) but you won't have access to advanced conversation features.</p>

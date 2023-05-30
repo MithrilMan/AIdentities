@@ -19,7 +19,7 @@ public partial class AIdentityFeatureTab
    protected override void OnParametersSet()
    {
       base.OnParametersSet();
-      _state.SetCurrentFeature(AIdentity?.Features[FeatureRegistration.FeatureType]);
+      _state.SetCurrentFeature(AIdentity, AIdentity?.Features[FeatureRegistration.FeatureType]);
    }
 
    public async Task SaveAsync()
@@ -38,7 +38,7 @@ public partial class AIdentityFeatureTab
       AIdentityProvider.Update(AIdentity);
 
       // update the parameters to apply the needed changes
-      _state.SetCurrentFeature(AIdentity?.Features[FeatureRegistration.FeatureType]);
+      _state.SetCurrentFeature(AIdentity, AIdentity?.Features[FeatureRegistration.FeatureType]);
 
       NotificationService.ShowSuccess("AIdentity updated successfully!");
    }

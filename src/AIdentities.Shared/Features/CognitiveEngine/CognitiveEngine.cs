@@ -3,6 +3,8 @@ using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 using AIdentities.Shared.Plugins.Connectors.Completion;
 using AIdentities.Shared.Plugins.Connectors.Conversational;
+using Polly.Retry;
+using Polly;
 
 namespace AIdentities.Shared.Features.CognitiveEngine;
 
@@ -27,6 +29,8 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
 
    protected DefaultConversationalMessage PersonalityInstruction { get; private set; } = default!;
 
+   protected AsyncRetryPolicy RetryPolicy { get; private set; }
+
    /// <summary>
    /// Holds a list of skills that are enabled for the AIdentity.
    /// The user can enable or disable skills for an AIdentity in the AIdentity settings.
@@ -48,6 +52,7 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
       EnsureAIdentityIsValid();
 
       Context = CreateCognitiveContext();
+      RetryPolicy = CreateRetryPolicy();
 
       SetupAIdentityPersonality();
       ConfigureAvailableSkills();
@@ -212,4 +217,31 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    public StreamedIntrospectiveThought StreamIntrospectiveThought(string thought)
       => new StreamedIntrospectiveThought(null, AIdentity, thought);
 
+
+   /// <summary>
+   /// Creates the retry policy for the cognitive engine.
+   /// This is applied everytime a call to a generation API fails with an
+   /// exception specified in the retry policy.
+   /// The default implementation is a simple exponential backoff that tries 3 times
+   /// and catch all exceptions.
+   /// </summary>
+   /// <returns></returns>
+   private AsyncRetryPolicy CreateRetryPolicy()
+   {
+      // Define the retry policy
+      var retryPolicy = Policy
+         .Handle<Exception>()
+         .WaitAndRetryAsync(
+         3,
+         retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+         (exception, timeSpan, retryCount, context) =>
+         {
+            _logger.LogWarning("Retry {RetryCount} due to {ExceptionType} with message {Message}",
+                               retryCount,
+                               exception.GetType().Name,
+                               exception.Message);
+         });
+
+      return retryPolicy;
+   }
 }

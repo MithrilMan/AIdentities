@@ -79,16 +79,9 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
 
    public async Task<byte[]> RequestTextToSpeechAsync(ITextToSpeechRequest request, CancellationToken cancellationToken)
    {
-      var apiRequest = BuildTTSRequest(request);
+      var apiRequest = BuildTTSRequest(request, out string? voiceId);
 
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Text);
-
-      string? voiceId = request.VoiceId;
-      if (string.IsNullOrWhiteSpace(voiceId))
-      {
-         _logger.LogDebug("No voice id specified, using default voice id: {DefaultVoiceId}", _settings.DefaultVoiceId);
-         voiceId = _settings.DefaultVoiceId;
-      }
 
       var endpoint = $"{EndPoint}/text-to-speech/{voiceId}?optimize_streaming_latency=0";
       using var response = await _client.PostAsJsonAsync(endpoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -102,16 +95,9 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
 
    public async Task RequestTextToSpeechAsStreamAsync(ITextToSpeechRequest request, Func<Stream, Task> streamConsumer, CancellationToken cancellationToken)
    {
-      var apiRequest = BuildTTSRequest(request);
+      var apiRequest = BuildTTSRequest(request, out string? voiceId);
 
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Text);
-
-      string? voiceId = request.VoiceId;
-      if (string.IsNullOrWhiteSpace(voiceId))
-      {
-         _logger.LogDebug("No voice id specified, using default voice id: {DefaultVoiceId}", _settings.DefaultVoiceId);
-         voiceId = _settings.DefaultVoiceId;
-      }
 
       var endpoint = $"{EndPoint}/text-to-speech/{voiceId}/stream?optimize_streaming_latency={(int)_settings.StreamingLatencyOptimization}";
       var postRequest = new HttpRequestMessage(HttpMethod.Post, endpoint);
@@ -133,9 +119,18 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
    /// </summary>
    /// <param name="request">The base TTS request.</param>
    /// <returns>The request to send to the ElevenLabs TTS API.</returns>
-   private ElevenLabsTextToSpeechRequest BuildTTSRequest(ITextToSpeechRequest request)
+   private ElevenLabsTextToSpeechRequest BuildTTSRequest(ITextToSpeechRequest request, out string? voiceId)
    {
-      string? modelId = request.ModelId;
+      var aidentityVoiceSettings = request.AIdentity?.Features.Get<ElevenLabsAIdentityFeature>();
+
+      voiceId = request.VoiceId ?? aidentityVoiceSettings?.VoiceId;
+      if (string.IsNullOrWhiteSpace(voiceId))
+      {
+         _logger.LogDebug("No voice id specified, using default voice id: {DefaultVoiceId}", _settings.DefaultVoiceId);
+         voiceId = _settings.DefaultVoiceId;
+      }
+
+      string? modelId = request.ModelId ?? aidentityVoiceSettings?.ModelId;
       if (string.IsNullOrWhiteSpace(modelId))
       {
          _logger.LogDebug("No model id specified, using default model id: {DefaultModelId}", _settings.DefaultTextToSpeechModel);
@@ -147,12 +142,14 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
       {
          stability = stabilityvalue as float?;
       }
+      stability ??= aidentityVoiceSettings?.VoiceStability;
 
       float? similarityBoost = null;
       if (request.CustomOptions.TryGetValue(nameof(ElevenLabsSettings.VoiceSimilarityBoost), out object? similarityBoostValue))
       {
          similarityBoost = similarityBoostValue as float?;
       }
+      similarityBoost ??= aidentityVoiceSettings?.VoiceSimilarityBoost;
 
       return new ElevenLabsTextToSpeechRequest
       {

@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Http.Features;
+using Polly.Retry;
+using Polly;
 
 namespace AIdentities.Connector.OpenAI.Services;
 public class OpenAIChatConnector : IConversationalConnector, IDisposable
@@ -30,6 +32,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    protected string DefaultModel => _settingsManager.Get<OpenAISettings>().DefaultChatModel;
 
    private HttpClient _client = default!;
+   readonly AsyncRetryPolicy _retryPolicy;
    private readonly JsonSerializerOptions _serializerOptions;
 
    public OpenAIChatConnector(ILogger<OpenAIChatConnector> logger, IPluginSettingsManager settingsManager)
@@ -42,8 +45,37 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
          DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
       };
 
+      _retryPolicy = CreateRetryPolicy();
+
       _settingsManager.OnSettingsUpdated += OnSettingsUpdated;
       ApplySettings(_settingsManager.Get<OpenAISettings>());
+   }
+
+   /// <summary>
+   /// Creates the retry policy for the cognitive engine.
+   /// This is applied everytime a call to a generation API fails with an
+   /// exception specified in the retry policy.
+   /// The default implementation is a simple exponential backoff that tries 3 times
+   /// and catch all exceptions.
+   /// </summary>
+   /// <returns></returns>
+   private AsyncRetryPolicy CreateRetryPolicy()
+   {
+      // Define the retry policy
+      var retryPolicy = Policy
+         .Handle<Exception>()
+         .WaitAndRetryAsync(
+         3,
+         retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+         (exception, timeSpan, retryCount, context) =>
+         {
+            _logger.LogWarning("Retry {RetryCount} due to {ExceptionType} with message {Message}",
+                               retryCount,
+                               exception.GetType().Name,
+                               exception.Message);
+         });
+
+      return retryPolicy;
    }
 
    /// <summary>
@@ -80,7 +112,10 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
       var sw = Stopwatch.StartNew();
 
-      using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
+      using HttpResponseMessage response = await _retryPolicy.ExecuteAsync(async () =>
+      {
+         return await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
+      }).ConfigureAwait(false);
 
       _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
@@ -118,9 +153,12 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       };
       httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-      using var httpResponseMessage = await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+      using var response = await _retryPolicy.ExecuteAsync(async () =>
+      {
+         return await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+      }).ConfigureAwait(false);
 
-      var stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+      using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
       await using var streamScope = stream.ConfigureAwait(false);
       using var streamReader = new StreamReader(stream);
       while (streamReader.EndOfStream is false)

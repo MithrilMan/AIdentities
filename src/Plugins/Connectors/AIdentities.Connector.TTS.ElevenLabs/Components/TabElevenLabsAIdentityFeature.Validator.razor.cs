@@ -8,6 +8,8 @@ public partial class TabElevenLabsAIdentityFeature
    {
       public Validator()
       {
+         RuleFor(x => x.VoiceId)
+            .NotEmpty().When(x => x.Customize);
       }
    }
 

@@ -16,11 +16,6 @@ public partial class Settings : BasePluginSettingsTab<ElevenLabsSettings, Settin
 
    MudForm? _form;
 
-   protected override async Task OnInitializedAsync()
-   {
-      await base.OnInitializedAsync().ConfigureAwait(false);
-   }
-
    protected override async ValueTask<bool> AreSettingsValid()
    {
       await _form!.Validate().ConfigureAwait(false);
@@ -79,20 +74,23 @@ public partial class Settings : BasePluginSettingsTab<ElevenLabsSettings, Settin
 
          try
          {
-            await _connector.GetAll().OfType<ElevenLabsTTSConnector>().First().RequestTextToSpeechAsStreamAsync(new DefaultTextToSpeechRequest(_state.TestingText)
-            {
-               VoiceId = _state.DefaultVoiceId,
-               ModelId = _state.DefaultTextToSpeechModel,
-               CustomOptions = new()
+            await _connector.GetAll()
+               .OfType<ElevenLabsTTSConnector>()
+               .First()
+               .RequestTextToSpeechAsStreamAsync(new DefaultTextToSpeechRequest(null, _state.TestingText)
+               {
+                  VoiceId = _state.DefaultVoiceId,
+                  ModelId = _state.DefaultTextToSpeechModel,
+                  CustomOptions = new()
                {
                   { nameof(ElevenLabsSettings.VoiceStability), _state.VoiceStability! },
                   { nameof(ElevenLabsSettings.VoiceSimilarityBoost), _state.VoiceSimilarityBoost! },
                }
-            }, async (stream) =>
-            {
-               using var streamRef = new DotNetStreamReference(stream: stream);
-               await PlayAudioStream.PlayAudioFileStream(streamRef).ConfigureAwait(false);
-            },
+               }, async (stream) =>
+               {
+                  using var streamRef = new DotNetStreamReference(stream: stream);
+                  await PlayAudioStream.PlayAudioFileStream(streamRef).ConfigureAwait(false);
+               },
             default
             ).ConfigureAwait(false);
          }

@@ -1,5 +1,4 @@
 ﻿using AIdentities.Connector.TTS.ElevenLabs.Components;
-using AIdentities.Connector.TTS.ElevenLabs.Models;
 using AIdentities.Connector.TTS.ElevenLabs.Services;
 using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 
@@ -12,5 +11,8 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
       services.AddScoped<ITextToSpeechConnector, ElevenLabsTTSConnector>();
 
       RegisterPluginSettings<ElevenLabsSettings, Settings>("ElevenLabs TTS");
+
+      // Register the AIdentity feature to expose an editor in the AIdentity management page.
+      RegisterAIdentityFeature<ElevenLabsAIdentityFeature, TabElevenLabsAIdentityFeature>("ElevenLabs");
    }
 }

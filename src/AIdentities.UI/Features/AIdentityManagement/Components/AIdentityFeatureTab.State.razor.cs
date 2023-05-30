@@ -1,4 +1,6 @@
-﻿namespace AIdentities.UI.Features.AIdentityManagement.Components;
+﻿using AIdentities.Shared.Features.AIdentities.Abstracts;
+
+namespace AIdentities.UI.Features.AIdentityManagement.Components;
 
 public partial class AIdentityFeatureTab
 {
@@ -7,10 +9,11 @@ public partial class AIdentityFeatureTab
       public object? CurrentFeature { get; private set; }
       public Dictionary<string, object?> Parameters { get; } = new();
 
-      public void SetCurrentFeature(object? feature)
+      public void SetCurrentFeature(AIdentity aIdentity, object? feature)
       {
-         Parameters["Feature"] = feature;
-         Parameters["IsChanged"] = feature != CurrentFeature;
+         Parameters[nameof(IAIdentityFeatureTab<IAIdentityFeature>.Feature)] = feature;
+         Parameters[nameof(IAIdentityFeatureTab.IsChanged)] = feature != CurrentFeature;
+         Parameters[nameof(IAIdentityFeatureTab.AIdentity)] = aIdentity;
 
          CurrentFeature = feature;
       }

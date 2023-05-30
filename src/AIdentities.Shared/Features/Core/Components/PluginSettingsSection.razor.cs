@@ -5,7 +5,7 @@ public partial class PluginSettingsSection
    /// <summary>
    /// The text to display in the tooltip
    /// </summary>
-   [Parameter] public string? TooltipText { get; set; }
+   [Parameter] public string? Info { get; set; }
 
    /// <summary>
    /// The title of the section

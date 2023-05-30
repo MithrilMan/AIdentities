@@ -207,10 +207,17 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       _state.IsWaitingReply = true;
       await InvokeAsync(StateHasChanged).ConfigureAwait(false);
 
-      await HandleThoughts(CognitiveChatMission.TalkToMissionRunnerAsync(
-         prompt: new UserPrompt(Guid.Empty, message.Text ?? ""), // TODO handle the user id
-         cancellationToken: _state.MessageGenerationCancellationTokenSource.Token
-         )).ConfigureAwait(false);
+      try
+      {
+         await HandleThoughts(CognitiveChatMission.TalkToMissionRunnerAsync(
+            prompt: new UserPrompt(Guid.Empty, message.Text ?? ""), // TODO handle the user id
+            cancellationToken: _state.MessageGenerationCancellationTokenSource.Token
+            )).ConfigureAwait(false);
+      }
+      catch (Exception ex)
+      {
+         NotificationService.ShowError($"An error occurred while generating the message: {ex.Message}");
+      }
 
       _state.IsWaitingReply = false;
       await InvokeAsync(StateHasChanged).ConfigureAwait(false);
@@ -401,13 +408,13 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          //final thought are saved in the database because are meaningful conversation messages
          await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, message).ConfigureAwait(false);
 
-         if (!_chatSettings.EnableTextToSpeech || _state.TextToSpeechConnector is null) return; //TODO use AIdentity specific TextToSpeechConnector
+         if (!_chatSettings.EnableTextToSpeech || _state.TextToSpeechConnector is null) return;
 
-         await PlayAudio(message).ConfigureAwait(false);
+         await PlayAudio(AIdentityProvider.Get(generatingThought.AIdentityId), message).ConfigureAwait(false);
       }
    }
 
-   private async Task PlayAudio(ConversationMessage message)
+   private async Task PlayAudio(AIdentity? aIdentity, ConversationMessage message)
    {
       if (_state.TextToSpeechConnector is null)
       {
@@ -418,7 +425,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       try
       {
          await _state.TextToSpeechConnector.RequestTextToSpeechAsStreamAsync(
-               new DefaultTextToSpeechRequest(message.Text ?? ""),
+               new DefaultTextToSpeechRequest(aIdentity, message.Text ?? ""),
                async (stream) =>
                {
                   using var streamRef = new DotNetStreamReference(stream: stream);

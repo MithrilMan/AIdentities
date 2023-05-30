@@ -14,6 +14,7 @@ When specified, the LLM will use this prompt to start the conversation.
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
 
    [Parameter] public bool IsChanged { get; set; } = default!;
+   [Parameter] public AIdentity AIdentity { get; set; } = default!;
    [Parameter] public AIdentityChatFeature Feature { get; set; } = default!;
 
    MudForm? _form;

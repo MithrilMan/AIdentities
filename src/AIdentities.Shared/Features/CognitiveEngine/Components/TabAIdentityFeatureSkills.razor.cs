@@ -2,19 +2,11 @@
 
 public partial class TabAIdentityFeatureSkills : IAIdentityFeatureTab<AIdentityFeatureSkills>
 {
-   const string HELP_BACKGROUND = @"AIdentity's background.
-You can for example specify where the AIdentity is from, or what it does for a living.";
-
-   const string HELP_FULL_PROMPT = @"The full prompt passed to the LLM to start the conversation.
-When specified, the LLM will use this prompt to start the conversation.
-";
-   const string HELP_FIRST_MESSAGE = @"The first message sent by the AIdentity when a new conversation starts.
-It has no impact on how it responds, It's purely cosmetic.";
-
    [Inject] protected INotificationService NotificationService { get; set; } = default!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
 
    [Parameter] public bool IsChanged { get; set; } = default!;
+   [Parameter] public AIdentity AIdentity { get; set; } = default!;
    [Parameter] public AIdentityFeatureSkills Feature { get; set; } = default!;
 
    MudForm? _form;

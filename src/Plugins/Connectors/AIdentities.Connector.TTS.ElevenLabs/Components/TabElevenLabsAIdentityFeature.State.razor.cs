@@ -7,21 +7,42 @@ public partial class TabElevenLabsAIdentityFeature
       /// <summary>
       /// When true, allow to customize the AIdentity voice
       /// </summary>
-      public bool? Customize { get; set; }
+      public bool Customize { get; set; }
       public string? ModelId { get; set; }
       public string? VoiceId { get; set; }
 
-      public float? VoiceStability { get; set; }
-      public float? VoiceSimilarityBoost { get; set; }
+      public float VoiceStability { get; set; }
+      public float VoiceSimilarityBoost { get; set; }
 
-      internal void SetFormFields(ElevenLabsAIdentityFeature? feature)
+      public List<GetVoicesResponse.Voice>? AvailableVoices { get; set; }
+      public string TestingText { get; set; } = "This is a test! Does it sounds good?";
+
+      internal void SetFormFields(ElevenLabsAIdentityFeature? feature, ElevenLabsSettings settings)
       {
-         Customize = feature?.Customize;
+         Customize = feature?.Customize ?? false;
 
          ModelId = feature?.ModelId;
          VoiceId = feature?.VoiceId;
-         VoiceStability = feature?.VoiceStability;
-         VoiceSimilarityBoost = feature?.VoiceSimilarityBoost;
+         VoiceStability = feature?.VoiceStability ?? settings.VoiceStability;
+         VoiceSimilarityBoost = feature?.VoiceSimilarityBoost ?? settings.VoiceSimilarityBoost;
+
+         AvailableVoices = settings.AvailableVoices;
+         AddDefaultVoiceToAvailableVoices();
+      }
+
+      public void AddDefaultVoiceToAvailableVoices()
+      {
+         if (AvailableVoices != null
+            && !string.IsNullOrWhiteSpace(VoiceId)
+            && !AvailableVoices.Exists(v => v.Id == VoiceId))
+         {
+            AvailableVoices.Add(new GetVoicesResponse.Voice
+            {
+               Category = "Default",
+               Id = VoiceId,
+               Name = VoiceId
+            });
+         }
       }
    }
 
