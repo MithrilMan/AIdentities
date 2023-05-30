@@ -31,7 +31,7 @@
                            <MudStack Spacing="0">
                               <MudText>Enable</MudText>
                               <MudSwitchM3 T="bool" Checked="@_state.SelectedSkills.Contains(skill.Name)"
-                                     CheckedChanged="@((isChecked) => OnSelectedSkillChanged(skill, isChecked))" />
+                                           CheckedChanged="@((isChecked) => OnSelectedSkillChanged(skill, isChecked))" />
                            </MudStack>
                         }
                      </CardHeaderActions>
@@ -41,9 +41,18 @@
                      <MudText Typo="Typo.subtitle1">Activation:</MudText>
                      <p class="line-clamp-3">@skill.Description</p>
                      <MudDivider DividerType="DividerType.FullWidth" Class="mud-border-primary" />
-                     <MudText Typo="Typo.subtitle1">Parameters:</MudText>
+                     <MudText Typo="Typo.subtitle1">Inputs:</MudText>
                      <div class="d-flex flex-wrap">
                         @foreach (var argument in skill.Inputs)
+                        {
+                           <MudTooltip Text="@argument.Description">
+                              <MudChip Size="Size.Small">@argument.Name</MudChip>
+                           </MudTooltip>
+                        }
+                     </div>
+                     <MudText Typo="Typo.subtitle1">Outputs:</MudText>
+                     <div class="d-flex flex-wrap">
+                        @foreach (var argument in skill.Outputs)
                         {
                            <MudTooltip Text="@argument.Description">
                               <MudChip Size="Size.Small">@argument.Name</MudChip>

@@ -8,6 +8,7 @@ using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Http.Features;
 using Polly.Retry;
 using Polly;
+using System.Threading;
 
 namespace AIdentities.Connector.OpenAI.Services;
 public class OpenAIChatConnector : IConversationalConnector, IDisposable
@@ -145,19 +146,30 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, true);
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
 
-      var sw = Stopwatch.StartNew();
-
       using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
       {
          Content = JsonContent.Create(apiRequest, null, _serializerOptions)
       };
       httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-      using var response = await _retryPolicy.ExecuteAsync(async () =>
+      var res = await _retryPolicy.ExecuteAsync(async () =>
       {
-         return await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+         return ConsumeStream(httpRequestMessage, cancellationToken);
       }).ConfigureAwait(false);
 
+      await foreach (var item in res.ConfigureAwait(false))
+      {
+         yield return item;
+      }
+   }
+
+   private async IAsyncEnumerable<IConversationalStreamedResponse> ConsumeStream(
+      HttpRequestMessage httpRequestMessage,
+      [EnumeratorCancellation] CancellationToken cancellationToken)
+   {
+      var sw = Stopwatch.StartNew();
+
+      var response = await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
       using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
       await using var streamScope = stream.ConfigureAwait(false);
       using var streamReader = new StreamReader(stream);

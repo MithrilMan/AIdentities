@@ -75,6 +75,7 @@ public partial class CognitiveChat
 
       public async Task InitializeConversation(Conversation conversation, bool loadMessages = true)
       {
+         SelectedConversation = conversation.Metadata;
          // if the last message is not generated, we need to generate a reply so we enable the "resend" button
          HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsAIGenerated == false;
          if (loadMessages)

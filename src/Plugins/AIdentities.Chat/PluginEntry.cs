@@ -1,5 +1,6 @@
 ﻿using AIdentities.Chat.CognitiveEngine;
 using AIdentities.Chat.Components;
+using AIdentities.Chat.Persistence;
 using AIdentities.Chat.Skills.IntroduceYourself;
 using AIdentities.Chat.Skills.InviteFriend;
 using AIdentities.Chat.Skills.ReplyToPrompt;
@@ -24,12 +25,12 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
          .AddScoped<ICognitiveEngineFactory, ChatKeeperCognitiveEngineFactory>()
          .AddScoped<ICognitiveEngineFactory, ChatCognitiveEngineFactory>();
 
+      services.AddDbContext<ConversationDbContext>();
 
       // Register the AIdentity feature to expose an editor in the AIdentity management page.
       RegisterAIdentityFeature<AIdentityChatFeature, TabChatAIdentityFeature>("Chat");
-
       RegisterAIdentitySafetyChecker<ChatAIdentitySafetyChecker>();
-
+      RegisterPluginStartup<StartupService>();
       RegisterPluginSettings<ChatSettings, Settings>("Chat");
       RegisterAvailableCommands(services);
    }

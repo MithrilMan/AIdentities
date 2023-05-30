@@ -1,5 +1,7 @@
-﻿using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+﻿using AIdentities.Chat.Persistence;
+using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using Toolbelt.Blazor.HotKeys2;
 
