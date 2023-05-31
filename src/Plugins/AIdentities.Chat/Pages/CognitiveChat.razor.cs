@@ -1,7 +1,5 @@
-﻿using AIdentities.Chat.Persistence;
-using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+﻿using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 using Microsoft.AspNetCore.Components.Web;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.JSInterop;
 using Toolbelt.Blazor.HotKeys2;
 
@@ -11,6 +9,7 @@ namespace AIdentities.Chat.Pages;
 [PageDefinition(PAGE_TITLE, IconsEx.CHAT_PLUS, PAGE_URL, Description = PAGE_DESCRIPTION)]
 public partial class CognitiveChat : AppPage<CognitiveChat>
 {
+   const int CHAT_KEEPER_THINKING_ANIMATION_DURATION = 3000;
    const string PAGE_TITLE = "Cognitive Chat";
    const string PAGE_URL = "/cognitive-chat";
    const string PAGE_DESCRIPTION = "Chat with AIdentities and humans, let them chat freely and assist anytime there is a skill you know to execute";
@@ -41,6 +40,11 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    MudTextFieldExtended<string?> _messageTextField = default!;
    private ChatSettings _chatSettings = default!;
 
+   /// <summary>
+   /// After a short delay, we stop the chat keeper thinking animation.
+   /// </summary>
+   private Action _stopChatKeeperThinkingAnimation = default!;
+
    protected override void OnInitialized()
    {
       base.OnInitialized();
@@ -49,6 +53,12 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       _chatSettings = PluginSettingsManager.Get<ChatSettings>();
       _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled && c.Name == _chatSettings.DefaultConnector);
       _state.TextToSpeechConnector = TextToSpeechConnectors.FirstOrDefault(c => c.Enabled && c.Name == _chatSettings.DefaultTextToSpeechConnector);
+
+      _stopChatKeeperThinkingAnimation = DebounceAsync(async () =>
+      {
+         _state.IsChatKeeperThinking = false;
+         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+      }, TimeSpan.FromMilliseconds(CHAT_KEEPER_THINKING_ANIMATION_DURATION));
 
       CognitiveChatMission.Start(PageCancellationToken);
       _ = StartConsumingThoughts(PageCancellationToken);
@@ -95,22 +105,23 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
             }
             else
             {
-               // if the thought is not streamed, we just add it to the list
-               var message = new ConversationMessage(
-                     text: thought.Content,
-                     aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
-                  );
-
                if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
                {
+                  // if the thought is not streamed, we just add it to the list
+                  var message = new ConversationMessage(
+                        text: thought.Content,
+                        aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
+                     );
+
                   await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
                   await ScrollToEndOfMessageList().ConfigureAwait(false);
+
+                  await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
                }
                else
                {
                   _state.ChatKeeperThoughts.Add(thought);
                }
-               await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
             }
          }
       }
@@ -119,6 +130,16 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          NotificationService.ShowError(ex.Message);
       }
    }
+
+   async Task ChatKeeperIsThinking()
+   {
+      _state.IsChatKeeperThinking = true;
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+
+      _stopChatKeeperThinkingAnimation();
+   }
+
+
 
    protected override void ConfigureHotKeys(HotKeysContext hotKeysContext)
    {
@@ -280,7 +301,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       }
    }
 
-   Task Resend() => HandlePrompt(_state.Messages.UnfilteredItems.Last(m => m.AuthorId != CognitiveChatMission.ChatKeeper.Id));
+   Task Resend() => HandlePrompt(_state.Messages.UnfilteredItems.Last(m => !m.IsAIGenerated));
 
    async Task OnDeleteMessage(ConversationMessage message)
    {
@@ -361,6 +382,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
                }
                else
                {
+                  await ChatKeeperIsThinking().ConfigureAwait(false);
                   _state.ChatKeeperThoughts.Add(thought);
                }
             }
@@ -376,22 +398,23 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          }
          else
          {
-            // if the thought is not streamed, we just add it to the list
-            var message = new ConversationMessage(
-               text: thought.Content,
-               aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
-               );
-
             if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
             {
+               // if the thought is not streamed, we just add it to the list
+               var message = new ConversationMessage(
+                  text: thought.Content,
+                  aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
+                  );
+
                await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
                await ScrollToEndOfMessageList().ConfigureAwait(false);
+               await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
             }
             else
             {
+               await ChatKeeperIsThinking().ConfigureAwait(false);
                _state.ChatKeeperThoughts.Add(thought);
             }
-            await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
          }
       }
    }
@@ -433,6 +456,11 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       {
          NotificationService.ShowError($"Error while playing audio: {ex.Message}");
       }
+   }
+
+   public void SetNextTalker(AIdentity aIdentity)
+   {
+      CognitiveChatMission.SetNextTalker(aIdentity);
    }
 
    public override void Dispose()

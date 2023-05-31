@@ -24,7 +24,7 @@ public record SkillDefinition(string Name, string Description)
    /// <summary>
    /// A list of examples of how to use the skill.
    /// </summary>
-   public List<string> Examples { get; init; } = new List<string>();
+   public List<SkillExample> Examples { get; init; } = new List<SkillExample>();
 
    /// <summary>
    /// A list of tags that can be used to find the skill.

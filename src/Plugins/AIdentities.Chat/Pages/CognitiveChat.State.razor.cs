@@ -1,5 +1,4 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
-using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+﻿using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 
 namespace AIdentities.Chat.Pages;
 
@@ -14,6 +13,13 @@ public partial class CognitiveChat
       /// True if no conversation is selected.
       /// </summary>
       public bool NoConversation => SelectedConversation is null;
+
+      /// <summary>
+      /// True if the user can moderate the conversation.
+      /// Moderating a conversation means being able to chose who have to talk/reply to a message.
+      /// In moderation mode the user can even send a message specifying who has to reply to it.
+      /// </summary>
+      public bool IsModeratorModeEnabled { get; set; }
 
       public string? Message { get; set; }
       public ConversationMessage? SelectedMessage { get; set; } = default!;
@@ -64,6 +70,11 @@ public partial class CognitiveChat
       public CancellationTokenSource MessageGenerationCancellationTokenSource { get; set; } = new CancellationTokenSource();
 
       public List<Thought> ChatKeeperThoughts { get; } = new();
+
+      /// <summary>
+      /// When the chat keeper is thinking, this is set to true for a bit.
+      /// </summary>
+      public bool IsChatKeeperThinking { get; set; }
 
 
       public void Initialize(Func<IEnumerable<ConversationMessage>, ValueTask<IEnumerable<ConversationMessage>>> messageFilter, IAIdentityProvider aidentityProvider)

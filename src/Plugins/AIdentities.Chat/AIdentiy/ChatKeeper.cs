@@ -13,6 +13,7 @@ public record ChatKeeper : AIdentity
 
    public ChatKeeper()
    {
+      Id = new Guid("c1111111-1111-1111-1111-111111111111");
       CreatedAt = new DateTimeOffset(2023, 05, 21, 11, 35, 0, TimeSpan.Zero);
       Name = "Chat Keeper";
       Description = "The Chat Keeper is an AIdentity who manages any conversation happening in the chat.";

@@ -1,4 +1,4 @@
-﻿namespace AIdentities.Chat.Skills.InviteFriend.Events;
+﻿namespace AIdentities.Chat.Skills.InviteToChat.Events;
 
 /// <summary>
 /// Event raised by the InviteFriend skill to invite a friend to a conversation.

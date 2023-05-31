@@ -1,4 +1,5 @@
-﻿using AIdentities.Chat.Skills.ReplyToPrompt;
+﻿using System.Diagnostics.CodeAnalysis;
+using AIdentities.Chat.Skills.ReplyToPrompt;
 using AIdentities.Shared.Plugins.Connectors.Completion;
 
 namespace AIdentities.Shared.Features.CognitiveEngine.Engines.Conversational;
@@ -37,7 +38,13 @@ public class ChatCognitiveEngine : CognitiveEngine<CognitiveContext>
          yield break;
       }
 
-      await foreach (var item in ExecuteSkill(_replySkill, prompt, null, cancellationToken).ConfigureAwait(false))
+      SkillExecutionContext? skillExecutionContext = null;
+      if (missionContext is not null)
+      {
+         skillExecutionContext = new SkillExecutionContext(_replySkill, Context, missionContext);
+      }
+
+      await foreach (var item in ExecuteSkill(_replySkill, prompt, skillExecutionContext, cancellationToken).ConfigureAwait(false))
       {
          yield return item;
       }

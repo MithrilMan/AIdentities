@@ -54,7 +54,23 @@ public static class SkillDefinitionBuilder
       List<SkillExampleAttribute> examples = GetSkillExamples(skillType);
       foreach (var example in examples)
       {
-         skillDefinition.Examples.Add(example.Example!);
+         bool isStandardExample =
+            example.UserRequest?.Trim() is { Length: > 0 }
+            && example.Reasoning?.Trim() is { Length: > 0 }
+            && example.JsonExample is { Length: > 0 };
+
+         if (!isStandardExample && string.IsNullOrWhiteSpace(example.CustomExample))
+         {
+            throw new ArgumentException($"Type {skillType.FullName} has an empty {nameof(SkillExampleAttribute.CustomExample)} but it's not a standard example");
+         }
+
+         skillDefinition.Examples.Add(new SkillExample(isStandardExample)
+         {
+            UserRequest = example.UserRequest,
+            Reasoning = example.Reasoning,
+            JsonExample = example.JsonExample,
+            CustomExample = example.CustomExample
+         });
       }
 
       return skillDefinition;
@@ -164,9 +180,15 @@ public static class SkillDefinitionBuilder
       //   throw new ArgumentException($"Type {skillType.FullName} does not have any {nameof(SkillExampleAttribute)}");
       //}
 
-      if (examples.Any(example => string.IsNullOrWhiteSpace(example.Example)))
+      static bool IsValidExample(SkillExampleAttribute skillExample)
+         => (skillExample.UserRequest?.Trim() is { Length: > 0 }
+            && skillExample.Reasoning?.Trim() is { Length: > 0 }
+            && skillExample.JsonExample is { Length: > 0 }
+            ) || skillExample.CustomExample?.Trim() is { Length: > 0 };
+
+      if (examples.Any(example => !IsValidExample(example)))
       {
-         throw new ArgumentException($"Type {skillType.FullName} has an empty {nameof(SkillExampleAttribute.Example)}");
+         throw new ArgumentException($"Type {skillType.FullName} has an empty {nameof(SkillExampleAttribute.CustomExample)}");
       }
 
       return examples;

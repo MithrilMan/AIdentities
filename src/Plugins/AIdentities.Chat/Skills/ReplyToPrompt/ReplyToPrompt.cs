@@ -51,7 +51,7 @@ public partial class ReplyToPrompt : Skill
       var streamedResult = connector.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest
       {
          Messages = PromptTemplates.BuildPromptMessages(aidentity, history),
-         MaxGeneratedTokens = 200
+         //MaxGeneratedTokens = 200
       }, cancellationToken).ConfigureAwait(false);
 
       var streamedFinalThought = context.StreamFinalThought("");

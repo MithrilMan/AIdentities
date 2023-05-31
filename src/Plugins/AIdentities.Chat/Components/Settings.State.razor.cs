@@ -22,7 +22,7 @@ public partial class Settings
          pluginSettings ??= new();
          DefaultConnector = pluginSettings.DefaultConnector;
          EnableSkills = pluginSettings.EnableSkills;
-         EnabledSkills = pluginSettings.EnabledSkills.ToHashSet();
+         EnabledSkills = pluginSettings.EnabledSkills.Intersect(AllKnownSkillNames).ToHashSet();
          EnableTextToSpeech = pluginSettings.EnableTextToSpeech;
          DefaultTextToSpeechConnector = pluginSettings.DefaultTextToSpeechConnector;
          TextToSpeechMode = pluginSettings.TextToSpeechMode;

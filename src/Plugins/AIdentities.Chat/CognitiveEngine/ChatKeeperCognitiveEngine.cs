@@ -1,5 +1,6 @@
 ﻿using AIdentities.Shared.Features.CognitiveEngine.Engines.Reflexive;
 using AIdentities.Shared.Plugins.Connectors.Completion;
+using Polly;
 
 namespace AIdentities.Chat.CognitiveEngine;
 

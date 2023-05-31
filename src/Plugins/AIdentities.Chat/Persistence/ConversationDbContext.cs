@@ -1,17 +1,20 @@
 ﻿using AIdentities.Chat.Persistence.EntityConfigurations;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 
 namespace AIdentities.Chat.Persistence;
 public class ConversationDbContext : DbContext
 {
    readonly ILogger<ConversationDbContext> _logger;
    readonly IPluginStorage<PluginEntry> _pluginStorage;
+   readonly ILoggerFactory _loggerFactory;
 
-   public ConversationDbContext(ILogger<ConversationDbContext> logger, IPluginStorage<PluginEntry> pluginStorage)
+   public ConversationDbContext(ILogger<ConversationDbContext> logger,
+                                IPluginStorage<PluginEntry> pluginStorage,
+                                ILoggerFactory loggerFactory)
    {
       _logger = logger;
       _pluginStorage = pluginStorage;
+      _loggerFactory = loggerFactory;
    }
 
    public DbSet<Conversation> Conversations { get; set; }
@@ -19,22 +22,19 @@ public class ConversationDbContext : DbContext
 
    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
    {
-      optionsBuilder.UseSqlite($"Data Source={_pluginStorage?.GetPluginStoragePath()}/conversations.db");
+      base.OnConfiguring(optionsBuilder);
+
+      var logger = _loggerFactory.CreateLogger("Microsoft.EntityFrameworkCore");
+
+      optionsBuilder
+         .UseSqlite($"Data Source={_pluginStorage?.GetPluginStoragePath()}/conversations.db")
+         //.UseLoggerFactory(_loggerFactory)
+         .EnableSensitiveDataLogging();
    }
 
    protected override void OnModelCreating(ModelBuilder modelBuilder)
    {
       base.OnModelCreating(modelBuilder);
-      //modelBuilder.Entity<Conversation>()
-      //   .HasOne<ConversationMetadata>(c => c.Metadata)
-      //   .WithOne<Conversation>(c => c.ConversationId)
-      //    .Property(e => e.Metadata)
-      //    .one
-      //    .HasConversion(
-      //        v => JsonSerializer.Serialize(v, null),
-      //        v => JsonSerializer.Deserialize<ICollection<MyGuidEntity>>(v, null),
-
-      //    );
 
       modelBuilder.ApplyConfiguration(new ConversationTypeConfiguration());
       modelBuilder.ApplyConfiguration(new ConversationMessageTypeConfiguration());

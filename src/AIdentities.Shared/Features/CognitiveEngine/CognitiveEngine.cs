@@ -122,7 +122,6 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
 
    public IAsyncEnumerable<Thought> ExecuteSkill(ISkill skill, Prompt prompt, SkillExecutionContext? skillExecutionContext, CancellationToken cancellationToken)
    {
-
       var context = skillExecutionContext ?? new SkillExecutionContext(
          skill,
          cognitiveContext: Context,

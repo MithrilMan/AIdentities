@@ -10,12 +10,16 @@ public static class PromptTemplates
    const string TOKEN_DETECTED_SKILL = $"{nameof(TOKEN_DETECTED_SKILL)}";
    const string TOKEN_DETECTED_SKILL_EXAMPLE = $"{nameof(TOKEN_DETECTED_SKILL_EXAMPLE)}";
    const string TOKEN_AVAILABLE_SKILLS = $"{nameof(TOKEN_AVAILABLE_SKILLS)}";
+   const string TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1 = $"{nameof(TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1)}";
+   const string TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2 = $"{nameof(TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2)}";
 
    /// <summary>
    /// Prompt to detect a skill within the user prompt.
    /// Substitutes these tokens:
    /// <see cref="TOKEN_AVAILABLE_SKILLS"/> with the actual available skills.
    /// <see cref="TOKEN_USER_PROMPT"/> with the actual user prompt.
+   /// <see cref="TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1"/> with the actual good skill detector example 1.
+   /// <see cref="TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2"/> with the actual good skill detector example 2.
    /// </summary>
    const string FIND_SKILL = $"""
       Here a list of available skills that you can use, in yaml format:
@@ -29,17 +33,13 @@ public static class PromptTemplates
       If you can't find any skill, just return the word "{UNKNOWN_SKILL}".
 
       <START Examples>
-      UserRequest: I don't like the color of the background, I'd like it to be blue
-      Reasoning : The user is asking to change the theme of the application, ChangeTheme satisfies the request.
-      Skill: ChangeTheme
+      {TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1}
 
       UserRequest: I want to know the weather in Rome
       Reasoning : The user is asking for the weather in Rome, no available skill satisfy the request.
       Skill: {UNKNOWN_SKILL}
 
-      UserRequest: I'd like a colorful theme for the application
-      Reasoning : The user is asking to change the theme of the application, ChangeTheme satisfies the request.
-      Skill: ChangeTheme
+      {TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2}
       <END Examples>
 
       UserRequest: {TOKEN_USER_PROMPT}
@@ -109,9 +109,38 @@ public static class PromptTemplates
          sbAvailableSkills.AppendLine($"    when: {skill.Description}");
       }
 
+      var rnd = new Random();
+      var examples = (
+         from skill in availableSkills
+         from example in skill.Examples
+         where example.IsStandardExample
+         select new
+         {
+            Skill = skill,
+            Example = example
+         }).ToList();
+
+
       var sb = new StringBuilder(FIND_SKILL);
       sb.Replace(TOKEN_USER_PROMPT, userPrompt.Text);
       sb.Replace(TOKEN_AVAILABLE_SKILLS, string.Join(Environment.NewLine, sbAvailableSkills.ToString()));
+
+      var goodExample = examples.First();
+      sb.Replace(TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1, $"""
+                                                     UserRequest: {goodExample.Example.UserRequest}
+                                                     Reasoning : {goodExample.Example.Reasoning}
+                                                     Skill: {goodExample.Skill.Name}
+                                                     """);
+
+      if (examples.Count > 1)
+      {
+         goodExample = examples.Skip(1).ElementAt(rnd.Next(1, examples.Count - 1));
+      }
+      sb.Replace(TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2, $"""
+                                                     UserRequest: {goodExample.Example.UserRequest}
+                                                     Reasoning : {goodExample.Example.Reasoning}
+                                                     Skill: {goodExample.Skill.Name}
+                                                     """);
       return sb.ToString();
    }
 

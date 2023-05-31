@@ -149,6 +149,26 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
       }).ConfigureAwait(false);
    }, interval, PageCancellationToken);
 
+   /// <summary>
+   /// Debounces the specified action.
+   /// <paramref name="interval"/> is the time to wait before executing the action and is reset each time the action is invoked.
+   /// </summary>
+   /// <param name="actionAsync">The action to debounce.</param>
+   /// <param name="interval">
+   /// The interval to wait before executing the action.
+   /// It is reset each time the action is invoked.
+   /// </param>
+   /// <returns></returns>
+   protected Action DebounceAsync(Func<Task> actionAsync, TimeSpan interval)
+      => ThrottlerDebouncer.Debounce(async () =>
+      {
+         await InvokeAsync(async () =>
+         {
+            await actionAsync().ConfigureAwait(false);
+            StateHasChanged();
+         }).ConfigureAwait(false);
+      }, interval, PageCancellationToken);
+
 
    /// <summary>
    /// Throttles the specified action.

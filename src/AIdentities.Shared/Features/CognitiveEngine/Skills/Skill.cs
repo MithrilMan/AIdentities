@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
 
@@ -79,28 +80,25 @@ public abstract class Skill : ISkill
    /// If it fails, it will try to extract the arguments from the cognitive context.
    /// </summary>
    /// <typeparam name="TReturnValue">The type of the arguments to extract.</typeparam>
-   /// <param name="cognitiveContext">The cognitive context.</param>
-   /// <param name="missionContext">The mission context.</param>
+   /// <param name="context">The skill execution context.</param>
    /// <param name="args">The extracted arguments.</param>
    /// <returns>The extracted arguments.</returns>
    public virtual bool TryExtractFromContext<TReturnValue>(
       SkillExecutionContext context,
       [MaybeNullWhen(false)] out TReturnValue args) where TReturnValue : class
    {
-      var cognitiveContext = context.CognitiveContext;
-      var mission_skill_key = $"{cognitiveContext.AIdentity}_{Name}";
-      if (cognitiveContext.State.TryGetValue(mission_skill_key, out object? rawValue)
-         && rawValue is TReturnValue missionContextValue)
+
+      var result = context.CognitiveContext.GetOrDefault<TReturnValue?>(typeof(TReturnValue).GetType().Name);
+      if (result != null)
       {
-         args = missionContextValue;
+         args = result;
          return true;
       }
 
-      var cognitive_skill_key = $"{Name}";
-      if (cognitiveContext.State.TryGetValue(cognitive_skill_key, out rawValue)
-         && rawValue is TReturnValue cognitiveContextValue)
+      result = context.MissionContext?.GetOrDefault<TReturnValue?>(typeof(TReturnValue).Name);
+      if (result != null)
       {
-         args = cognitiveContextValue;
+         args = result;
          return true;
       }
 

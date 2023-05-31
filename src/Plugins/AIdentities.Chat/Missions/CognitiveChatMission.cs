@@ -1,9 +1,11 @@
 ﻿using System.Threading.Channels;
 using AIdentities.Chat.CognitiveEngine;
 using AIdentities.Chat.Skills.IntroduceYourself;
-using AIdentities.Chat.Skills.InviteFriend.Events;
+using AIdentities.Chat.Skills.InviteToChat.Events;
+using AIdentities.Shared.Features.AIdentities.Models;
 using AIdentities.Shared.Features.CognitiveEngine.Engines.Conversational;
 using AIdentities.Shared.Services.EventBus;
+using static MudBlazor.CategoryTypes;
 
 namespace AIdentities.Chat.Missions;
 
@@ -20,6 +22,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
    readonly ISkillManager _skillManager;
    readonly ICognitiveEngineProvider _cognitiveEngineProvider;
    readonly IEventBus _eventBus;
+   readonly IConversationHistory _conversationHistory;
    readonly ChatSettings _settings;
 
    /// <summary>
@@ -43,13 +46,15 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
                                IAIdentityProvider aIdentityProvider,
                                ISkillManager skillManager,
                                ICognitiveEngineProvider cognitiveEngineProvider,
-                               IEventBus eventBus)
+                               IEventBus eventBus,
+                               IConversationHistory conversationHistory)
    {
       _logger = logger;
       _aIdentityProvider = aIdentityProvider;
       _skillManager = skillManager;
       _cognitiveEngineProvider = cognitiveEngineProvider;
       _eventBus = eventBus;
+      _conversationHistory = conversationHistory;
       _settings = pluginSettingsManager.Get<ChatSettings>();
 
       _eventBus.Subscribe(this);
@@ -77,6 +82,9 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       }
 
       Context.AIdentitiesConstraints.AllowedAIdentities.Add(ChatKeeper);
+
+      //populate the missionContext with the chat history
+      Context.ConversationHistory = _conversationHistory;
    }
 
 
@@ -100,6 +108,8 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
    /// <param name="conversation"></param>
    public async Task StartNewConversationAsync(Conversation conversation)
    {
+      _conversationHistory.SetConversation(conversation);
+
       Context.CurrentConversation = conversation;
       Context.PartecipatingAIdentities.Clear();
 
@@ -169,7 +179,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
    /// <summary>
    /// When a new AIdentity is invited to the conversation, we create a new cognitive engine for it.
    /// This makes use of event bus to be notified when a new AIdentity is invited to the conversation.
-   /// The event is raised by the <see cref="Skills.InviteFriend.InviteFriend"/>skill.
+   /// The event is raised by the <see cref="Skills.InviteToChat.InviteToChat"/>skill.
    /// </summary>
    /// <param name="message"></param>
    /// <returns></returns>
@@ -185,5 +195,17 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
 
          await MakeAIdentityIntroduce(partecipatingAIdentity.CognitiveEngine).ConfigureAwait(false);
       }
+   }
+
+   public void SetNextTalker(AIdentity aIdentity)
+   {
+      Context.NextTalker = aIdentity;
+      Thoughts.Writer.TryWrite(new ActionThought(null, ChatKeeper, $"The next talker will be {aIdentity.Name}"));
+   }
+
+   public void SetModeratedMode(bool moderatedMode)
+   {
+      Context.IsModeratedModeEnabled = moderatedMode;
+      Thoughts.Writer.TryWrite(new ActionThought(null, ChatKeeper, $"Moderated mode is now {(moderatedMode ? "enabled" : "disabled")}"));
    }
 }

@@ -1,44 +1,44 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 
-namespace AIdentities.Chat.Skills.InviteFriend;
+namespace AIdentities.Chat.Skills.InviteToChat;
 
 [SkillDefinition(
    Name = NAME,
-   Description = "The user wants you to invite a friend",
+   Description = "The user wants you to invite someone to the conversation",
    Tags = new[] { SkillTags.TAG_CHAT }
    )]
 [SkillInputDefinition(
    Name = IN_WHO_TO_INVITE, Type = SkillVariableType.String,
    IsRequired = false,
-   Description = "Who the user wants to talk with/invite."
+   Description = "The name of the person the user wants to invite to the conversation."
    )]
 [SkillInputDefinition(
    Name = IN_CHARACTERISTIC_TO_HAVE, Type = SkillVariableType.String,
    IsRequired = false,
-   Description = "Which characteristic the friend must have in order to be invited."
+   Description = "Which characteristic the person must have in order to be invited to the conversation."
    )]
 [SkillOutputDefinition(
    Name = OUT_FRIEND_INVITED, Type = SkillVariableType.String,
    Description = "The Id of the AIdentity that has been invited to the conversation"
    )]
-[SkillExample(Example = """
-   UserRequest: Hey let's invite a friend, I'm feeling lonely
-   Reasoning: The user is asking to invite another friend to the chat because he feels lonely.
-   JSON: { "CharacteristicToHave": "Anyone that can alleviate the loneliness." }
-   """)]
-[SkillExample(Example = """
-   UserRequest: I'd like to talk with Ciccio Pasticcio
-   Reasoning: The user wants to talk with Ciccio Pasticcio.
-   JSON: { "WhoToInvite": "Ciccio Pasticcio" }
-   """)]
-[SkillExample(Example = """
-   UserRequest: I'd like to talk with someone expert in computer science
-   Reasoning: The user wants to talk with someone else, expert in computer science.
-   JSON: { "CharacteristicToHave": "expert in computer science" }
-   """)]
-public partial class InviteFriend : Skill
+[SkillExample(
+   UserRequest = "Hey let's invite someone, I'm feeling lonely",
+   Reasoning = "The user is asking to invite someone to the chat because he feels lonely.",
+   JsonExample = """{ "CharacteristicToHave": "Anyone that can alleviate the loneliness." }"""
+   )]
+[SkillExample(
+   UserRequest = "I'd like to talk with Ciccio Pasticcio",
+   Reasoning = "The user wants to talk with someone called Ciccio Pasticcio.",
+   JsonExample = """{ "WhoToInvite": "Ciccio Pasticcio" }"""
+   )]
+[SkillExample(
+   UserRequest = "I'd like to talk with someone expert in computer science",
+   Reasoning = "The user wants to talk with someone expert in computer science.",
+   JsonExample = """{ "CharacteristicToHave": "expert in computer science" }"""
+   )]
+public partial class InviteToChat : Skill
 {
-   const string NAME = nameof(InviteFriend);
+   const string NAME = nameof(InviteToChat);
    const string IN_WHO_TO_INVITE = nameof(WhoToInvite);
    const string IN_CHARACTERISTIC_TO_HAVE = nameof(CharacteristicToHave);
    const string OUT_FRIEND_INVITED = nameof(SetFriendInvited);

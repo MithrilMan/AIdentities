@@ -2,6 +2,7 @@
 using AIdentities.Shared.Features.CognitiveEngine;
 using AIdentities.Shared.Features.CognitiveEngine.Components;
 using AIdentities.Shared.Features.CognitiveEngine.Engines.Reflexive;
+using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors;
 using AIdentities.Shared.Services.EventBus;
@@ -52,5 +53,9 @@ public static class DependencyInjection
       // register the AIdentity skills feature and its tab to allow users
       // to enable or disable skills for an AIdentity and customize the settings for each skill that have customizable settings.
       services.AddSingleton(new AIdentityFeatureRegistration(typeof(AIdentityFeatureSkills), typeof(TabAIdentityFeatureSkills), "Skills"));
+
+      // Probably would be better to have ConversationHistory instantiated by a factory so a consumer
+      // can inject the factory and instantiate how many history it wants.
+      services.AddTransient<IConversationHistory, ConversationHistory>();
    }
 }

@@ -64,31 +64,30 @@ public class CognitiveChatStorage : ICognitiveChatStorage
    {
       using var trx = _dbContext.Database.BeginTransaction();
 
+      _dbContext.Conversations.Attach(conversation);
       if (message != null)
       {
          conversation.AddMessage(message);
+         _dbContext.Entry(message).State = EntityState.Added;
       }
 
-      _dbContext.Conversations.Update(conversation);
       await _dbContext.SaveChangesAsync().ConfigureAwait(false);
       await trx.CommitAsync().ConfigureAwait(false);
 
       return true;
    }
 
-   public async ValueTask<bool> DeleteMessageAsync(Conversation Conversation, ConversationMessage message)
+   public async ValueTask<bool> DeleteMessageAsync(Conversation conversation, ConversationMessage message)
    {
       using var trx = _dbContext.Database.BeginTransaction();
 
+      _dbContext.Conversations.Attach(conversation);
       if (message != null)
       {
-         //bool removed = _dbContext.ConversationMessages.Remove(message) != null;
-         //if (removed)
-         //{
-         //   Conversation.MessageCount--;
-         //}
-         Conversation.RemoveMessage(message.Id);
-         _dbContext.Conversations.Update(Conversation);
+         if (conversation.RemoveMessage(message.Id))
+         {
+            _dbContext.Entry(message).State = EntityState.Deleted;
+         }
       }
       await _dbContext.SaveChangesAsync().ConfigureAwait(false);
       await trx.CommitAsync().ConfigureAwait(false);

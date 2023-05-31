@@ -13,11 +13,12 @@ public partial class Settings : BasePluginSettingsTab<ChatSettings, Settings.Sta
 
    protected override void OnInitialized()
    {
-      base.OnInitialized();
       _validator = new Validator(ConversationalConnectors, TextToSpeechConnectors);
       _state.AvailableConnectors = ConversationalConnectors.ToDictionary(c => c.Name, c => c);
       _state.AvailableTTSConnectors = TextToSpeechConnectors.ToDictionary(c => c.Name, c => c);
       _state.AllKnownSkillNames = SkillManager.GetSkillDefinitions().Select(s => s.Name).ToList();
+
+      base.OnInitialized();
    }
 
    protected override async ValueTask<bool> AreSettingsValid()

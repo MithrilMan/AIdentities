@@ -1,10 +1,9 @@
-﻿namespace AIdentities.Shared.Features.CognitiveEngine.Skills.Attributes;
+﻿namespace AIdentities.Shared.Features.CognitiveEngine.Skills;
 
 /// <summary>
-/// An attribute used to create an example of how to use the skill.
+/// An example of how to use the skill.
 /// </summary>
-[AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = true)]
-public class SkillExampleAttribute : Attribute
+public record SkillExample(bool IsStandardExample)
 {
    /// <summary>
    /// A full example of how to use the skill.

@@ -1,16 +1,14 @@
-﻿using System.Runtime.CompilerServices;
-using AIdentities.Chat.Skills.InviteFriend.Events;
-using AIdentities.Shared.Services.EventBus;
+﻿using AIdentities.Shared.Services.EventBus;
 
-namespace AIdentities.Chat.Skills.InviteFriend;
+namespace AIdentities.Chat.Skills.InviteToChat;
 
-public partial class InviteFriend : Skill
+public partial class InviteToChat : Skill
 {
-   readonly ILogger<InviteFriend> _logger;
+   readonly ILogger<InviteToChat> _logger;
    readonly IAIdentityProvider _aIdentityProvider;
    readonly IEventBus _eventBus;
 
-   public InviteFriend(ILogger<InviteFriend> logger,
+   public InviteToChat(ILogger<InviteToChat> logger,
                        IAIdentityProvider aIdentityProvider,
                        IEventBus eventBus)
    {
@@ -41,7 +39,7 @@ public partial class InviteFriend : Skill
          SetFriendInvited(context, aidentity);
          yield return context.IntrospectiveThought($"I've inserted the AIdentity to invite in the cognitive key {OUT_FRIEND_INVITED}");
 
-         await _eventBus.PublishAsync(new InviteToConversation(aidentity)).ConfigureAwait(false);
+         await _eventBus.PublishAsync(new Events.InviteToConversation(aidentity)).ConfigureAwait(false);
       }
       else
       {
@@ -59,7 +57,7 @@ public partial class InviteFriend : Skill
             SetFriendInvited(context, aidentity);
             yield return context.IntrospectiveThought($"I've inserted the AIdentity to invite in the cognitive key {OUT_FRIEND_INVITED}");
 
-            await _eventBus.PublishAsync(new InviteToConversation(aidentity)).ConfigureAwait(false);
+            await _eventBus.PublishAsync(new Events.InviteToConversation(aidentity)).ConfigureAwait(false);
          }
       }
    }

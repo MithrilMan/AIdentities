@@ -38,4 +38,35 @@ public interface IMissionContext
    /// A sort of collective meaningfull memory.
    /// </summary>
    Dictionary<string, object> State { get; }
+
+   /// <summary>
+   /// Get the value of the given key in the State dictionary.
+   /// If the key is not present or the value is not of the given type, return the default value (cannot be null).
+   /// </summary>
+   /// <typeparam name="T">The type of the value to get.</typeparam>
+   /// <param name="key">The key of the value to get.</param>
+   /// <param name="defaultValue">The default value to return if the key is not present or the value is not of the given type.
+   /// The default value cannot be null and will be stored in the dictionary.
+   /// </param>
+   /// <returns>The value of the given key in the State dictionary or the default (non null) value.</returns>
+   /// <exception cref="ArgumentNullException"></exception>
+   T GetOrDefault<T>(string key, T defaultValue);
+
+   /// <summary>
+   /// Get the value of the given key in the State dictionary.
+   /// If the key is not present or the value is not of the given type, return null.
+   /// </summary>
+   /// <typeparam name="T">The type of the value to get.</typeparam>
+   /// <param name="key">The key of the value to get.</param>
+   /// <returns>The value of the given key in the State dictionary or the default value of the type.</returns>
+   T? GetOrDefault<T>(string key);
+
+   /// <summary>
+   /// Set the value of the given key in the State dictionary.
+   /// if the passed value is null, the key is removed from the dictionary.
+   /// </summary>
+   /// <typeparam name="T">The type of the value to set.</typeparam>
+   /// <param name="key">The key of the value to set.</param>
+   /// <param name="value">The value to set.</param>
+   void SetOrRemove<T>(string key, T? value);
 }
