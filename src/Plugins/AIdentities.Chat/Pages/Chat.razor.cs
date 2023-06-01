@@ -13,7 +13,6 @@ public partial class Chat : AppPage<Chat>
    const string LIST_ID = "message-list-wrapper";
    const string LIST_SELECTOR = $"#{LIST_ID}";
 
-   [Inject] private IDialogService DialogService { get; set; } = null!;
    [Inject] private IEnumerable<IConversationalConnector> ChatConnectors { get; set; } = null!;
    [Inject] private IChatStorage ChatStorage { get; set; } = null!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;

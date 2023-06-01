@@ -1,4 +1,5 @@
-﻿using AIdentities.Shared.Services;
+﻿using AIdentities.Shared.Features.Core.Components;
+using AIdentities.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Toolbelt.Blazor.HotKeys2;
 
@@ -12,6 +13,7 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
    [Inject] protected ILogger<TAppComponent> Logger { get; set; } = default!;
    [Inject] protected IAppComponentSettingsManager ComponentSettingsManager { get; set; } = default!;
    [Inject] protected INotificationService NotificationService { get; set; } = default!;
+   [Inject] protected IDialogService DialogService { get; set; } = default!;
    [Inject] private HotKeys Hotkeys { get; set; } = default!;
 
    [Parameter] public string SettingsKey { get; set; } = typeof(TAppPageSettings).Name;
@@ -204,6 +206,20 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
             StateHasChanged();
          }).ConfigureAwait(false);
       }, interval, PageCancellationToken);
+
+
+   protected Task ShowHotKeysCheatSheet()
+      => DialogService.ShowAsync<HotKeyCheatSheet>("Current Page HotKeys", new DialogParameters
+      {
+         { nameof(HotKeyCheatSheet.HotKeysContext), _hotKeysContext }
+      }, new DialogOptions()
+      {
+         CloseButton = true,
+         CloseOnEscapeKey = true,
+         Position = DialogPosition.Center,
+         FullWidth = true,
+      });
+
 
    public virtual void Dispose()
    {

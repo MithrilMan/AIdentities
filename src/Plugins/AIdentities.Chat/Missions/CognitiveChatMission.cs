@@ -3,6 +3,7 @@ using AIdentities.Chat.CognitiveEngine;
 using AIdentities.Chat.Skills.IntroduceYourself;
 using AIdentities.Chat.Skills.InviteToChat.Events;
 using AIdentities.Shared.Features.CognitiveEngine.Engines.Conversational;
+using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 using AIdentities.Shared.Services.EventBus;
 
 namespace AIdentities.Chat.Missions;
@@ -38,6 +39,9 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
    /// The AIdentity responsible for keeping the conversation.
    /// </summary>
    public AIdentity ChatKeeper { get; set; } = new ChatKeeper();
+   public Conversation? CurrentConversation => Context.CurrentConversation;
+
+   public IEnumerable<AIdentity> ParticipatingAIdentities => Context.ParticipatingAIdentities.Select(p => p.Value.AIdentity);
 
    public CognitiveChatMission(ILogger<CognitiveChatMission> logger,
                                IPluginSettingsManager pluginSettingsManager,
@@ -94,6 +98,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
 
    public void ClearConversation()
    {
+      _conversationHistory.SetConversation(null);
       Context.CurrentConversation = null;
       Context.ParticipatingAIdentities.Clear();
    }

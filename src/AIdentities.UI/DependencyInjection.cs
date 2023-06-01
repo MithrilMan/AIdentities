@@ -2,6 +2,8 @@
 using AIdentities.UI.Features.Core.Services.PageManager;
 using AIdentities.UI.Features.Core.Services.Plugins;
 using AIdentities.UI.Features.Core.Services.PluginStaticResources;
+using ElectronNET.API.Entities;
+using ElectronNET.API;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using MudExtensions.Services;
@@ -45,7 +47,16 @@ public static class DependencyInjection
       // validators and use ValidateOnStart.
       services
          .AddOptions<AppOptions>()
-         .BindConfiguration(AppOptions.SECTION_NAME);
+         .BindConfiguration(AppOptions.SECTION_NAME)
+         .PostConfigure(async options =>
+         {
+            if (HybridSupport.IsElectronActive)
+            {
+               var appData = await Electron.App.GetPathAsync(PathName.UserData).ConfigureAwait(false);
+               options.PackageFolder = appData;
+               Console.WriteLine("Electron is active, setting package folder to: " + options.PackageFolder);
+            }
+         });
 
       // inject the services from the Shared project
       services.AddSharedServices();

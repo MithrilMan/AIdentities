@@ -1,19 +1,19 @@
 {
    "executable": "AIdentities.UI",
    "splashscreen": {
-      "imageFile": "wwwroot/Icon-1024.png"
+      "imageFile": "wwwroot/splash-512.png"
    },
    "name": "AIdentities",
    "author": "",
    "description": "Create and team up with tailor-made personas that unleash your AI's untapped potential",
    "homepage": "https://github.com/MithrilMan/AIdentities/",
-   "singleInstance": false,
+   "singleInstance": true,
    "environment": "Production",
    "build": {
       "appId": "com.AIdentities.app",
       "productName": "AIdentities",
       "copyright": "Copyright © 2023 MithrilMan",
-      "buildVersion": "1.0.0",
+      "buildVersion": "0.1.2",
       "compression": "maximum",
       "directories": {
          "output": "../../../../../bin/Desktop"

@@ -1,4 +1,5 @@
-﻿using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+﻿using System.Collections.Concurrent;
+using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Toolbelt.Blazor.HotKeys2;
@@ -16,7 +17,6 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    const string LIST_ID = "message-list-wrapper";
    const string LIST_SELECTOR = $"#{LIST_ID}";
 
-   [Inject] private IDialogService DialogService { get; set; } = null!;
    [Inject] private IEnumerable<IConversationalConnector> ChatConnectors { get; set; } = null!;
    [Inject] private ICognitiveChatStorage ChatStorage { get; set; } = null!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
@@ -35,7 +35,9 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    /// <summary>
    /// reference to the _chatKeeper instance
    /// </summary>
-   readonly Dictionary<Guid, ConversationMessage> _unfinisheMessages = new();
+   //readonly Dictionary<Guid, ConversationMessage> _unfinisheMessages = new();
+   readonly ConcurrentDictionary<Guid, IStreamedThought> _streamingChatKeeperThoughts = new();
+   readonly ConcurrentDictionary<Guid, ConversationMessage> _streamingMessages = new();
 
    MudTextFieldExtended<string?> _messageTextField = default!;
    private ChatSettings _chatSettings = default!;
@@ -48,7 +50,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    protected override void OnInitialized()
    {
       base.OnInitialized();
-      _state.Initialize(Filter, AIdentityProvider);
+      _state.Initialize(CognitiveChatMission, AIdentityProvider);
 
       _chatSettings = PluginSettingsManager.Get<ChatSettings>();
       _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled && c.Name == _chatSettings.DefaultConnector);
@@ -62,6 +64,18 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
       CognitiveChatMission.Start(PageCancellationToken);
       _ = StartConsumingThoughts(PageCancellationToken);
+   }
+
+
+   protected override void ConfigureHotKeys(HotKeysContext hotKeysContext)
+   {
+      base.ConfigureHotKeys(hotKeysContext);
+      hotKeysContext.Add(ModCode.Ctrl, Code.E, ExportConversation, "Export the conversation.");
+      hotKeysContext.Add(ModCode.None, Code.Delete, OnHotkeyDeleteMessage, "Delete the selected message.");
+      hotKeysContext.Add(ModCode.Ctrl, Code.M, OnHotkeyModerate, "Toggle the conversation moderation mode, enabling custom tools to chose who can talk and about what.");
+      hotKeysContext.Add(ModCode.None, Code.ArrowUp, OnHotkeyArrowUp, "Select the previous message");
+      hotKeysContext.Add(ModCode.None, Code.ArrowDown, OnHotkeyArrowDown, "Select the next message");
+      hotKeysContext.Add(ModCode.Ctrl, Code.R, OnHotkeyResend, "Resend last message");
    }
 
    private async Task StartConsumingThoughts(CancellationToken cancellationToken)
@@ -90,36 +104,49 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       // and we can add it to the list
       if (thought.IsStreamedThought(out var streamedThought))
       {
-         if (!_unfinisheMessages.TryGetValue(streamedThought.Id, out var message))
+         if (thought.AIdentityId == CognitiveChatMission.ChatKeeper.Id)
          {
-            message = new ConversationMessage(
-               text: "",
-               aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
-            );
-            _unfinisheMessages[streamedThought.Id] = message;
-
-            if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
+            if (!_streamingChatKeeperThoughts.TryGetValue(streamedThought.Id, out var streamingThought))
             {
-               await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
+               _streamingChatKeeperThoughts[streamedThought.Id] = streamedThought;
             }
-            else
+
+            if (streamedThought.IsStreamComplete)
             {
+               _streamingChatKeeperThoughts.TryRemove(streamedThought.Id, out _);
                _state.ChatKeeperThoughts.Add(thought);
             }
          }
-
-         message.UpdateText(streamedThought.Content);
-         await ScrollToEndOfMessageList().ConfigureAwait(false);
-
-         if (streamedThought.IsStreamComplete)
+         else
          {
-            _unfinisheMessages.Remove(streamedThought.Id);
-            await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
+            if (!_streamingMessages.TryGetValue(streamedThought.Id, out var streamingMessage))
+            {
+               streamingMessage = new ConversationMessage(
+                  text: "",
+                  aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
+                  );
+
+               _streamingMessages[streamedThought.Id] = streamingMessage;
+            }
+
+            streamingMessage.UpdateText(streamedThought.Content);
+            await ScrollToEndOfMessageList().ConfigureAwait(false);
+
+            if (streamedThought.IsStreamComplete)
+            {
+               _streamingMessages.Remove(streamedThought.Id, out _);
+               await UpdateChatStorageIfNeeded(thought, streamingMessage).ConfigureAwait(false);
+            }
          }
       }
       else
       {
-         if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
+         if (thought.AIdentityId == CognitiveChatMission.ChatKeeper.Id)
+         {
+            await ChatKeeperIsThinking().ConfigureAwait(false);
+            _state.ChatKeeperThoughts.Add(thought);
+         }
+         else
          {
             // if the thought is not streamed, we just add it to the list
             var message = new ConversationMessage(
@@ -127,14 +154,8 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
                aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
                );
 
-            await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
             await ScrollToEndOfMessageList().ConfigureAwait(false);
             await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
-         }
-         else
-         {
-            await ChatKeeperIsThinking().ConfigureAwait(false);
-            _state.ChatKeeperThoughts.Add(thought);
          }
       }
    }
@@ -147,20 +168,11 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       _stopChatKeeperThinkingAnimation();
    }
 
-
-
-   protected override void ConfigureHotKeys(HotKeysContext hotKeysContext)
-   {
-      base.ConfigureHotKeys(hotKeysContext);
-      hotKeysContext.Add(ModCode.Ctrl, Code.E, ExportConversation, "Export the conversation.");
-      hotKeysContext.Add(ModCode.None, Code.Delete, OnHotkeyDeleteMessage, "Delete the selected message.");
-   }
-
    private async ValueTask ExportConversation()
    {
       if (_state.NoConversation) return;
 
-      if (_state.Messages.UnfilteredCount is not > 0)
+      if (_state.CurrentConversation is not { Messages.Count: > 0 })
       {
          NotificationService.ShowWarning("The conversation is empty, nothing to export.");
          return;
@@ -172,7 +184,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
           yesText: "Export it!", cancelText: "Cancel").ConfigureAwait(false);
       if (result != true) return;
 
-      Guid conversationId = _state.SelectedConversation!.Id;
+      Guid conversationId = _state.CurrentConversation.Id;
       await ConversationExporter.ExportConversationAsync(conversationId, ConversationExportFormat.Html).ConfigureAwait(false);
    }
 
@@ -184,16 +196,48 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       await InvokeAsync(StateHasChanged).ConfigureAwait(false);
    }
 
-   public async ValueTask<IEnumerable<ConversationMessage>> Filter(IEnumerable<ConversationMessage> unfilteredItems)
+   private async ValueTask OnHotkeyModerate()
    {
-      if (_state.MessageSearchText is null) return unfilteredItems;
+      if (_state.NoConversation) return;
 
-      await ValueTask.CompletedTask.ConfigureAwait(false);
+      _state.IsModeratorModeEnabled = !_state.IsModeratorModeEnabled;
+      OnIsModeratorModeEnabledChanged();
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+   }
 
-      unfilteredItems = unfilteredItems
-         .Where(item => item.Text?.Contains(_state.MessageSearchText, StringComparison.OrdinalIgnoreCase) ?? false);
+   private async ValueTask OnHotkeyArrowUp()
+   {
+      if (_state.NoConversation || _state.SelectedMessage is null) return;
 
-      return unfilteredItems;
+      var previousMessage = _state.CurrentConversation.Messages.TakeWhile(m => m != _state.SelectedMessage).LastOrDefault();
+      if (previousMessage is not null)
+      {
+         _state.SelectedMessage = previousMessage;
+      }
+
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+      await ScrollService.EnsureIsVisible($"{LIST_SELECTOR} .mud-selected-item").ConfigureAwait(false);
+   }
+
+   private async ValueTask OnHotkeyArrowDown()
+   {
+      if (_state.NoConversation || _state.SelectedMessage is null) return;
+
+      var nextMessage = _state.CurrentConversation.Messages.SkipWhile(m => m != _state.SelectedMessage).Skip(1).FirstOrDefault();
+      if (nextMessage is not null)
+      {
+         _state.SelectedMessage = nextMessage;
+      }
+
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+      await ScrollService.EnsureIsVisible($"{LIST_SELECTOR} .mud-selected-item").ConfigureAwait(false);
+   }
+
+   private async ValueTask OnHotkeyResend()
+   {
+      if (!_state.HasMessageGenerationFailed) return;
+
+      await Resend().ConfigureAwait(false);
    }
 
    private async Task SendMessageAsync()
@@ -214,20 +258,16 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
          try
          {
-            await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, message).ConfigureAwait(false);
+            await ChatStorage.UpdateConversationAsync(_state.CurrentConversation!, message).ConfigureAwait(false);
          }
          catch (Exception ex)
          {
             NotificationService.ShowError($"Error while updating the conversation: {ex.Message}");
          }
 
-         // the append has to be done on the same thread the UI is using to render, to prevent "a collection has been modified" exceptions
-         await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
-
          _state.Message = string.Empty;
 
          await ScrollToEndOfMessageList().ConfigureAwait(false);
-
          await HandlePrompt(message).ConfigureAwait(false);
       }
    }
@@ -256,37 +296,30 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    private async Task ScrollToEndOfMessageList()
    {
       await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-      await Task.Delay(100).ConfigureAwait(false);
+      await Task.Delay(250).ConfigureAwait(false);
       await ScrollService.ScrollToBottom(LIST_SELECTOR).ConfigureAwait(false);
    }
 
-   async Task OnConversationChanged()
+   async Task OnConversationChanged(Conversation conversation)
    {
-      if (_state.NoConversation)
+      if (conversation == null)
       {
-         await _state.CloseConversation().ConfigureAwait(false);
-         _state.ChatKeeperThoughts.Clear();
-         CognitiveChatMission.ClearConversation();
+         _state.CloseConversation();
          return;
       }
 
-      Conversation conversation;
-
       try
       {
-         conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation!.Id).ConfigureAwait(false);
+         conversation = await ChatStorage.LoadConversationAsync(conversation.Id).ConfigureAwait(false);
       }
       catch (Exception ex)
       {
          NotificationService.ShowError($"Failed to load conversation: {ex.Message}");
-         await _state.CloseConversation().ConfigureAwait(false);
+         _state.CloseConversation();
          return;
       }
 
       await _state.InitializeConversation(conversation).ConfigureAwait(false);
-
-      await CognitiveChatMission.StartNewConversationAsync(conversation).ConfigureAwait(false);
-
       await ScrollToEndOfMessageList().ConfigureAwait(false);
    }
 
@@ -310,10 +343,12 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       }
    }
 
-   Task Resend() => HandlePrompt(_state.Messages.UnfilteredItems.Last(m => !m.IsAIGenerated));
+   Task Resend() => HandlePrompt(_state.CurrentConversation!.Messages.Last(m => !m.IsAIGenerated));
 
    async Task OnDeleteMessage(ConversationMessage message)
    {
+      if (_state.CurrentConversation is null) return;
+
       bool? result = await DialogService.ShowMessageBox(
          "Do you want to REMOVE the message?",
          "Removing the message is permanent and cannot be undone.",
@@ -321,14 +356,19 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
       if (result != true) return;
 
-      if (await ChatStorage.DeleteMessageAsync(_state.SelectedConversation!, message).ConfigureAwait(false))
-      {
-         await _state.Messages.RemoveItemAsync(message).ConfigureAwait(false);
 
-         // we cannot remove easily a message from the PromptGenerator, so we just reset the conversation
-         var conversation = await ChatStorage.LoadConversationAsync(_state.SelectedConversation!.Id).ConfigureAwait(false);
-         await _state.InitializeConversation(conversation, loadMessages: false).ConfigureAwait(false);
-         await CognitiveChatMission.StartNewConversationAsync(conversation).ConfigureAwait(false);
+      // we store the next selectable message, to select it after the deletion
+      var nextSelectableMessage = _state.CurrentConversation.Messages.TakeWhile(m => m != message).LastOrDefault()
+         ?? _state.CurrentConversation.Messages.Skip(1).FirstOrDefault();
+
+      if (await ChatStorage.DeleteMessageAsync(_state.CurrentConversation, message).ConfigureAwait(false))
+      {
+         bool deleted = _state.CurrentConversation.RemoveMessage(message.Id);
+
+         if (_state.SelectedMessage == message)
+         {
+            _state.SelectedMessage = nextSelectableMessage;
+         }
       }
    }
 
@@ -341,20 +381,20 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
    async Task AddParticipant(AIdentity aIdentity)
    {
-      if (_state.SelectedConversation is null)
+      if (_state.NoConversation)
       {
          NotificationService.ShowError("No conversation selected");
          return;
       }
-      if (_state.SelectedConversation.AIdentityIds.Contains(aIdentity.Id))
+
+      if (_state.CurrentConversation.AIdentityIds.Contains(aIdentity.Id))
       {
          NotificationService.ShowError("AIdentity already in conversation");
          return;
       }
-      _state.SelectedConversation.AddAIdentity(aIdentity);
+
       CognitiveChatMission.AddParticipant(aIdentity.Id);
-      _state.ParticipatingAIdentities.Add(aIdentity);
-      await ChatStorage.UpdateConversationAsync(_state.SelectedConversation, null).ConfigureAwait(false);
+      await ChatStorage.UpdateConversationAsync(_state.CurrentConversation, null).ConfigureAwait(false);
    }
 
 
@@ -375,10 +415,12 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
    public async Task UpdateChatStorageIfNeeded(Thought generatingThought, ConversationMessage message)
    {
+      if (_state.NoConversation) return;
+
       if (generatingThought.IsFinalThought())
       {
          //final thought are saved in the database because are meaningful conversation messages
-         await ChatStorage.UpdateConversationAsync(_state.SelectedConversation!, message).ConfigureAwait(false);
+         await ChatStorage.UpdateConversationAsync(_state.CurrentConversation, message).ConfigureAwait(false);
 
          if (!_chatSettings.EnableTextToSpeech || _state.TextToSpeechConnector is null) return;
 
@@ -414,16 +456,27 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
    void OnIsModeratorModeEnabledChanged() => CognitiveChatMission.SetModeratedMode(_state.IsModeratorModeEnabled);
    public void SetNextTalker(AIdentity aIdentity) => CognitiveChatMission.SetNextTalker(aIdentity);
-   Task ReplyToLastMessage(AIdentity talker)
+   async Task ReplyToLastMessage(AIdentity talker)
    {
+      if (_state.NoConversation) return;
+
       SetNextTalker(talker);
-      return CognitiveChatMission.ReplyToMessageAsync(_state.SelectedConversation?.Messages.LastOrDefault());
+      await CognitiveChatMission.ReplyToMessageAsync(_state.CurrentConversation.Messages.LastOrDefault()).ConfigureAwait(false);
    }
 
    Task ReplyToSelectedMessage(AIdentity talker)
    {
       SetNextTalker(talker);
       return CognitiveChatMission.ReplyToMessageAsync(_state.SelectedMessage);
+   }
+
+   IEnumerable<ConversationMessage> GetMessagesToDisplay()
+   {
+      if (_state.NoConversation) return Enumerable.Empty<ConversationMessage>();
+
+      return _state.CurrentConversation.Messages
+         .Union(_streamingMessages.Values.ToList())
+         .OrderBy(m => m.CreationDate);
    }
 
    public override void Dispose()

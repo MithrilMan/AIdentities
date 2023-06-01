@@ -1,4 +1,6 @@
-﻿using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+﻿using System.Diagnostics.CodeAnalysis;
+using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
+using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 
 namespace AIdentities.Chat.Pages;
 
@@ -8,11 +10,21 @@ public partial class CognitiveChat
    {
       public string? MessageSearchText { get; set; }
 
-      public Conversation? SelectedConversation { get; set; }
       /// <summary>
       /// True if no conversation is selected.
       /// </summary>
-      public bool NoConversation => SelectedConversation is null;
+      [MemberNotNullWhen(false, nameof(CurrentConversation))]
+      public bool NoConversation => CognitiveChatMission.CurrentConversation is null;
+
+      /// <summary>
+      /// returns the current conversation.
+      /// </summary>
+      public Conversation? CurrentConversation => CognitiveChatMission.CurrentConversation;
+
+      /// <summary>
+      /// Current participating AIdentities.
+      /// </summary>
+      public IEnumerable<AIdentity> ParticipatingAIdentities => CognitiveChatMission.ParticipatingAIdentities;
 
       /// <summary>
       /// True if the user can moderate the conversation.
@@ -23,7 +35,6 @@ public partial class CognitiveChat
 
       public string? Message { get; set; }
       public ConversationMessage? SelectedMessage { get; set; } = default!;
-      public FilteredObservableCollection<ConversationMessage> Messages { get; private set; } = default!;
 
       /// <summary>
       /// This is used to prevent the user from sending multiple messages before the first one has been replied to.
@@ -31,9 +42,9 @@ public partial class CognitiveChat
       /// </summary>
       public bool IsWaitingReply { get; set; }
 
-      public bool CanSendMessage => Connector != null && !IsWaitingReply && SelectedConversation != null;
+      public bool CanSendMessage => Connector != null && !IsWaitingReply && !NoConversation;
 
-      public bool HasMessageGenerationFailed { get; internal set; }
+      public bool HasMessageGenerationFailed => !CurrentConversation?.Messages.LastOrDefault()?.IsAIGenerated ?? false; //{ get; internal set; }
 
       /// <summary>
       /// The response from the chat API, streamed as it comes in.
@@ -55,12 +66,9 @@ public partial class CognitiveChat
       /// </summary>
       public ITextToSpeechConnector? TextToSpeechConnector { get; internal set; }
 
-      /// <summary>
-      /// A collection of all the AIdentities that are participating in the current conversation.
-      /// </summary>
-      public HashSet<AIdentity> ParticipatingAIdentities { get; set; } = new HashSet<AIdentity>();
+      public string ParticipatingAIdentitiesTooltip => string.Join(", ", CognitiveChatMission.ParticipatingAIdentities.Select(aidentity => aidentity.Name));
 
-      public string ParticipatingAIdentitiesTooltip => string.Join(", ", ParticipatingAIdentities.Select(aidentity => aidentity.Name));
+      public CognitiveChatMission CognitiveChatMission { get; private set; } = default!;
 
       public IAIdentityProvider AIdentityProvider { get; private set; } = default!;
 
@@ -77,37 +85,23 @@ public partial class CognitiveChat
       public bool IsChatKeeperThinking { get; set; }
 
 
-      public void Initialize(Func<IEnumerable<ConversationMessage>, ValueTask<IEnumerable<ConversationMessage>>> messageFilter, IAIdentityProvider aidentityProvider)
+      public void Initialize(CognitiveChatMission cognitiveChatMission, IAIdentityProvider aidentityProvider)
       {
-         Messages = new(messageFilter);
+         CognitiveChatMission = cognitiveChatMission;
          AIdentityProvider = aidentityProvider;
          MessageSearchText = null;
       }
 
-      public async Task InitializeConversation(Conversation conversation, bool loadMessages = true)
+      public async Task InitializeConversation(Conversation conversation)
       {
-         SelectedConversation = conversation;
-         // if the last message is not generated, we need to generate a reply so we enable the "resend" button
-         HasMessageGenerationFailed = conversation.Messages?.LastOrDefault()?.IsAIGenerated == false;
-         if (loadMessages)
-         {
-            await Messages.LoadItemsAsync(conversation.Messages).ConfigureAwait(false);
-         }
-
-         ParticipatingAIdentities = conversation.AIdentityIds
-            .Select(AIdentityProvider.Get)
-            .Where(aidentity => aidentity is not null)
-            .Select(aidentity => aidentity!)
-            .ToHashSet();
+         await CognitiveChatMission.StartNewConversationAsync(conversation).ConfigureAwait(false);
+         SelectedMessage = conversation.Messages.FirstOrDefault();
       }
 
-      public async Task CloseConversation()
+      public void CloseConversation()
       {
-         SelectedConversation = null;
-         HasMessageGenerationFailed = false;
-         await Messages.LoadItemsAsync(null).ConfigureAwait(false);
-
-         ParticipatingAIdentities.Clear();
+         ChatKeeperThoughts.Clear();
+         CognitiveChatMission.ClearConversation();
       }
    }
 

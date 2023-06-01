@@ -33,7 +33,7 @@ public class ConversationHistory : IConversationHistory
       return messages;
    }
 
-   public void SetConversation(Conversation conversation)
+   public void SetConversation(Conversation? conversation)
    {
       CurrentConversation = conversation;
    }

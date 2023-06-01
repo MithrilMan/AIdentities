@@ -18,7 +18,7 @@ public interface IConversationHistory
    /// Sets the conversation to manage.
    /// </summary>
    /// <param name="conversation">The conversation to manage.</param>
-   void SetConversation(Conversation conversation);
+   void SetConversation(Conversation? conversation);
 
    /// <summary>
    /// Returns the conversation history from the point of view of the given aIdentity.

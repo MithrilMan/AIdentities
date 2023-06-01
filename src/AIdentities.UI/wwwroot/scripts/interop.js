@@ -26,6 +26,13 @@ function scrollElementToBottom(element) {
    }
 }
 
+window.ensureIsVisible = (childSelector) => {
+   const child = document.querySelector(childSelector);
+   if (child != null) {
+      child.scrollIntoView({ behavior: 'smooth' });
+   }
+}
+
 window.downloadFileFromStream = async (fileName, contentStreamReference) => {
    const arrayBuffer = await contentStreamReference.arrayBuffer();
    const blob = new Blob([arrayBuffer]);

@@ -15,9 +15,4 @@ public class PlayAudioStream : IPlayAudioStream
    {
       await _jsRuntime.InvokeVoidAsync("playAudioFileStream", streamReference).ConfigureAwait(false);
    }
-
-   public async Task ScrollToBottom(string selector)
-   {
-      await _jsRuntime.InvokeVoidAsync("scrollElementToBottom", selector).ConfigureAwait(false);
-   }
 }

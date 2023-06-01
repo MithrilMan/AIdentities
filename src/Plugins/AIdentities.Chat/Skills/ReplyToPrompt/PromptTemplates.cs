@@ -62,7 +62,7 @@ internal static class PromptTemplates
       );
 
       var messages = chatHistory.ToList();
-      foreach (var oldMessage in messages.SkipLast(1))
+      foreach (var oldMessage in messages) //.SkipLast(1))
       {
          yield return CreateMessage(oldMessage);
       }

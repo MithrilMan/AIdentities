@@ -95,13 +95,14 @@
       <div class="d-flex flex-column flex-grow-1 overflow-y-auto" id="@LIST_ID">
          <MudPaper Class="d-flex flex-column flex-grow-1 pa-2 gap-1" Outlined="true">
             <MudList Class="list d-flex flex-column flex-grow-1" DisablePadding="true" DisableGutters="true" Dense="true"
-                     Clickable="true" SelectedItemChanged="OnSelectedMessageChanged">
+                     Clickable="true" SelectedItemChanged="OnSelectedMessageChanged"
+                     SelectedValue="_state.SelectedMessage">
                <MudSpacer />
                @{
                   Guid? lastAIdentity = null;
                   var lastMessageWasGenerated = false;
                }
-               @foreach (var message in _state.Messages.Items)
+               @foreach (var message in GetMessagesToDisplay())
                {
                   var newMessageGroup = lastMessageWasGenerated != message.IsAIGenerated || (message.IsAIGenerated && lastAIdentity != message.AuthorId);
                   lastAIdentity = message.AuthorId;
@@ -178,7 +179,7 @@
 
    <MudItem xs="3" Class="mud-height-full">
       <MudPaper Class="mud-height-full">
-         <ConversationList Class="mud-height-full" @bind-Conversation="_state.SelectedConversation" @bind-Conversation:after="OnConversationChanged" />
+         <ConversationList Class="mud-height-full" Conversation="_state.CurrentConversation" ConversationChanged="OnConversationChanged" />
       </MudPaper>
    </MudItem>
 </MudGrid>
@@ -202,16 +203,16 @@
       {
          return "Select a conversation";
       }
-      return _state.SelectedConversation!.Title;
+      return _state.CurrentConversation.Title;
    }
 
    ICollection<AIdentity> GetAvailableAIdentities()
    {
       if (_state.NoConversation) return Array.Empty<AIdentity>();
 
-      return AIdentityProvider.All().Where(a => !_state.SelectedConversation!.AIdentityIds.Contains(a.Id)).ToList();
+      return AIdentityProvider.All().Where(a => !_state.CurrentConversation.AIdentityIds.Contains(a.Id)).ToList();
    }
 
-   void OnSelectedMessageChanged(MudListItem item) => _state.SelectedMessage = item.Value as ConversationMessage;
+   void OnSelectedMessageChanged(MudListItem item) => _state.SelectedMessage = item?.Value as ConversationMessage;
 }
 
