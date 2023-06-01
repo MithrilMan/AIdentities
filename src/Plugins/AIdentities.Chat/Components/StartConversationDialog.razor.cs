@@ -2,7 +2,6 @@
 
 public partial class StartConversationDialog : ComponentBase
 {
-   [Inject] public IChatStorage ChatStorage { get; set; } = default!;
    [Inject] public INotificationService NotificationService { get; set; } = default!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
 

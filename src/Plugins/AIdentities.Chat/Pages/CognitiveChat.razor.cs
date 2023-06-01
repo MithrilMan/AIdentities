@@ -311,6 +311,8 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       try
       {
          conversation = await ChatStorage.LoadConversationAsync(conversation.Id).ConfigureAwait(false);
+         await _state.InitializeConversation(conversation).ConfigureAwait(false);
+         await ScrollToEndOfMessageList().ConfigureAwait(false);
       }
       catch (Exception ex)
       {
@@ -318,9 +320,6 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          _state.CloseConversation();
          return;
       }
-
-      await _state.InitializeConversation(conversation).ConfigureAwait(false);
-      await ScrollToEndOfMessageList().ConfigureAwait(false);
    }
 
 

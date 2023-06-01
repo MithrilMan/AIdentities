@@ -5,9 +5,9 @@ public class ChatAIdentitySafetyChecker : IAIdentitySafetyChecker
 {
 
    readonly ILogger<ChatAIdentitySafetyChecker> _logger;
-   readonly IChatStorage _chatStorage;
+   readonly ICognitiveChatStorage _chatStorage;
 
-   public ChatAIdentitySafetyChecker(ILogger<ChatAIdentitySafetyChecker> logger, IChatStorage chatStorage)
+   public ChatAIdentitySafetyChecker(ILogger<ChatAIdentitySafetyChecker> logger, ICognitiveChatStorage chatStorage)
    {
       _logger = logger;
       _chatStorage = chatStorage;

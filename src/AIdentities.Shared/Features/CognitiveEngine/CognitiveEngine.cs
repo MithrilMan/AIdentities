@@ -99,10 +99,9 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
          _logger.LogError("The AIdentity {AIdentityId} doesn't have a name.", AIdentity.Id);
          throw new ArgumentNullException(nameof(AIdentity.Name));
       }
-      if (AIdentity.Personality is null)
+      if (string.IsNullOrEmpty(AIdentity.Personality))
       {
-         _logger.LogError("The AIdentity {AIdentity} ({AIdentityId}) doesn't have a personality.", AIdentity.Name, AIdentity.Id);
-         throw new ArgumentNullException(nameof(AIdentity.Personality));
+         _logger.LogWarning("The AIdentity {AIdentity} ({AIdentityId}) doesn't have a personality.", AIdentity.Name, AIdentity.Id);
       }
    }
 

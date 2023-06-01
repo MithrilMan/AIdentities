@@ -5,16 +5,16 @@ using Microsoft.JSInterop;
 
 namespace AIdentities.Chat.Services;
 
-public class ChatExporter : IConversationExporter
+public class ConversationExporter : IConversationExporter
 {
-   readonly ILogger<ChatExporter> _logger;
+   readonly ILogger<ConversationExporter> _logger;
    private readonly IJSRuntime _jsRuntime;
    readonly ICognitiveChatStorage _cognitiveChatStorage;
    readonly IAIdentityProvider _aIdentityProvider;
    readonly IDownloadService _downloadService;
    readonly INotificationService _notificationService;
 
-   public ChatExporter(ILogger<ChatExporter> logger,
+   public ConversationExporter(ILogger<ConversationExporter> logger,
                                IJSRuntime jsRuntime,
                                ICognitiveChatStorage cognitiveChatStorage,
                                IAIdentityProvider aIdentityProvider,

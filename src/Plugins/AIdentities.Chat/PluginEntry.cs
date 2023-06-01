@@ -12,13 +12,10 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
    public override void RegisterServices(IServiceCollection services)
    {
       services
-         .AddScoped<IChatStorage, ChatStorage>()
-         .AddScoped<IConversationExporter, ChatExporter>();
+         .AddScoped<IConversationExporter, ConversationExporter>();
 
       services
          .AddScoped<ICognitiveChatStorage, CognitiveChatStorage>();
-
-      services.AddTransient<IChatPromptGenerator, ChatPromptGenerator>();
 
       services
          .AddTransient<CognitiveChatMission>()

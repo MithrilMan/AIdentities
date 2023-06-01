@@ -13,7 +13,7 @@
       "appId": "com.AIdentities.app",
       "productName": "AIdentities",
       "copyright": "Copyright © 2023 MithrilMan",
-      "buildVersion": "0.1.2",
+      "buildVersion": "0.2.0",
       "compression": "maximum",
       "directories": {
          "output": "../../../../../bin/Desktop"

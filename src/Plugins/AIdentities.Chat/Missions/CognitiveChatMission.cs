@@ -5,6 +5,7 @@ using AIdentities.Chat.Skills.InviteToChat.Events;
 using AIdentities.Shared.Features.CognitiveEngine.Engines.Conversational;
 using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 using AIdentities.Shared.Services.EventBus;
+using Polly;
 
 namespace AIdentities.Chat.Missions;
 
@@ -227,6 +228,8 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
 
    internal void AddParticipant(Guid aIdentityId)
    {
+      if (Context.CurrentConversation is null) throw new InvalidOperationException("The conversation is not started.");
+
       var aidentity = _aIdentityProvider.Get(aIdentityId);
       if (aidentity is null)
       {
@@ -234,6 +237,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
          return;
       }
 
+      Context.CurrentConversation.AddAIdentity(aidentity);
       // we create a new cognitive engine for each AIdentity that participate to the conversation.
       Context.ParticipatingAIdentities.Add(
          aIdentityId,

@@ -5,13 +5,13 @@ namespace AIdentities.Shared.Features.CognitiveEngine.Prompts;
 public static class PromptTemplates
 {
    public const string UNKNOWN_SKILL = "DUNNO";
-   const string TOKEN_USER_PROMPT = $"{nameof(TOKEN_USER_PROMPT)}";
-   const string TOKEN_SKILL_ARGUMENTS = $"{nameof(TOKEN_SKILL_ARGUMENTS)}";
-   const string TOKEN_DETECTED_SKILL = $"{nameof(TOKEN_DETECTED_SKILL)}";
-   const string TOKEN_DETECTED_SKILL_EXAMPLE = $"{nameof(TOKEN_DETECTED_SKILL_EXAMPLE)}";
-   const string TOKEN_AVAILABLE_SKILLS = $"{nameof(TOKEN_AVAILABLE_SKILLS)}";
-   const string TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1 = $"{nameof(TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1)}";
-   const string TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2 = $"{nameof(TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2)}";
+   const string TOKEN_USER_PROMPT = $"<<{nameof(TOKEN_USER_PROMPT)}>>";
+   const string TOKEN_SKILL_ARGUMENTS = $"<<{nameof(TOKEN_SKILL_ARGUMENTS)}>>";
+   const string TOKEN_DETECTED_SKILL = $"<<{nameof(TOKEN_DETECTED_SKILL)}>>";
+   const string TOKEN_DETECTED_SKILL_EXAMPLE = $"<<{nameof(TOKEN_DETECTED_SKILL_EXAMPLE)}>>";
+   const string TOKEN_AVAILABLE_SKILLS = $"<<{nameof(TOKEN_AVAILABLE_SKILLS)}>>";
+   const string TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1 = $"<<{nameof(TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1)}>>";
+   const string TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2 = $"<<{nameof(TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2)}>>";
 
    /// <summary>
    /// Prompt to detect a skill within the user prompt.
@@ -166,7 +166,16 @@ public static class PromptTemplates
 
       sb.Replace(TOKEN_DETECTED_SKILL, detectedSkill.Name);
       sb.Replace(TOKEN_SKILL_ARGUMENTS, string.Join(Environment.NewLine, sbSkillArgs.ToString()));
-      sb.Replace(TOKEN_DETECTED_SKILL_EXAMPLE, string.Join(Environment.NewLine, detectedSkill.Examples));
+      sb.Replace(TOKEN_DETECTED_SKILL_EXAMPLE, string.Join(
+         Environment.NewLine,
+         detectedSkill.Examples.Select(e =>
+            $"""
+            UserRequest: {e.UserRequest}
+            Reasoning: {e.Reasoning}
+            JSON: {e.JsonExample}
+
+            """)
+         ));
       sb.Replace(TOKEN_USER_PROMPT, string.Join(Environment.NewLine, userPrompt.Text));
       return sb.ToString();
    }
