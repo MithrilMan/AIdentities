@@ -40,11 +40,11 @@ public partial class Chat
       public IConversationalConnector? Connector { get; set; }
 
       /// <summary>
-      /// A collection of all the AIdentities that are partecipating in the current conversation.
+      /// A collection of all the AIdentities that are participating in the current conversation.
       /// </summary>
-      public HashSet<AIdentity> PartecipatingAIdentities { get; set; } = new HashSet<AIdentity>();
+      public HashSet<AIdentity> ParticipatingAIdentities { get; set; } = new HashSet<AIdentity>();
 
-      public string PartecipatingAIdentitiesTooltip => string.Join(", ", PartecipatingAIdentities.Select(aidentity => aidentity.Name));
+      public string ParticipatingAIdentitiesTooltip => string.Join(", ", ParticipatingAIdentities.Select(aidentity => aidentity.Name));
 
       /// <summary>
       /// The chat prompt generator used to generate the chat prompts.
@@ -75,7 +75,7 @@ public partial class Chat
             await Messages.LoadItemsAsync(conversation.Messages).ConfigureAwait(false);
          }
 
-         PartecipatingAIdentities = conversation.Metadata.AIdentityIds
+         ParticipatingAIdentities = conversation.Metadata.AIdentityIds
             .Select(AIdentityProvider.Get)
             .Where(aidentity => aidentity is not null)
             .Select(aidentity => aidentity!)
@@ -89,7 +89,7 @@ public partial class Chat
          await Messages.LoadItemsAsync(null).ConfigureAwait(false);
 
          ChatPromptGenerator.InitializeConversation(null);
-         PartecipatingAIdentities.Clear();
+         ParticipatingAIdentities.Clear();
       }
    }
 

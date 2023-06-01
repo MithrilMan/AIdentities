@@ -12,7 +12,7 @@ public interface IConversationHistory
    /// <summary>
    /// The current conversation.
    /// </summary>
-   public Conversation? CurrentConversation { get; } 
+   public Conversation? CurrentConversation { get; }
 
    /// <summary>
    /// Sets the conversation to manage.
@@ -24,6 +24,8 @@ public interface IConversationHistory
    /// Returns the conversation history from the point of view of the given aIdentity.
    /// </summary>
    /// <param name="pointOfView">The aIdentity to get the conversation history from.</param>
+   /// <param name="mostRecentMessageToTake">The history will stop at the specified message. Messages
+   /// after this one will not be returned.</param>
    /// <returns>The conversation history from the point of view of the given aIdentity.</returns>
-   IEnumerable<ConversationMessage> GetConversationHistory(AIdentity pointOfView);
+   IEnumerable<ConversationMessage> GetConversationHistory(AIdentity pointOfView, ConversationMessage? mostRecentMessageToTake);
 }

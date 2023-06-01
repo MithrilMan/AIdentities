@@ -18,7 +18,12 @@ public class CognitiveChatStorage : ICognitiveChatStorage
    {
       using var trx = _dbContext.Database.BeginTransaction();
 
-      var convesation = _dbContext.Conversations.Find(conversationId);
+      var convesation = await _dbContext
+         .Conversations
+         .Include(c => c.Messages)
+         .FirstOrDefaultAsync(c => c.Id == conversationId)
+         .ConfigureAwait(false);
+
       if (convesation == null) return false;
 
       _dbContext.Conversations.Remove(convesation);

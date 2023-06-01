@@ -12,7 +12,7 @@ public class ConversationHistory : IConversationHistory
       _logger = logger;
    }
 
-   public IEnumerable<ConversationMessage> GetConversationHistory(AIdentity pointOfView)
+   public IEnumerable<ConversationMessage> GetConversationHistory(AIdentity pointOfView, ConversationMessage? stopAtMessage)
    {
       if (CurrentConversation == null) throw new InvalidOperationException("No conversation is loaded.");
 
@@ -22,7 +22,13 @@ public class ConversationHistory : IConversationHistory
       //   .Messages
       //   .SkipWhile(m => !m.IsAIGenerated || m.AuthorId != pointOfView.Id);
 
-      var messages = CurrentConversation.Messages;
+      var messages = CurrentConversation.Messages.AsEnumerable();
+      if (stopAtMessage != null)
+      {
+         messages = messages
+            .TakeWhile(m => m != stopAtMessage)
+            .Append(stopAtMessage);
+      }
 
       return messages;
    }

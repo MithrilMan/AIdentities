@@ -45,7 +45,7 @@ public class ChatKeeperCognitiveEngine : ReflexiveCognitiveEngine<CognitiveConte
    /// <summary>
    /// Keep the conversation going.
    /// It works if missionContext is a <see cref="CognitiveChatMissionContext"/> and there are
-   /// <see cref="PartecipatingAIdentities"/> in the conversation.
+   /// <see cref="ParticipatingAIdentities"/> in the conversation.
    /// </summary>
    /// <param name="prompt">The prompt to pass to the AIdentity</param>
    /// <param name="missionContext">The mission context (should be a <see cref="CognitiveChatMissionContext"/>)</param>
@@ -61,11 +61,18 @@ public class ChatKeeperCognitiveEngine : ReflexiveCognitiveEngine<CognitiveConte
 
       ICognitiveEngine? replyingAidentity = null;
       var aIdentityPrompt = prompt as AIdentityPrompt;
-      chatMissionContext.PartecipatingAIdentities.TryGetValue(aIdentityPrompt?.AIdentityId ?? Guid.Empty, out var promptSender);
+      chatMissionContext.ParticipatingAIdentities.TryGetValue(aIdentityPrompt?.AIdentityId ?? Guid.Empty, out var promptSender);
+
+      if (chatMissionContext.IsModeratedModeEnabled
+         && chatMissionContext.NextTalker is not null
+         && chatMissionContext.ParticipatingAIdentities.TryGetValue(chatMissionContext.NextTalker.Id, out var nextTalkerParticipant))
+      {
+         replyingAidentity = nextTalkerParticipant.CognitiveEngine;
+      }
 
       // TODO: pick a random AIdentity or implement a better algorithm to know who should talk
       // at the moment we pick the first AIdentity that is not the prompt sender
-      replyingAidentity ??= chatMissionContext.PartecipatingAIdentities.Values.First(p => p != promptSender)?.CognitiveEngine;
+      replyingAidentity ??= chatMissionContext.ParticipatingAIdentities.Values.FirstOrDefault(p => p != promptSender)?.CognitiveEngine;
 
       if (replyingAidentity is null)
       {

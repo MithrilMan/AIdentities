@@ -86,16 +86,31 @@ public abstract class Skill : ISkill
    public virtual bool TryExtractFromContext<TReturnValue>(
       SkillExecutionContext context,
       [MaybeNullWhen(false)] out TReturnValue args) where TReturnValue : class
+      => TryExtractFromContext(typeof(TReturnValue).Name, context, out args);
+
+   /// <summary>
+   /// Try to extract the arguments from the contexts.
+   /// First it will try to extract the arguments from the mission context.
+   /// If it fails, it will try to extract the arguments from the cognitive context.
+   /// </summary>
+   /// <typeparam name="TReturnValue">The type of the arguments to extract.</typeparam>
+   /// <param name="key">The key of the arguments to extract.</param>
+   /// <param name="context">The skill execution context.</param>
+   /// <param name="args">The extracted arguments.</param>
+   /// <returns>The extracted arguments.</returns>
+   public virtual bool TryExtractFromContext<TReturnValue>(string key,
+      SkillExecutionContext context,
+      [MaybeNullWhen(false)] out TReturnValue args) where TReturnValue : class
    {
 
-      var result = context.CognitiveContext.GetOrDefault<TReturnValue?>(typeof(TReturnValue).GetType().Name);
+      var result = context.CognitiveContext.GetOrDefault<TReturnValue?>(key);
       if (result != null)
       {
          args = result;
          return true;
       }
 
-      result = context.MissionContext?.GetOrDefault<TReturnValue?>(typeof(TReturnValue).Name);
+      result = context.MissionContext?.GetOrDefault<TReturnValue?>(key);
       if (result != null)
       {
          args = result;

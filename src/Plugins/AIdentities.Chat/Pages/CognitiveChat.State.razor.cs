@@ -56,11 +56,11 @@ public partial class CognitiveChat
       public ITextToSpeechConnector? TextToSpeechConnector { get; internal set; }
 
       /// <summary>
-      /// A collection of all the AIdentities that are partecipating in the current conversation.
+      /// A collection of all the AIdentities that are participating in the current conversation.
       /// </summary>
-      public HashSet<AIdentity> PartecipatingAIdentities { get; set; } = new HashSet<AIdentity>();
+      public HashSet<AIdentity> ParticipatingAIdentities { get; set; } = new HashSet<AIdentity>();
 
-      public string PartecipatingAIdentitiesTooltip => string.Join(", ", PartecipatingAIdentities.Select(aidentity => aidentity.Name));
+      public string ParticipatingAIdentitiesTooltip => string.Join(", ", ParticipatingAIdentities.Select(aidentity => aidentity.Name));
 
       public IAIdentityProvider AIdentityProvider { get; private set; } = default!;
 
@@ -94,7 +94,7 @@ public partial class CognitiveChat
             await Messages.LoadItemsAsync(conversation.Messages).ConfigureAwait(false);
          }
 
-         PartecipatingAIdentities = conversation.AIdentityIds
+         ParticipatingAIdentities = conversation.AIdentityIds
             .Select(AIdentityProvider.Get)
             .Where(aidentity => aidentity is not null)
             .Select(aidentity => aidentity!)
@@ -107,7 +107,7 @@ public partial class CognitiveChat
          HasMessageGenerationFailed = false;
          await Messages.LoadItemsAsync(null).ConfigureAwait(false);
 
-         PartecipatingAIdentities.Clear();
+         ParticipatingAIdentities.Clear();
       }
    }
 

@@ -13,7 +13,7 @@
             bool isSelected = _state.SelectedConversation == conversation;
             bool isEditingThisConversation = _state.IsEditingConversation && isSelected;
             <MudListItem Value="conversation" @key="conversation" Class="ma-0 pa-0" Inset="false">
-               <MudCard Class="@(isSelected ? "mud-theme-primary" : "conversation-list")">
+               <MudCard Class="@(isSelected ? "mud-theme-transparent" : "conversation-list")">
                   <MudCardHeader>
                      <CardHeaderContent>
                         @if (isEditingThisConversation)
@@ -29,13 +29,13 @@
                      <CardHeaderActions>
                         @if (isEditingThisConversation)
                         {
-                           <MudIconButton Size="Size.Medium" Class="pa-0" Icon="@Icons.Material.Filled.Done" OnClick="()=>RenameConversation(conversation)" />
+                           <MudIconButton Color="Color.Secondary" Size="Size.Medium" Class="pa-0" Icon="@Icons.Material.Filled.Done" OnClick="()=>RenameConversation(conversation)" />
                         }
                         else
                         {
-                           <MudIconButton Size="Size.Medium" Class="pa-0" Icon="@Icons.Material.Filled.Edit" OnClick="()=>EnableRenameConversation(conversation)" />
+                           <MudIconButton Color="Color.Secondary" Size="Size.Medium" Class="pa-0" Icon="@Icons.Material.Filled.Edit" OnClick="()=>EnableRenameConversation(conversation)" />
                         }
-                        <MudIconButton Size="Size.Medium" Class="pa-0" Icon="@Icons.Material.Filled.Delete" OnClick="()=>DeleteConversation(conversation)" />
+                        <MudIconButton Color="Color.Secondary" Size="Size.Medium" Class="pa-0" Icon="@Icons.Material.Filled.Delete" OnClick="()=>DeleteConversation(conversation)" />
                      </CardHeaderActions>
                   </MudCardHeader>
                   <MudCardContent Class="pt-0 d-flex align-end">

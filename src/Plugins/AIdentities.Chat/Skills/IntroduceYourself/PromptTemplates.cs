@@ -9,7 +9,7 @@ internal static class PromptTemplates
       var background = aIdentity.Features.Get<AIdentityChatFeature>()?.Background;
 
       var sb = new StringBuilder($"""
-         You are {aIdentity.Name} and you are partecipating to a new conversation.
+         You are {aIdentity.Name} and you are participating to a new conversation.
          Based on your trait listed below, write a starting sentence to introduce yourself into the conversation that started already and you don't know nothing about.
          <PERSONALITY>{aIdentity.Personality}</PERSONALITY>
 

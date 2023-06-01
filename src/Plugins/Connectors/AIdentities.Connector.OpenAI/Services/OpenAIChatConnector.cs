@@ -6,9 +6,9 @@ using System.Text.RegularExpressions;
 using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Http.Features;
-using Polly.Retry;
+using MudBlazor.Charts;
 using Polly;
-using System.Threading;
+using Polly.Retry;
 
 namespace AIdentities.Connector.OpenAI.Services;
 public class OpenAIChatConnector : IConversationalConnector, IDisposable
@@ -35,6 +35,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    private HttpClient _client = default!;
    readonly AsyncRetryPolicy _retryPolicy;
    private readonly JsonSerializerOptions _serializerOptions;
+   private readonly JsonSerializerOptions _debuggingSerializerOptions;
 
    public OpenAIChatConnector(ILogger<OpenAIChatConnector> logger, IPluginSettingsManager settingsManager)
    {
@@ -44,6 +45,12 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       _serializerOptions = new JsonSerializerOptions()
       {
          DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
+      };
+
+      _debuggingSerializerOptions = new JsonSerializerOptions()
+      {
+         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+         WriteIndented = true
       };
 
       _retryPolicy = CreateRetryPolicy();
@@ -110,7 +117,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
+      _logger.LogDebug("Performing request {apiRequest}", JsonSerializer.Serialize(apiRequest.Messages, _debuggingSerializerOptions));
       var sw = Stopwatch.StartNew();
 
       using HttpResponseMessage response = await _retryPolicy.ExecuteAsync(async () =>
@@ -144,7 +151,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    public async IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, true);
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
+      _logger.LogDebug("Performing stream request {apiRequest}", JsonSerializer.Serialize(apiRequest.Messages, _debuggingSerializerOptions));
 
       using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
       {
@@ -154,7 +161,16 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
 
       var res = await _retryPolicy.ExecuteAsync(async () =>
       {
-         return ConsumeStream(httpRequestMessage, cancellationToken);
+         await Task.CompletedTask.ConfigureAwait(false);
+         try
+         {
+            return ConsumeStream(httpRequestMessage, cancellationToken);
+         }
+         catch (Exception ex)
+         {
+            _logger.LogError(ex, "Error while consuming stream");
+            return AsyncEnumerable.Empty<IConversationalStreamedResponse>();
+         }
       }).ConfigureAwait(false);
 
       await foreach (var item in res.ConfigureAwait(false))
@@ -192,6 +208,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
          }
          catch (Exception ex)
          {
+            _logger.LogError(ex, "Failed to deserialize response: {Response}", line);
             // if we can't deserialize the response, it's probably because it's an error, try to deserialize
             // the rest of the stream as an error message
             line += await streamReader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
@@ -219,25 +236,37 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream) => new ChatCompletionRequest
+   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream)
    {
-      FrequencyPenalty = request.RepetitionPenalityRange,
-      MaxTokens = request.MaxGeneratedTokens,
-      Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
+      //measure request token size
+      try
       {
-         Content = m.Content,
-         Name = SanitizeName(m.Name),
-         Role = MapRole(m.Role)
-      }).ToList(),
-      Model = request.ModelId ?? DefaultModel,
-      PresencePenalty = request.RepetitionPenality,
-      N = request.CompletionResults,
-      Stop = request.StopSequences,
-      Stream = requireStream,
-      Temperature = request.Temperature,
-      TopP = request.TopPSamplings,
-      User = request.UserId,
-   };
+         var tokenizer = SharpToken.GptEncoding.GetEncodingForModel(request.ModelId ?? DefaultModel);
+         var tokenCount = tokenizer.Encode(string.Join('\n', request.Messages.Select(m => m.Content))).Count;
+         _logger.LogDebug("Request token size: approx {TokenCount}", tokenCount);
+      }
+      catch { _logger.LogDebug("Request token size: unknown"); }
+
+      return new ChatCompletionRequest
+      {
+         FrequencyPenalty = request.RepetitionPenalityRange,
+         MaxTokens = request.MaxGeneratedTokens,
+         Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
+         {
+            Content = m.Content,
+            Name = SanitizeName(m.Name),
+            Role = MapRole(m.Role)
+         }).ToList(),
+         Model = request.ModelId ?? DefaultModel,
+         PresencePenalty = request.RepetitionPenality,
+         N = request.CompletionResults,
+         Stop = request.StopSequences,
+         Stream = requireStream,
+         Temperature = request.Temperature,
+         TopP = request.TopPSamplings,
+         User = request.UserId,
+      };
+   }
 
    /// <summary>
    /// Sanitizes a name to be used in the request.
@@ -248,7 +277,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    /// <param name="name"></param>
    /// <returns></returns>
    /// <exception cref="NotImplementedException"></exception>
-   private string? SanitizeName(string? name)
+   private static string? SanitizeName(string? name)
    {
       if (name is null) return null;
 

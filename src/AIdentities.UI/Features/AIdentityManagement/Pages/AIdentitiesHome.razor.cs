@@ -43,7 +43,7 @@ public partial class AIdentitiesHome : AppPage<AIdentitiesHome>
          }
       }
 
-      Logger.LogDebug("Deleting AIdentity {AIdentity}", aIdentity);
+      Logger.LogDebug("Deleting AIdentity {AIdentity}", aIdentity.Name ?? aIdentity.Id.ToString());
       AIdentityProvider.Delete(aIdentity);
       if (_state.CurrentAIDentity == aIdentity)
       {

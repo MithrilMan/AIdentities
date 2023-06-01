@@ -8,7 +8,7 @@ public partial class ConversationList : ComponentBase
    [Inject] IDialogService DialogService { get; set; } = null!;
    [Inject] INotificationService NotificationService { get; set; } = null!;
    [Inject] IAIdentityProvider AIdentityProvider { get; set; } = null!;
-   [Inject] private IChatExporter ConversationExporter { get; set; } = null!;
+   [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
 
    [Parameter] public string? Class { get; set; }
    [Parameter] public Conversation? Conversation { get; set; }

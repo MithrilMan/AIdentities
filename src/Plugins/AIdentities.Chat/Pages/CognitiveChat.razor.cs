@@ -20,7 +20,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    [Inject] private IEnumerable<IConversationalConnector> ChatConnectors { get; set; } = null!;
    [Inject] private ICognitiveChatStorage ChatStorage { get; set; } = null!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
-   [Inject] private IChatExporter ConversationExporter { get; set; } = null!;
+   [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
    [Inject] private IPluginSettingsManager PluginSettingsManager { get; set; } = null!;
    [Inject] private IAIdentityProvider AIdentityProvider { get; set; } = null!;
    [Inject] private IPluginResourcePath PluginResourcePath { get; set; } = null!;
@@ -70,64 +70,72 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       {
          await foreach (var thought in CognitiveChatMission.Thoughts.Reader.ReadAllAsync(cancellationToken).ConfigureAwait(false))
          {
-            // if we receive a streamed thought, we create a new message and we add it to the list
-            // subsequent streamed thoughts with same id will just replace the content of the temporary
-            // message until we receive a IsStreamComplete that signal that our message is finally complete
-            // and we can add it to the list
-            if (thought.IsStreamedThought(out var streamedThought))
-            {
-               if (!_unfinisheMessages.TryGetValue(streamedThought.Id, out var message))
-               {
-                  message = new ConversationMessage(
-                     text: "",
-                     aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
-                  );
-                  _unfinisheMessages[streamedThought.Id] = message;
-
-                  if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
-                  {
-                     await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
-                  }
-                  else
-                  {
-                     _state.ChatKeeperThoughts.Add(thought);
-                  }
-               }
-
-               message.UpdateText(streamedThought.Content);
-               await ScrollToEndOfMessageList().ConfigureAwait(false);
-
-               if (streamedThought.IsStreamComplete)
-               {
-                  _unfinisheMessages.Remove(streamedThought.Id);
-                  await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
-               }
-            }
-            else
-            {
-               if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
-               {
-                  // if the thought is not streamed, we just add it to the list
-                  var message = new ConversationMessage(
-                        text: thought.Content,
-                        aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
-                     );
-
-                  await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
-                  await ScrollToEndOfMessageList().ConfigureAwait(false);
-
-                  await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
-               }
-               else
-               {
-                  _state.ChatKeeperThoughts.Add(thought);
-               }
-            }
+            await HandleIncomingThought(thought).ConfigureAwait(false);
          }
       }
       catch (Exception ex) when (ex is not OperationCanceledException)
       {
          NotificationService.ShowError(ex.Message);
+      }
+   }
+
+   private async Task HandleIncomingThought(Thought thought)
+   {
+      //consider only thoughts that are final or that are from the chat keeper
+      if (!thought.IsFinalThought() && thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id) return;
+
+      // if we receive a streamed thought, we create a new message and we add it to the list
+      // subsequent streamed thoughts with same id will just replace the content of the temporary
+      // message until we receive a IsStreamComplete that signal that our message is finally complete
+      // and we can add it to the list
+      if (thought.IsStreamedThought(out var streamedThought))
+      {
+         if (!_unfinisheMessages.TryGetValue(streamedThought.Id, out var message))
+         {
+            message = new ConversationMessage(
+               text: "",
+               aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
+            );
+            _unfinisheMessages[streamedThought.Id] = message;
+
+            if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
+            {
+               await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
+            }
+            else
+            {
+               _state.ChatKeeperThoughts.Add(thought);
+            }
+         }
+
+         message.UpdateText(streamedThought.Content);
+         await ScrollToEndOfMessageList().ConfigureAwait(false);
+
+         if (streamedThought.IsStreamComplete)
+         {
+            _unfinisheMessages.Remove(streamedThought.Id);
+            await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
+         }
+      }
+      else
+      {
+         if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
+         {
+            // if the thought is not streamed, we just add it to the list
+            var message = new ConversationMessage(
+               text: thought.Content,
+               aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
+               );
+
+            await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
+            await ScrollToEndOfMessageList().ConfigureAwait(false);
+            await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
+         }
+         else
+         {
+            await ChatKeeperIsThinking().ConfigureAwait(false);
+            _state.ChatKeeperThoughts.Add(thought);
+         }
       }
    }
 
@@ -248,6 +256,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    private async Task ScrollToEndOfMessageList()
    {
       await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+      await Task.Delay(100).ConfigureAwait(false);
       await ScrollService.ScrollToBottom(LIST_SELECTOR).ConfigureAwait(false);
    }
 
@@ -343,7 +352,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          return;
       }
       _state.SelectedConversation.AddAIdentity(aIdentity);
-      _state.PartecipatingAIdentities.Add(aIdentity);
+      _state.ParticipatingAIdentities.Add(aIdentity);
       await ChatStorage.UpdateConversationAsync(_state.SelectedConversation, null).ConfigureAwait(false);
    }
 
@@ -359,63 +368,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
       await foreach (var thought in thoughts)
       {
-         // at the moment let show just the final thoughts
-         if (!thought.IsFinalThought() && thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id) continue;
-
-         // if we receive a streamed thought, we create a new message and we add it to the list
-         // subsequent streamed thoughts with same id will just replace the content of the temporary
-         // message until we receive a IsStreamComplete that signal that our message is finally complete
-         // and we can add it to the list
-         if (thought.IsStreamedThought(out var streamedThought))
-         {
-            if (!_unfinisheMessages.TryGetValue(streamedThought.Id, out var message))
-            {
-               message = new ConversationMessage(
-                  text: "",
-                  aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
-                  );
-               _unfinisheMessages[streamedThought.Id] = message;
-
-               if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
-               {
-                  await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
-               }
-               else
-               {
-                  await ChatKeeperIsThinking().ConfigureAwait(false);
-                  _state.ChatKeeperThoughts.Add(thought);
-               }
-            }
-
-            message.UpdateText(streamedThought.Content);
-            await ScrollToEndOfMessageList().ConfigureAwait(false);
-
-            if (streamedThought.IsStreamComplete)
-            {
-               _unfinisheMessages.Remove(streamedThought.Id);
-               await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
-            }
-         }
-         else
-         {
-            if (thought.AIdentityId != CognitiveChatMission.ChatKeeper.Id)
-            {
-               // if the thought is not streamed, we just add it to the list
-               var message = new ConversationMessage(
-                  text: thought.Content,
-                  aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
-                  );
-
-               await InvokeAsync(() => _state.Messages.AppendItemAsync(message).AsTask()).ConfigureAwait(false);
-               await ScrollToEndOfMessageList().ConfigureAwait(false);
-               await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
-            }
-            else
-            {
-               await ChatKeeperIsThinking().ConfigureAwait(false);
-               _state.ChatKeeperThoughts.Add(thought);
-            }
-         }
+         await HandleIncomingThought(thought).ConfigureAwait(false);
       }
    }
 
@@ -458,9 +411,18 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       }
    }
 
-   public void SetNextTalker(AIdentity aIdentity)
+   void OnIsModeratorModeEnabledChanged() => CognitiveChatMission.SetModeratedMode(_state.IsModeratorModeEnabled);
+   public void SetNextTalker(AIdentity aIdentity) => CognitiveChatMission.SetNextTalker(aIdentity);
+   Task ReplyToLastMessage(AIdentity talker)
    {
-      CognitiveChatMission.SetNextTalker(aIdentity);
+      SetNextTalker(talker);
+      return CognitiveChatMission.ReplyToMessageAsync(_state.SelectedConversation?.Messages.LastOrDefault());
+   }
+
+   Task ReplyToSelectedMessage(AIdentity talker)
+   {
+      SetNextTalker(talker);
+      return CognitiveChatMission.ReplyToMessageAsync(_state.SelectedMessage);
    }
 
    public override void Dispose()

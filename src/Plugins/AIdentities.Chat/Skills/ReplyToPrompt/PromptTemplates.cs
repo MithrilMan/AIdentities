@@ -1,5 +1,4 @@
 ﻿using System.Text;
-using AIdentities.Shared.Features.AIdentities.Models;
 
 namespace AIdentities.Chat.Skills.ReplyToPrompt;
 
@@ -20,8 +19,6 @@ internal static class PromptTemplates
       Maintain the character of {{TOKEN_AIDENTITY_NAME}} throughout the conversation, even when directly challenged about your identity.
       Do not admit or discuss that you are an AI language model or chatbot.
       {{TOKEN_EXAMPLE_MESSAGES}}
-      Who are you?
-      You are {{TOKEN_AIDENTITY_NAME}}!
       """;
 
    const string EXAMPLE_MESSAGES_INSTRUCTION = $$"""
@@ -30,13 +27,23 @@ internal static class PromptTemplates
    """;
 
    const string ADDITIONAL_GUARDRAIL = $$"""
-      !!!Remember to stick to the character of {{TOKEN_AIDENTITY_NAME}} and to not reveal that you are an AI language model or chatbot.
+      !!!Remember you are {{TOKEN_AIDENTITY_NAME}}, stick to her character and to not reveal that you are an AI language model or chatbot.
       Craft your responses to be consistent with {{TOKEN_AIDENTITY_NAME}}'s personality!!!
       """;
 
 
    public static IEnumerable<DefaultConversationalMessage> BuildPromptMessages(AIdentity aIdentity, IEnumerable<ConversationMessage> chatHistory)
    {
+      DefaultConversationalMessage CreateMessage(ConversationMessage message)
+      {
+         bool isAIdentityMessage = message.AuthorId == aIdentity.Id && message.IsAIGenerated;
+         return new DefaultConversationalMessage(
+             Role: isAIdentityMessage ? DefaultConversationalRole.Assistant : DefaultConversationalRole.User,
+             Content: message.Text ?? "",
+             Name: message.AuthorName// message.AuthorId == aIdentity.Id ? aIdentity.Name : message.AuthorName.ToString()
+            );
+      }
+
       var chatFeature = aIdentity.Features.Get<AIdentityChatFeature>();
 
       var sb = new StringBuilder(CONVERSATION_PROMPT)
@@ -52,25 +59,25 @@ internal static class PromptTemplates
          Name: null
       );
 
-      foreach (var oldMessage in chatHistory)
+      var messages = chatHistory.ToList();
+      foreach (var oldMessage in messages.SkipLast(1))
       {
-         bool isAIdentityMessage = oldMessage.AuthorId == aIdentity.Id && oldMessage.IsAIGenerated;
-         yield return new DefaultConversationalMessage(
-             Role: isAIdentityMessage ? DefaultConversationalRole.Assistant : DefaultConversationalRole.User,
-             Content: oldMessage.Text ?? "",
-             Name: oldMessage.AuthorId == aIdentity.Id ? aIdentity.Name : oldMessage.AuthorId.ToString()
-            );
+         yield return CreateMessage(oldMessage);
       }
 
-      sb.Clear()
-         .Append(ADDITIONAL_GUARDRAIL)
-         .Replace(TOKEN_AIDENTITY_NAME, aIdentity.Name);
-
       yield return new DefaultConversationalMessage(
-         Content: sb.ToString(),
+         Content: sb.Clear()
+            .Append(ADDITIONAL_GUARDRAIL)
+            .Replace(TOKEN_AIDENTITY_NAME, aIdentity.Name)
+            .ToString(),
          Role: DefaultConversationalRole.System,
-         Name: aIdentity.Name
+         Name: null
       );
+
+      if (messages.Count > 0)
+      {
+         yield return CreateMessage(chatHistory.Last());
+      }
    }
 
    /// <summary>

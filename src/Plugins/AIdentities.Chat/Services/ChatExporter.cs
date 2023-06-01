@@ -1,21 +1,22 @@
-﻿using System.Text;
+﻿using System.Drawing;
+using System.Text;
 using AIdentities.Shared.Utils;
 using Microsoft.JSInterop;
 
 namespace AIdentities.Chat.Services;
 
-public class ChatExporter : IChatExporter
+public class ChatExporter : IConversationExporter
 {
    readonly ILogger<ChatExporter> _logger;
    private readonly IJSRuntime _jsRuntime;
-   readonly IChatStorage _chatStorage;
+   readonly ICognitiveChatStorage _cognitiveChatStorage;
    readonly IAIdentityProvider _aIdentityProvider;
    readonly IDownloadService _downloadService;
    readonly INotificationService _notificationService;
 
    public ChatExporter(ILogger<ChatExporter> logger,
                                IJSRuntime jsRuntime,
-                               IChatStorage chatStorage,
+                               ICognitiveChatStorage cognitiveChatStorage,
                                IAIdentityProvider aIdentityProvider,
                                IDownloadService downloadService,
                                INotificationService notificationService
@@ -23,7 +24,7 @@ public class ChatExporter : IChatExporter
    {
       _logger = logger;
       _jsRuntime = jsRuntime;
-      _chatStorage = chatStorage;
+      _cognitiveChatStorage = cognitiveChatStorage;
       _aIdentityProvider = aIdentityProvider;
       _downloadService = downloadService;
       _notificationService = notificationService;
@@ -31,14 +32,13 @@ public class ChatExporter : IChatExporter
 
    public async Task ExportConversationAsync(Guid conversationId, ConversationExportFormat format)
    {
-      var conversation = await _chatStorage.LoadConversationAsync(conversationId).ConfigureAwait(false);
+      var conversation = await _cognitiveChatStorage.LoadConversationAsync(conversationId).ConfigureAwait(false);
       if (conversation is null)
       {
          _notificationService.ShowError("Conversation not found");
          return;
       }
 
-      var medaData = conversation.Metadata;
       var messages = conversation.Messages;
 
       if (messages is not { Count: > 0 })
@@ -47,43 +47,11 @@ public class ChatExporter : IChatExporter
          return;
       }
 
-      Dictionary<Guid, AIdentity?> involvedAIdentities = messages
-      .Select(m => m.AIDentityId)
-         .Where(m => m != null)
-         .DistinctBy(m => m)
-         .ToDictionary(id => id!.Value, id => _aIdentityProvider.Get(id!.Value));
 
-      var exportedConversation = new
-      {
-         Title = medaData.Title,
-         CreatedAt = medaData.CreatedAt,
-         Messages = messages.Select(m =>
-         {
-            string from;
-            if (m.IsGenerated)
-            {
-               from = involvedAIdentities.TryGetValue(m.AIDentityId ?? Guid.Empty, out var aidentity)
-                  ? aidentity?.Name ?? "Unknown"
-                  : "Unknown";
-            }
-            else
-            {
-               from = m.User ?? "User";
-            }
-
-            return new
-            {
-               m.CreationDate,
-               m.Message,
-               From = from
-            };
-         })
-      };
-
-      var fileName = PathUtils.SanitizeFileName($"{medaData.CreatedAt:yyyy-MM-dd HH-mm-ss}-{medaData.Title}.html");
+      var fileName = PathUtils.SanitizeFileName($"{conversation.CreatedAt:yyyy-MM-dd HH-mm-ss}-{conversation.Title}.html");
       try
       {
-         await _downloadService.DownloadFileFromStreamAsync(fileName, ExportConversation(exportedConversation, ConversationExportFormat.Html)).ConfigureAwait(false);
+         await _downloadService.DownloadFileFromStreamAsync(fileName, ExportConversation(conversation, ConversationExportFormat.Html)).ConfigureAwait(false);
       }
       catch (Exception ex)
       {
@@ -92,7 +60,7 @@ public class ChatExporter : IChatExporter
       }
    }
 
-   public string ExportConversation(object exportedConversation, ConversationExportFormat format)
+   public string ExportConversation(Conversation exportedConversation, ConversationExportFormat format)
    {
       // Create a StringBuilder to store the formatted chat
 
@@ -119,30 +87,110 @@ public class ChatExporter : IChatExporter
 
    }
 
-   private static string ExportHtml(object exportedConversation)
+   private string ExportHtml(Conversation conversation)
    {
+      const string TOKEN_BODY = "<<MESSAGES>>";
+      const string TOKEN_PARTICIPANTS = "<<PARTICIPANTS>>";
+
+      string template = $$"""
+      <html>
+         <head>
+            <title>Conversation Export: {{conversation.Title}}</title>
+            <style>
+               body {
+                  font-family: Arial, Helvetica, sans-serif;
+               }
+               h2 {
+                  font-size: 1.5em;
+               }
+               .message p {
+                  font-size: 0.8em;
+                  white-space: pre-wrap;
+               }
+               .participants{
+                 display: inline-flex;
+                  flex-direction: row;
+                  flex-wrap: wrap;
+                  gap: 2em;
+                  padding: 10px;
+                  border: solid 1px black;
+                  border-radius: 10px;
+                  margin-bottom: 25px;
+               }
+            </style>
+         </head>
+         <body>
+            <h1>{{conversation.Title}}</h1>
+            <p>Created at: {{conversation.CreatedAt}}</p>
+            <p>Last update at: {{conversation.UpdatedAt}}</p>
+            <hr/>
+            <h2>Participants</h2>
+            <div class="participants">
+            {{TOKEN_PARTICIPANTS}}
+            </div>
+      {{TOKEN_BODY}}
+         </body>
+      </html>
+      """;
+
+
+      //create 15 different dark colors for the participants
+      //colors have to be very different to ensure that the text is readable but visible on a white background
+      string[] palette = new string[] { "#ff0000", "#0000ff", "#ff00ff", "#ff8000", "#ff0080", "#80ff00", "#8000ff", "#00ff80", "#0080ff", "#ff80ff", "#80ffff", "#ffff80" };
+      var colors = new Dictionary<Guid, string>();
+      for (int i = 0; i < conversation.AIdentityIds.Count; i++)
+      {
+         colors.Add(conversation.AIdentityIds.ElementAt(i), palette[i % palette.Length]);
+      }
+
+
+      ////assign a color to each participant
+      //var colors = new Dictionary<Guid, string>();
+      //var random = new Random();
+      //foreach (var id in conversation.AIdentityIds)
+      //{
+      //   if (!colors.ContainsKey(id))
+      //   {
+      //      var color = $"#{random.Next(0x1000000):X6}";
+      //      // ensure that the color is not too bright
+      //      var rgb = new ColorConverter().ConvertFromString(color) as System.Drawing.Color?;
+      //      while (rgb is not null && rgb.Value.GetBrightness() > 0.9)
+      //      {
+      //         color = $"#{random.Next(0x1000000):X6}";
+      //         rgb = new ColorConverter().ConvertFromString(color) as System.Drawing.Color?;
+      //      }
+
+      //      colors.Add(id, color);
+      //   }
+      //}
+
+      var sbParticipants = new StringBuilder();
+      foreach (var id in conversation.AIdentityIds)
+      {
+         var aIdentity = _aIdentityProvider.Get(id);
+         if (aIdentity is not null)
+         {
+            sbParticipants.AppendLine($"<div><strong style=\"color:{colors[id]}\">{aIdentity.Name}</strong></div>");
+         }
+      }
+
       var sb = new StringBuilder();
-      // Add HTML tags to the beginning and end of the chat
-      sb.AppendLine("<html>");
-      sb.AppendLine("<head><title>Conversation Export</title></head>");
-      sb.AppendLine("<body>");
-
-      // Add the conversation title and creation date
-      dynamic conversation = exportedConversation;
-      sb.AppendLine($"<h2>{conversation.Title}</h2>");
-      sb.AppendLine($"<p>Created at: {conversation.CreatedAt}</p>");
-
       // Add the messages
       foreach (var message in conversation.Messages)
       {
-         sb.AppendLine($"<p><strong>{message.From}:</strong> {message.Message}</p>");
+         string color = colors.TryGetValue(message.AuthorId, out var c) ? c : "#000000";
+         sb.AppendLine($"""
+            <div class="message">
+               <strong style="color:{color}">{message.AuthorName}:</strong> <span>{message.CreationDate.ToLocalTime()}</span>
+               <p>{message.Text}</p>
+            </div>
+            """);
       }
 
-      // Close the HTML tags
-      sb.AppendLine("</body>");
-      sb.AppendLine("</html>");
-
       // Return the formatted chat as an HTML string
-      return sb.ToString();
+      return template
+         .Replace(TOKEN_BODY, sb.ToString())
+         .Replace(TOKEN_PARTICIPANTS, sbParticipants.ToString())
+         ;
    }
 }

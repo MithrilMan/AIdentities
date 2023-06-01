@@ -2,6 +2,15 @@
 
 public partial class ReplyToPrompt : Skill
 {
+   /// <summary>
+   /// We expect the conversation history to be in the context with this key.
+   /// </summary>
+   public const string CONVERSATION_HISTORY_KEY = nameof(CognitiveChatMissionContext.ConversationHistory);
+   /// <summary>
+   /// If this contextual variable is set, the skill will reply to the message instead of the last message conversation.
+   /// </summary>
+   public const string MESSAGE_TO_REPLY_TO_KEY = nameof(CognitiveChatMissionContext.MessageToReplyTo);
+
    static readonly JsonSerializerOptions _jsonOptionExample = new() { WriteIndented = true };
 
    readonly ILogger<ReplyToPrompt> _logger;
@@ -30,23 +39,37 @@ public partial class ReplyToPrompt : Skill
 
       var aidentity = context.AIdentity;
 
-      // check if in the cognitive context there is a conversation history
-      if (!TryExtractFromContext<IConversationHistory>(context, out IConversationHistory? conversationHistory))
+      // check in the context if there is a conversation history
+      if (!TryExtractFromContext<IConversationHistory>(CONVERSATION_HISTORY_KEY, context, out var conversationHistory))
       {
          yield return context.ActionThought("I don't have a chat history to examine, using the prompt instead");
       }
 
-      var prompt = context.PromptChain.Peek();
-      (Guid authorId, bool isAiGenerated) = prompt switch
+      // check in the con
+      if (TryExtractFromContext<ConversationMessage>(MESSAGE_TO_REPLY_TO_KEY, context, out var messageToReplyToKey))
       {
-         UserPrompt userPrompt => (userPrompt.UserId, false),
-         AIdentityPrompt aIdentityPrompt => (aIdentityPrompt.AIdentityId, true),
-         _ => (Guid.Empty, false)
-      };
+         yield return context.ActionThought($"The AIdentity {aidentity.Name} is replying to a specific message");
+      }
 
-      var history = conversationHistory is not null ?
-         conversationHistory.GetConversationHistory(aidentity)
-         : new List<ConversationMessage>() { new ConversationMessage(prompt.Text, aidentity) };
+      IEnumerable<ConversationMessage> history = Array.Empty<ConversationMessage>();
+      if (conversationHistory is not null)
+      {
+         history = conversationHistory.GetConversationHistory(aidentity, messageToReplyToKey);
+      }
+      else
+      {
+         var prompt = context.PromptChain.Peek();
+         var conversationMessage = prompt switch
+         {
+            UserPrompt userPrompt => new ConversationMessage(prompt.Text, userPrompt.UserId, "User"),
+            AIdentityPrompt aIdentityPrompt => new ConversationMessage(prompt.Text, _aIdentityProvider.Get(aIdentityPrompt.AIdentityId) ?? aidentity),
+            _ => null
+         };
+         if (conversationMessage is not null)
+         {
+            history = new ConversationMessage[] { conversationMessage };
+         }
+      }
 
       var streamedResult = connector.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest
       {

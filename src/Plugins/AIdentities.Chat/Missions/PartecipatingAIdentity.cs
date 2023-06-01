@@ -3,12 +3,12 @@
 /// <summary>
 /// holds a reference to the AIdentity engine.
 /// </summary>
-public class PartecipatingAIdentity
+public class ParticipatingAIdentity
 {
    public ICognitiveEngine CognitiveEngine { get; set; }
    public AIdentity AIdentity => CognitiveEngine.AIdentity;
 
-   public PartecipatingAIdentity(ICognitiveEngine engine)
+   public ParticipatingAIdentity(ICognitiveEngine engine)
    {
       CognitiveEngine = engine;
    }

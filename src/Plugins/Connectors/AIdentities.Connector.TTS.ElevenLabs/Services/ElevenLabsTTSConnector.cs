@@ -81,7 +81,7 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
    {
       var apiRequest = BuildTTSRequest(request, out string? voiceId);
 
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Text);
+      _logger.LogDebug("Performing TTS request ${apiRequest}", apiRequest.Text);
 
       var endpoint = $"{EndPoint}/text-to-speech/{voiceId}?optimize_streaming_latency=0";
       using var response = await _client.PostAsJsonAsync(endpoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -97,7 +97,7 @@ public class ElevenLabsTTSConnector : ITextToSpeechConnector, IDisposable
    {
       var apiRequest = BuildTTSRequest(request, out string? voiceId);
 
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Text);
+      _logger.LogDebug("Performing TTS request ${apiRequest}", apiRequest.Text);
 
       var endpoint = $"{EndPoint}/text-to-speech/{voiceId}/stream?optimize_streaming_latency={(int)_settings.StreamingLatencyOptimization}";
       var postRequest = new HttpRequestMessage(HttpMethod.Post, endpoint);

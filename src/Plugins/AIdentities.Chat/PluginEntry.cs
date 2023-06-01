@@ -13,7 +13,7 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
    {
       services
          .AddScoped<IChatStorage, ChatStorage>()
-         .AddScoped<IChatExporter, ChatExporter>();
+         .AddScoped<IConversationExporter, ChatExporter>();
 
       services
          .AddScoped<ICognitiveChatStorage, CognitiveChatStorage>();

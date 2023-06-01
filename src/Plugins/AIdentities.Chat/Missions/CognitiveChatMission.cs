@@ -2,10 +2,8 @@
 using AIdentities.Chat.CognitiveEngine;
 using AIdentities.Chat.Skills.IntroduceYourself;
 using AIdentities.Chat.Skills.InviteToChat.Events;
-using AIdentities.Shared.Features.AIdentities.Models;
 using AIdentities.Shared.Features.CognitiveEngine.Engines.Conversational;
 using AIdentities.Shared.Services.EventBus;
-using static MudBlazor.CategoryTypes;
 
 namespace AIdentities.Chat.Missions;
 
@@ -97,7 +95,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
    public void ClearConversation()
    {
       Context.CurrentConversation = null;
-      Context.PartecipatingAIdentities.Clear();
+      Context.ParticipatingAIdentities.Clear();
    }
 
    /// <summary>
@@ -111,7 +109,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       _conversationHistory.SetConversation(conversation);
 
       Context.CurrentConversation = conversation;
-      Context.PartecipatingAIdentities.Clear();
+      Context.ParticipatingAIdentities.Clear();
 
       foreach (var aidentityId in conversation.AIdentityIds)
       {
@@ -123,16 +121,18 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
          }
 
          // we create a new cognitive engine for each AIdentity that participate to the conversation.
-         Context.PartecipatingAIdentities.Add(
+         Context.ParticipatingAIdentities.Add(
             aidentityId,
-            new PartecipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity))
+            new ParticipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity))
             );
       }
+
+      Context.NextTalker = Context.ParticipatingAIdentities.Count > 0 ? Context.ParticipatingAIdentities.FirstOrDefault().Value.AIdentity : null;
 
       if (conversation.Messages is not { Count: > 0 })
       {
          // if the conversation is empty, we ask the first AIdentity that participate to the discussion, to start talking.
-         var firstParticipant = Context.PartecipatingAIdentities.First().Value.CognitiveEngine;
+         var firstParticipant = Context.ParticipatingAIdentities.First().Value.CognitiveEngine;
 
          await MakeAIdentityIntroduce(firstParticipant).ConfigureAwait(false);
       }
@@ -186,14 +186,14 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
    public async Task HandleAsync(InviteToConversation message)
    {
       var aidentity = message.AIdentity;
-      if (!Context.PartecipatingAIdentities.ContainsKey(aidentity.Id))
+      if (!Context.ParticipatingAIdentities.ContainsKey(aidentity.Id))
       {
          // all the AIdentities that participate to the conversation are using ConversationalCognitiveEngine
-         var partecipatingAIdentity = new PartecipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity));
+         var participatingAIdentity = new ParticipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity));
          // we create a new cognitive engine for each AIdentity that participate to the conversation.
-         Context.PartecipatingAIdentities.Add(aidentity.Id, partecipatingAIdentity);
+         Context.ParticipatingAIdentities.Add(aidentity.Id, participatingAIdentity);
 
-         await MakeAIdentityIntroduce(partecipatingAIdentity.CognitiveEngine).ConfigureAwait(false);
+         await MakeAIdentityIntroduce(participatingAIdentity.CognitiveEngine).ConfigureAwait(false);
       }
    }
 
@@ -207,5 +207,27 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
    {
       Context.IsModeratedModeEnabled = moderatedMode;
       Thoughts.Writer.TryWrite(new ActionThought(null, ChatKeeper, $"Moderated mode is now {(moderatedMode ? "enabled" : "disabled")}"));
+   }
+
+   public async Task ReplyToMessageAsync(ConversationMessage? conversationMessage)
+   {
+      Context.MessageToReplyTo = conversationMessage;
+      if (conversationMessage is null) return;
+
+      try
+      {
+         await EnqueueThoughtsAsync(MissionRunner!.HandlePromptAsync(new AIdentityPrompt(
+            ChatKeeper.Id,
+            $"{Context.MessageToReplyTo!.AuthorName}, reply to message above"
+            ), Context, Context.MissionRunningCancellationToken)).ConfigureAwait(false);
+      }
+      catch
+      {
+         throw;
+      }
+      finally
+      {
+         Context.MessageToReplyTo = null;
+      }
    }
 }

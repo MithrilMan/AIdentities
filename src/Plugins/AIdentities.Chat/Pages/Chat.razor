@@ -25,16 +25,16 @@
          @if (_showAddAIdentityDialog)
          {
             <MudStack Row="true">
-               <MudTooltip Text="@_state.PartecipatingAIdentitiesTooltip" Placement="Placement.Right" Arrow="true">
+               <MudTooltip Text="@_state.ParticipatingAIdentitiesTooltip" Placement="Placement.Right" Arrow="true">
                   <MudAvatarGroup Class="px-2" Spacing="2" Max="5">
-                     @foreach (var aid in _state.PartecipatingAIdentities)
+                     @foreach (var aid in _state.ParticipatingAIdentities)
                      {
                         <MudAvatar Size="Size.Medium"><MudImage Src="@aid.GetImageUri()" /></MudAvatar>
                      }
                   </MudAvatarGroup>
                </MudTooltip>
                <AIdentitySelector AutoFocus="true" Class="ma-0" Placeholder="Select an AIdentity to invite." Style="border-radius:0"
-                               Margin="Margin.Dense" Variant="Variant.Text" Filter="(aid => !_state.PartecipatingAIdentities.Contains(aid))"
+                               Margin="Margin.Dense" Variant="Variant.Text" Filter="(aid => !_state.ParticipatingAIdentities.Contains(aid))"
                                SelectedAIdentityChanged="AddAIdentityToConversation" />
             </MudStack>
          }

@@ -14,13 +14,18 @@
             <MudText Class="flex-1 text-ellipsis" Typo="Typo.h6">@GetConversationTitle()</MudText>
             <MudSpacer />
 
-            <MudToggleIconButton Variant="Variant.Text" Title="Moderator Mode" ToggledColor="Color.Tertiary"
-                                 Disabled="_state.NoConversation" @bind-Toggled="_state.IsModeratorModeEnabled"
-                                 Icon="@Icons.Material.Filled.Gavel" ToggledIcon="@Icons.Material.Filled.PersonAdd" />
+            <MudToggleIconButton Variant="Variant.Text" Title="Moderator Mode is disabled" Disabled="_state.NoConversation"
+            @bind-Toggled="_state.IsModeratorModeEnabled"
+            @bind-Toggled:after="@OnIsModeratorModeEnabledChanged"
+                                 ToggledIcon="@Icons.Material.Filled.Gavel" ToggledColor="Color.Tertiary"
+                                 ToggledTitle="Moderator Mode is enabled" ToggledSize="Size.Large"
+                                 Icon="@Icons.Material.Filled.Gavel" />
 
-            <MudToggleIconButton Variant="Variant.Text" Title="Add a participant" ToggledColor="Color.Tertiary"
-                                 Disabled="_state.NoConversation" @bind-Toggled="_showAddAIdentityDialog"
-                                 Icon="@Icons.Material.Filled.PersonAdd" ToggledIcon="@Icons.Material.Filled.PersonAdd" />
+            <MudToggleIconButton Variant="Variant.Text" Title="Click to be able to add a participant" Disabled="_state.NoConversation"
+            @bind-Toggled="_showAddAIdentityDialog"
+                                 ToggledIcon="@Icons.Material.Filled.PersonAdd" ToggledColor="Color.Tertiary"
+                                 ToggledTitle="You can add a participant" ToggledSize="Size.Large"
+                                 Icon="@Icons.Material.Filled.PersonAdd" />
             <MudMenu Icon="@Icons.Material.Filled.MoreVert">
                <MudMenuItem OnClick="ExportConversation" Icon="@IconsEx.EXPORT" Disabled="_state.NoConversation">Export</MudMenuItem>
             </MudMenu>
@@ -51,19 +56,36 @@
                      </MudPopover>
                   </div>
 
-                  @foreach (var aid in _state.PartecipatingAIdentities)
+                  @foreach (var aid in _state.ParticipatingAIdentities)
                   {
-                     <div class="cursor-pointer" @onclick="@(() => SetNextTalker(aid))">
+                     @if (_state.IsModeratorModeEnabled)
+                     {
+                        <div class="cursor-pointer" @onclick="@(() => SetNextTalker(aid))">
+                           <MudMenu AnchorOrigin="Origin.BottomLeft" Color="Color.Tertiary" Size="Size.Large" ActivationEvent="MouseEvent.MouseOver">
+                              <ActivatorContent>
+                                 <MudAvatar Size="Size.Medium" Class="@GetParticipantClass(aid)"><MudImage Src="@aid.GetImageUri()" /></MudAvatar>
+                              </ActivatorContent>
+                              <ChildContent>
+                                 <MudText Class="mud-theme-secondary" Typo="Typo.subtitle1" Align="Align.Center">@aid.Name</MudText>
+                                 <MudDivider />
+                                 <MudMenuItem OnClick="() => ReplyToSelectedMessage(aid)" Disabled="_state.SelectedMessage is null">Reply to selected message</MudMenuItem>
+                                 <MudMenuItem OnClick="() => ReplyToLastMessage(aid)">Reply to last message</MudMenuItem>
+                              </ChildContent>
+                           </MudMenu>
+                        </div>
+                     }
+                     else
+                     {
                         <MudTooltip Text="@aid.Name" Placement="Placement.Bottom" Arrow="true">
-                           <MudAvatar Size="Size.Medium" Class="@GetParticipantClass(aid)"><MudImage Src="@aid.GetImageUri()" /></MudAvatar>
+                           <MudAvatar Size="Size.Medium"><MudImage Src="@aid.GetImageUri()" /></MudAvatar>
                         </MudTooltip>
-                     </div>
+                     }
                   }
                </div>
                @if (_showAddAIdentityDialog)
                {
                   <AIdentitySelector AutoFocus="true" Class="ma-0" Placeholder="Select an AIdentity to invite." Style="border-radius:0"
-                                     Margin="Margin.Dense" Variant="Variant.Text" Filter="(aid => !_state.PartecipatingAIdentities.Contains(aid))"
+                                     Margin="Margin.Dense" Variant="Variant.Text" Filter="(aid => !_state.ParticipatingAIdentities.Contains(aid))"
                                      SelectedAIdentityChanged="AddAIdentityToConversation" />
                }
             </MudStack>
@@ -171,7 +193,7 @@
       .Build();
 
    string GetParticipantClass(AIdentity aIdentity) => CssBuilder.Empty()
-      .AddClass("animate__animated animate__tada animate__infinite", CognitiveChatMission.Context.NextTalker == aIdentity)
+      .AddClass("animate__animated animate__swing animate__slower animate__infinite", CognitiveChatMission.Context.NextTalker == aIdentity)
       .Build();
 
    string GetConversationTitle()

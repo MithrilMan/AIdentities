@@ -12,21 +12,21 @@ public class CognitiveChatMissionContext : MissionContext
    }
 
    /// <summary>
-   /// The current conversation history
+   /// The current conversation history.
    /// </summary>
    public IConversationHistory? ConversationHistory
    {
-      get => GetOrDefault<IConversationHistory>(nameof(IConversationHistory));
-      set => SetOrRemove(nameof(IConversationHistory), value);
+      get => GetOrDefault<IConversationHistory>(nameof(ConversationHistory));
+      set => SetOrRemove(nameof(ConversationHistory), value);
    }
 
    /// <summary>
-   /// The list of AIdentities that are partecipating to the conversation
+   /// The list of AIdentities that are participating to the conversation
    /// </summary>
-   public Dictionary<Guid, PartecipatingAIdentity> PartecipatingAIdentities
+   public Dictionary<Guid, ParticipatingAIdentity> ParticipatingAIdentities
    {
-      get => GetOrDefault<Dictionary<Guid, PartecipatingAIdentity>>(nameof(PartecipatingAIdentities), new());
-      set => State[nameof(PartecipatingAIdentities)] = value;
+      get => GetOrDefault<Dictionary<Guid, ParticipatingAIdentity>>(nameof(ParticipatingAIdentities), new());
+      set => State[nameof(ParticipatingAIdentities)] = value;
    }
 
    /// <summary>
@@ -37,7 +37,7 @@ public class CognitiveChatMissionContext : MissionContext
       get => GetOrDefault<bool>(nameof(IsModeratedModeEnabled));
       set => SetOrRemove(nameof(IsModeratedModeEnabled), value);
    }
-   
+
    /// <summary>
    /// The next talker that should reply to the current message
    /// </summary>
@@ -45,5 +45,16 @@ public class CognitiveChatMissionContext : MissionContext
    {
       get => GetOrDefault<AIdentity?>(nameof(NextTalker));
       set => SetOrRemove(nameof(NextTalker), value);
+   }
+
+   /// <summary>
+   /// Sets the message to reply to.
+   /// When this property is set, the <see cref="NextTalker"/> that message history will stop at this message.
+   /// Once the message has been used, this property should be reset to null.
+   /// </summary>
+   public ConversationMessage? MessageToReplyTo
+   {
+      get => GetOrDefault<ConversationMessage?>(nameof(MessageToReplyTo));
+      set => SetOrRemove(nameof(MessageToReplyTo), value);
    }
 }
