@@ -113,18 +113,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
 
       foreach (var aidentityId in conversation.AIdentityIds)
       {
-         var aidentity = _aIdentityProvider.Get(aidentityId);
-         if (aidentity is null)
-         {
-            _logger.LogWarning("The AIdentity {aidentityId} is not available and will not be used.", aidentityId);
-            continue;
-         }
-
-         // we create a new cognitive engine for each AIdentity that participate to the conversation.
-         Context.ParticipatingAIdentities.Add(
-            aidentityId,
-            new ParticipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity))
-            );
+         AddParticipant(aidentityId);
       }
 
       Context.NextTalker = Context.ParticipatingAIdentities.Count > 0 ? Context.ParticipatingAIdentities.FirstOrDefault().Value.AIdentity : null;
@@ -229,5 +218,21 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       {
          Context.MessageToReplyTo = null;
       }
+   }
+
+   internal void AddParticipant(Guid aIdentityId)
+   {
+      var aidentity = _aIdentityProvider.Get(aIdentityId);
+      if (aidentity is null)
+      {
+         _logger.LogWarning("The AIdentity {aidentityId} is not available and will not be used.", aIdentityId);
+         return;
+      }
+
+      // we create a new cognitive engine for each AIdentity that participate to the conversation.
+      Context.ParticipatingAIdentities.Add(
+         aIdentityId,
+         new ParticipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity))
+         );
    }
 }

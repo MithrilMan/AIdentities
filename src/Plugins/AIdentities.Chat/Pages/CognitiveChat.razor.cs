@@ -339,7 +339,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       _state.MessageGenerationCancellationTokenSource = new CancellationTokenSource();
    }
 
-   async Task AddAIdentityToConversation(AIdentity aIdentity)
+   async Task AddParticipant(AIdentity aIdentity)
    {
       if (_state.SelectedConversation is null)
       {
@@ -352,6 +352,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          return;
       }
       _state.SelectedConversation.AddAIdentity(aIdentity);
+      CognitiveChatMission.AddParticipant(aIdentity.Id);
       _state.ParticipatingAIdentities.Add(aIdentity);
       await ChatStorage.UpdateConversationAsync(_state.SelectedConversation, null).ConfigureAwait(false);
    }

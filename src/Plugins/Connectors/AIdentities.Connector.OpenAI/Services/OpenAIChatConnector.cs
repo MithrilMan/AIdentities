@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http.Features;
 using MudBlazor.Charts;
 using Polly;
 using Polly.Retry;
+using static MudBlazor.CategoryTypes;
 
 namespace AIdentities.Connector.OpenAI.Services;
 public class OpenAIChatConnector : IConversationalConnector, IDisposable
@@ -195,7 +196,9 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
          var line = (await streamReader.ReadLineAsync(cancellationToken).ConfigureAwait(false))!;
 
          if (line.StartsWith(STREAM_DATA_MARKER))
+         {
             line = line[_streamDataMarkerLength..];
+         }
 
          if (string.IsNullOrWhiteSpace(line)) continue; //empty line
 
