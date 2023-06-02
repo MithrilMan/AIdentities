@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+using AIdentities.Shared.Services.Javascript;
 
 namespace AIdentities.Chat.Pages;
 
@@ -8,8 +8,6 @@ public partial class CognitiveChat
 {
    class State
    {
-      public string? MessageSearchText { get; set; }
-
       /// <summary>
       /// True if no conversation is selected.
       /// </summary>
@@ -47,13 +45,6 @@ public partial class CognitiveChat
       public bool HasMessageGenerationFailed => !CurrentConversation?.Messages.LastOrDefault()?.IsAIGenerated ?? false; //{ get; internal set; }
 
       /// <summary>
-      /// The response from the chat API, streamed as it comes in.
-      /// During the streaming, this is used to store the response, and when the streaming is done, it is 
-      /// cleared and the response is added to the <see cref="Messages"/> collection.
-      /// </summary>
-      public ConversationMessage? StreamedResponse { get; set; }
-
-      /// <summary>
       /// Holds the reference to the current Conversational Connector.
       /// If null, no chat message can be sent.
       /// </summary>
@@ -66,6 +57,11 @@ public partial class CognitiveChat
       /// </summary>
       public ITextToSpeechConnector? TextToSpeechConnector { get; internal set; }
 
+      /// <summary>
+      /// The service used to play audio streams.
+      /// </summary>
+      public IPlayAudioStream PlayAudioStream { get; private set; } = default!;
+
       public string ParticipatingAIdentitiesTooltip => string.Join(", ", CognitiveChatMission.ParticipatingAIdentities.Select(aidentity => aidentity.Name));
 
       public CognitiveChatMission CognitiveChatMission { get; private set; } = default!;
@@ -76,6 +72,7 @@ public partial class CognitiveChat
       /// The cancellation token source used to cancel the message generation.
       /// </summary>
       public CancellationTokenSource MessageGenerationCancellationTokenSource { get; set; } = new CancellationTokenSource();
+      public CancellationTokenSource PlayingSpeechCancellationTokenSource { get; set; } = new CancellationTokenSource();
 
       public List<Thought> ChatKeeperThoughts { get; } = new();
 
@@ -84,22 +81,23 @@ public partial class CognitiveChat
       /// </summary>
       public bool IsChatKeeperThinking { get; set; }
 
-
-      public void Initialize(CognitiveChatMission cognitiveChatMission, IAIdentityProvider aidentityProvider)
+      public void Initialize(CognitiveChatMission cognitiveChatMission, IAIdentityProvider aidentityProvider, IPlayAudioStream playAudioStream)
       {
          CognitiveChatMission = cognitiveChatMission;
          AIdentityProvider = aidentityProvider;
-         MessageSearchText = null;
+         PlayAudioStream = playAudioStream;
       }
 
       public async Task InitializeConversation(Conversation conversation)
       {
+         await PlayAudioStream.StopAudioFiles().ConfigureAwait(false);
          await CognitiveChatMission.StartNewConversationAsync(conversation).ConfigureAwait(false);
          SelectedMessage = conversation.Messages.FirstOrDefault();
       }
 
       public void CloseConversation()
       {
+         _ = PlayAudioStream.StopAudioFiles();
          ChatKeeperThoughts.Clear();
          CognitiveChatMission.ClearConversation();
       }

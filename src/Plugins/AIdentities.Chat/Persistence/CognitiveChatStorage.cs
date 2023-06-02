@@ -75,6 +75,17 @@ public class CognitiveChatStorage : ICognitiveChatStorage
       return true;
    }
 
+   public async ValueTask ClearConversation(Conversation conversation)
+   {
+      using var trx = _dbContext.Database.BeginTransaction();
+
+      _dbContext.Conversations.Attach(conversation);
+      conversation.Clear();
+
+      await _dbContext.SaveChangesAsync().ConfigureAwait(false);
+      await trx.CommitAsync().ConfigureAwait(false);
+   }
+
    public async ValueTask<bool> DeleteMessageAsync(Conversation conversation, ConversationMessage message)
    {
       using var trx = _dbContext.Database.BeginTransaction();

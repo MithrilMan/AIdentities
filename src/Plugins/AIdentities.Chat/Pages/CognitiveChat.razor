@@ -28,6 +28,7 @@
                                  Icon="@Icons.Material.Filled.PersonAdd" />
             <MudMenu Icon="@Icons.Material.Filled.MoreVert">
                <MudMenuItem OnClick="ExportConversation" Icon="@IconsEx.EXPORT" Disabled="_state.NoConversation">Export</MudMenuItem>
+               <MudMenuItem OnClick="ClearConversation" Icon="@Icons.Material.Filled.Clear" Disabled="_state.NoConversation">Clear conversation</MudMenuItem>
             </MudMenu>
          </MudToolBar>
          @if (_state.NoConversation == false)
@@ -108,35 +109,27 @@
                   lastAIdentity = message.AuthorId;
                   lastMessageWasGenerated = message.IsAIGenerated;
                   <MudListItem Class="flex-shrink-0" @key="message" Value="message">
-                     <GenerativeChatMessage NewGroup="@newMessageGroup" Message="message" IsSelected="@(_state.SelectedMessage == message)" OnDelete="OnDeleteMessage" />
+                     <GenerativeChatMessage NewGroup="@newMessageGroup" Message="message" IsSelected="@(_state.SelectedMessage == message)"
+                                            OnDelete="OnDeleteMessage" OnPlayAudio="OnPlayAudio" OnStopAudio="OnStopAudio" />
                   </MudListItem>
                }
-               @if (_state.IsWaitingReply)
+               @if (_state.IsWaitingReply && _streamingMessages.Count == 0)
                {
-                  if (_state.StreamedResponse is { Text.Length: > 0 })
-                  {
-                     <MudListItem Class="flex-shrink-0" Value="_state.StreamedResponse">
-                        <GenerativeChatMessage Message="_state.StreamedResponse" IsSelected="@(_state.SelectedMessage == _state.StreamedResponse)" OnDelete="OnDeleteMessage" />
-                     </MudListItem>
-                  }
-                  else
-                  {
-                     <MudStack Row="true" Class="mud-width-full">
-                        <MudItem xs="11">
-                           <MudCard Class="flex-grow-1" Elevation="0">
-                              <MudCardHeader Class="py-1 px-0">
-                                 <CardHeaderAvatar>
-                                    <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Height="40px" Width="40px" />
-                                 </CardHeaderAvatar>
-                                 <CardHeaderContent>
-                                    <MudSkeleton Animation="Animation.Wave" Height="40px" SkeletonType="SkeletonType.Rectangle" />
-                                 </CardHeaderContent>
-                              </MudCardHeader>
-                           </MudCard>
-                        </MudItem>
-                        <MudItem xs="1"></MudItem>
-                     </MudStack>
-                  }
+                  <MudStack Row="true" Class="mud-width-full">
+                     <MudItem xs="11">
+                        <MudCard Class="flex-grow-1" Elevation="0">
+                           <MudCardHeader Class="py-1 px-0">
+                              <CardHeaderAvatar>
+                                 <MudSkeleton SkeletonType="SkeletonType.Circle" Animation="Animation.Pulse" Height="40px" Width="40px" />
+                              </CardHeaderAvatar>
+                              <CardHeaderContent>
+                                 <MudSkeleton Animation="Animation.Wave" Height="40px" SkeletonType="SkeletonType.Rectangle" />
+                              </CardHeaderContent>
+                           </MudCardHeader>
+                        </MudCard>
+                     </MudItem>
+                     <MudItem xs="1"></MudItem>
+                  </MudStack>
                }
             </MudList>
          </MudPaper>

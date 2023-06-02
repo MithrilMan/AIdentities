@@ -14,4 +14,10 @@ public interface IPlayAudioStream
    /// <param name="streamReference">The stream containing the sound to play.</param>
    /// <returns></returns>
    Task PlayAudioFileStream(DotNetStreamReference streamReference);
+
+   /// <summary>
+   /// Stops all the audio files playing on the page.
+   /// </summary>
+   /// <returns></returns>
+   Task StopAudioFiles();
 }

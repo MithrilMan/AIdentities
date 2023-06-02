@@ -1,4 +1,5 @@
 ﻿using System.Collections.Concurrent;
+using System.IO;
 using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
@@ -37,7 +38,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    /// </summary>
    //readonly Dictionary<Guid, ConversationMessage> _unfinisheMessages = new();
    readonly ConcurrentDictionary<Guid, IStreamedThought> _streamingChatKeeperThoughts = new();
-   readonly ConcurrentDictionary<Guid, ConversationMessage> _streamingMessages = new();
+   readonly ConcurrentDictionary<Guid, ExtendedConversationMessage> _streamingMessages = new();
 
    MudTextFieldExtended<string?> _messageTextField = default!;
    private ChatSettings _chatSettings = default!;
@@ -50,7 +51,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    protected override void OnInitialized()
    {
       base.OnInitialized();
-      _state.Initialize(CognitiveChatMission, AIdentityProvider);
+      _state.Initialize(CognitiveChatMission, AIdentityProvider, PlayAudioStream);
 
       _chatSettings = PluginSettingsManager.Get<ChatSettings>();
       _state.Connector = ChatConnectors.FirstOrDefault(c => c.Enabled && c.Name == _chatSettings.DefaultConnector);
@@ -121,9 +122,11 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          {
             if (!_streamingMessages.TryGetValue(streamedThought.Id, out var streamingMessage))
             {
-               streamingMessage = new ConversationMessage(
+               streamingMessage = new ExtendedConversationMessage(
                   text: "",
-                  aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
+                  aIdentity: AIdentityProvider.Get(thought.AIdentityId)!,
+                  isGeneratingSpeech: false,
+                  isComplete: false
                   );
 
                _streamingMessages[streamedThought.Id] = streamingMessage;
@@ -134,6 +137,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
             if (streamedThought.IsStreamComplete)
             {
+               streamingMessage.IsComplete = true;
                _streamingMessages.Remove(streamedThought.Id, out _);
                await UpdateChatStorageIfNeeded(thought, streamingMessage).ConfigureAwait(false);
             }
@@ -149,9 +153,11 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          else
          {
             // if the thought is not streamed, we just add it to the list
-            var message = new ConversationMessage(
+            var message = new ExtendedConversationMessage(
                text: thought.Content,
-               aIdentity: AIdentityProvider.Get(thought.AIdentityId)!
+               aIdentity: AIdentityProvider.Get(thought.AIdentityId)!,
+                isGeneratingSpeech: false,
+                isComplete: true
                );
 
             await ScrollToEndOfMessageList().ConfigureAwait(false);
@@ -186,6 +192,25 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
       Guid conversationId = _state.CurrentConversation.Id;
       await ConversationExporter.ExportConversationAsync(conversationId, ConversationExportFormat.Html).ConfigureAwait(false);
+   }
+
+   private async ValueTask ClearConversation()
+   {
+      if (_state.NoConversation) return;
+
+      if (_state.CurrentConversation is not { Messages.Count: > 0 })
+      {
+         NotificationService.ShowWarning("The conversation is empty, nothing to remove.");
+         return;
+      }
+
+      bool? result = await DialogService.ShowMessageBox(
+          "Do you want to completely clear the conversation?",
+          "Accept to clear the conversation and remove all messages. Current participants will remain in the conversation.",
+          yesText: "Yes, clear it!", cancelText: "Cancel").ConfigureAwait(false);
+      if (result != true) return;
+
+      await ChatStorage.ClearConversation(_state.CurrentConversation).ConfigureAwait(false);
    }
 
    private async ValueTask OnHotkeyDeleteMessage()
@@ -302,6 +327,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
    async Task OnConversationChanged(Conversation conversation)
    {
+      await PlayAudioStream.StopAudioFiles().ConfigureAwait(false);
       if (conversation == null)
       {
          _state.CloseConversation();
@@ -371,11 +397,38 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       }
    }
 
+   async Task OnPlayAudio(ConversationMessage message)
+   {
+      if (message.Audio is not { Length: > 0 })
+      {
+         NotificationService.ShowError("No audio available");
+         return;
+      }
+
+      using var memoryStream = new MemoryStream(message.Audio);
+      using var streamRef = new DotNetStreamReference(memoryStream);
+      await PlayAudioStream.StopAudioFiles().ConfigureAwait(false);
+      await PlayAudioStream.PlayAudioFileStream(streamRef).ConfigureAwait(false);
+   }
+
+   Task OnStopAudio(ConversationMessage message)
+   {
+      StopPlayingAudio();
+      return Task.CompletedTask;
+   }
+
    void StopMessageGeneration()
    {
       _state.MessageGenerationCancellationTokenSource.Cancel();
       _state.IsWaitingReply = false;
       _state.MessageGenerationCancellationTokenSource = new CancellationTokenSource();
+   }
+
+   void StopPlayingAudio()
+   {
+      _state.PlayingSpeechCancellationTokenSource.Cancel();
+      _state.IsWaitingReply = false;
+      _state.PlayingSpeechCancellationTokenSource = new CancellationTokenSource();
    }
 
    async Task AddParticipant(AIdentity aIdentity)
@@ -412,7 +465,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       }
    }
 
-   public async Task UpdateChatStorageIfNeeded(Thought generatingThought, ConversationMessage message)
+   public async Task UpdateChatStorageIfNeeded(Thought generatingThought, ExtendedConversationMessage message)
    {
       if (_state.NoConversation) return;
 
@@ -423,12 +476,14 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
          if (!_chatSettings.EnableTextToSpeech || _state.TextToSpeechConnector is null) return;
 
-         await PlayAudio(AIdentityProvider.Get(generatingThought.AIdentityId), message).ConfigureAwait(false);
+         await GenerateTextToSpeech(AIdentityProvider.Get(generatingThought.AIdentityId), message).ConfigureAwait(false);
       }
    }
 
-   private async Task PlayAudio(AIdentity? aIdentity, ConversationMessage message)
+   private async Task GenerateTextToSpeech(AIdentity? aIdentity, ExtendedConversationMessage message)
    {
+      if (_state.NoConversation) return;
+
       if (_state.TextToSpeechConnector is null)
       {
          NotificationService.ShowError("TextToSpeechConnector not available");
@@ -437,19 +492,34 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
       try
       {
+         message.IsGeneratingSpeech = true;
+         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
          await _state.TextToSpeechConnector.RequestTextToSpeechAsStreamAsync(
-               new DefaultTextToSpeechRequest(aIdentity, message.Text ?? ""),
-               async (stream) =>
-               {
-                  using var streamRef = new DotNetStreamReference(stream: stream);
-                  await PlayAudioStream.PlayAudioFileStream(streamRef).ConfigureAwait(false);
-               },
-               PageCancellationToken
-               ).ConfigureAwait(false);
+            new DefaultTextToSpeechRequest(aIdentity, message.Text ?? ""),
+            async (stream) =>
+            {
+               // store the streamRef audio generated into the Audio property of the message
+               using var memoryStream = new MemoryStream();
+               await stream.CopyToAsync(memoryStream).ConfigureAwait(false);
+               message.SetAudio(memoryStream.ToArray());
+               await ChatStorage.UpdateConversationAsync(_state.CurrentConversation, null).ConfigureAwait(false);
+
+               // play the audio
+               stream.Position = 0;
+               using var streamRef = new DotNetStreamReference(stream: stream);
+               await PlayAudioStream.StopAudioFiles().ConfigureAwait(false);
+               await PlayAudioStream.PlayAudioFileStream(streamRef).ConfigureAwait(false);
+            },
+            PageCancellationToken
+            ).ConfigureAwait(false);
       }
       catch (Exception ex)
       {
          NotificationService.ShowError($"Error while playing audio: {ex.Message}");
+      }
+      finally
+      {
+         message.IsGeneratingSpeech = false;
       }
    }
 
@@ -482,6 +552,8 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    {
       base.Dispose();
       CognitiveChatMission?.Dispose();
+      _state.PlayingSpeechCancellationTokenSource?.Dispose();
       _state.MessageGenerationCancellationTokenSource?.Dispose();
+      _ = PlayAudioStream.StopAudioFiles();
    }
 }

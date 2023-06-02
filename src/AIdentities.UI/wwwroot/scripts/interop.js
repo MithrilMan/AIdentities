@@ -47,7 +47,6 @@ window.downloadFileFromStream = async (fileName, contentStreamReference) => {
 
 
 window.playAudioFileStream = async (contentStreamReference) => {
-
    const arrayBuffer = await contentStreamReference.arrayBuffer();
    const blob = new Blob([arrayBuffer]);
    const url = URL.createObjectURL(blob);
@@ -62,4 +61,8 @@ window.playAudioFileStream = async (contentStreamReference) => {
       document.body.removeChild(sound);
       URL.revokeObjectURL(url);
    };
+}
+
+window.stopAudioFiles = () => {
+   document.querySelectorAll('audio').forEach(el => el.pause());
 }

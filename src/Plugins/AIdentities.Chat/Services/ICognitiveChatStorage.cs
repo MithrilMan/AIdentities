@@ -51,4 +51,10 @@ public interface ICognitiveChatStorage
    /// <param name="message">The message to delete.</param>
    /// <returns>True if the message was deleted, false otherwise.</returns>
    ValueTask<bool> DeleteMessageAsync(Conversation conversation, ConversationMessage message);
+
+   /// <summary>
+   /// Clears all conversation messages.
+   /// All participants will still be available.
+   /// </summary>
+   ValueTask ClearConversation(Conversation conversation);
 }

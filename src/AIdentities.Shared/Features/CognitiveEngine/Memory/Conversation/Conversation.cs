@@ -189,4 +189,14 @@ public class Conversation
       Title = title;
       UpdatedAt = DateTimeOffset.UtcNow;
    }
+
+   /// <summary>
+   /// Removes all the messages from the conversation.
+   /// </summary>
+   public void Clear()
+   {
+      _messages.Clear();
+      MessageCount = 0;
+      UpdatedAt = DateTimeOffset.UtcNow;
+   }
 }

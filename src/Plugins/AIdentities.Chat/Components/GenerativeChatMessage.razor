@@ -16,9 +16,30 @@
                   <MudSpacer />
                </MudStack>
             }
-            <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@MessageStyle">
-               <MudMarkdown Value="@Message.Text" />
-            </MudPaper>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0">
+               <div style="width: 46px" class="@MessageIconClass">
+                  @if (IsGeneratingSpeech)
+                  {
+                     <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                     <MudIcon Icon="@Icons.Material.Filled.RecordVoiceOver" Size="Size.Medium"
+                              Class="absolute ma-auto"
+                              Style="left:0;right:0;top:0;bottom:0;" />
+                  }
+                  else if (HasAudio && !_isPlaying)
+                  {
+                     <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Medium" Variant="Variant.Filled"
+                                    Color="Color.Primary" OnClick="PlayAudio" />
+                  }
+                  else if (HasAudio && _isPlaying)
+                  {
+                     <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Medium" Variant="Variant.Filled"
+                                    Color="Color.Error" OnClick="StopAudio" />
+                  }
+               </div>
+               <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@MessageStyle">
+                  <MudMarkdown Value="@Message.Text" />
+               </MudPaper>
+            </MudStack>
             <MudSpacer />
          </MudItem>
          <MudItem xs="1">
@@ -54,19 +75,45 @@
                   <MudAvatar Color="Color.Secondary" Size="Size.Medium">@Message.AuthorName</MudAvatar>
                </MudStack>
             }
-            <MudPaper Class="pa-1 overflow-x-auto mud-theme-primary" Elevation="2" Style="@MessageStyle">
-               <MudMarkdown Value="@Message.Text" />
-            </MudPaper>
+            <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0">
+               <MudSpacer />
+               <MudPaper Class="pa-1 overflow-x-auto mud-theme-primary" Elevation="2" Style="@MessageStyle">
+                  <MudMarkdown Value="@Message.Text" />
+               </MudPaper>
+               <div style="width: 46px" class="@MessageIconClass">
+                  @if (IsGeneratingSpeech)
+                  {
+                     <MudProgressCircular Color="Color.Default" Indeterminate="true" />
+                     <MudIcon Icon="@Icons.Material.Filled.RecordVoiceOver" Size="Size.Medium"
+                              Class="absolute ma-auto "
+                              Style="left:0;right:0;top:0;bottom:0;" />
+                  }
+                  else if (HasAudio && !_isPlaying)
+                  {
+                     <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Medium" Variant="Variant.Filled"
+                                    Color="Color.Primary" OnClick="PlayAudio" />
+                  }
+                  else if (HasAudio && _isPlaying)
+                  {
+                     <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Medium" Variant="Variant.Filled"
+                                    Color="Color.Error" OnClick="StopAudio" />
+                  }
+               </div>
+            </MudStack>
          </MudItem>
       </MudStack>
    }
 </div>
 
 @code {
-   protected string MessageStyle => StyleBuilder
-      .Empty()
-      .AddStyle("user-select", "text", IsSelected)
-      .AddStyle("margin-left", "46px", Message.IsAIGenerated)
-      .AddStyle("margin-right", "46px", !Message.IsAIGenerated)
+   protected string MessageStyle => StyleBuilder.Empty().AddStyle("user-select", "text", IsSelected).Build();
+
+   protected string MessageIconClass => CssBuilder.Default("d-flex flex-shrink-0 justify-center")
+      .AddClass("animate__animated animate__heartBeat animate__infinite", IsGeneratingSpeech)
       .Build();
+
+
+   bool IsGeneratingSpeech => Message is ExtendedConversationMessage extendedMessage && extendedMessage.IsGeneratingSpeech;
+
+   bool HasAudio => Message.Audio is { Length: > 0 };
 }

@@ -5,10 +5,12 @@ using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Services;
+using Bogus.Bson;
 using Microsoft.AspNetCore.Http.Features;
 using MudBlazor.Charts;
 using Polly;
 using Polly.Retry;
+using static AIdentities.Connector.OpenAI.Services.SseReader;
 using static MudBlazor.CategoryTypes;
 
 namespace AIdentities.Connector.OpenAI.Services;
@@ -162,52 +164,52 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
 
       var sw = Stopwatch.StartNew();
 
-      var response = await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-      using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-      await using var streamScope = stream.ConfigureAwait(false);
-      using var streamReader = new StreamReader(stream);
-      while (streamReader.EndOfStream is false) //TODO change this code in order to be catchable and retryable
+      using var response = await _retryPolicy.ExecuteAsync(async () =>
       {
-         cancellationToken.ThrowIfCancellationRequested();
-         var line = (await streamReader.ReadLineAsync(cancellationToken).ConfigureAwait(false))!;
+         return await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+      }).ConfigureAwait(false);
+      using var sseReader = new SseReader(await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false));
 
-         if (line.StartsWith(STREAM_DATA_MARKER))
-         {
-            line = line[_streamDataMarkerLength..];
-         }
+      SharpToken.GptEncoding? tokenizer = null;
+      try
+      {
+         tokenizer = SharpToken.GptEncoding.GetEncodingForModel(request.ModelId ?? DefaultModel);
+      }
+      catch { _logger.LogDebug("Unable to find tokenizer for model {ModelId}, token counter not available", request.ModelId); }
 
-         if (string.IsNullOrWhiteSpace(line)) continue; //empty line
+      int cumulativeCompletionTokens = 0;
+      while (true && !cancellationToken.IsCancellationRequested)
+      {
+         SseLine? sseEvent = await sseReader.TryReadSingleFieldEventAsync().ConfigureAwait(false);
+         if (sseEvent == null) break;
 
-         if (line == "[DONE]") break;
+         ReadOnlyMemory<char> name = sseEvent.Value.FieldName;
+         if (!name.Span.SequenceEqual("data".AsSpan())) throw new InvalidDataException();
 
-         ChatCompletionResponse? streamedResponse = null;
-         try
-         {
-            streamedResponse = JsonSerializer.Deserialize<ChatCompletionResponse>(line);
-         }
-         catch (Exception ex)
-         {
-            _logger.LogError(ex, "Failed to deserialize response: {Response}", line);
-            // if we can't deserialize the response, it's probably because it's an error, try to deserialize
-            // the rest of the stream as an error message
-            line += await streamReader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-            var error = JsonSerializer.Deserialize<ErrorResponse>(line);
-            if (error?.Error is not null)
-               throw new Exception($"Request failed with status code {error.Error.Code}: {error.Error.Message}");
-         }
+         ReadOnlyMemory<char> value = sseEvent.Value.FieldValue;
+         if (value.Span.SequenceEqual("[DONE]".AsSpan())) yield break;
+
+         var streamedResponse = JsonSerializer.Deserialize<ChatCompletionResponse>(value.Span, (JsonSerializerOptions?)null);
 
          if (streamedResponse is not null)
          {
+            var message = streamedResponse.Choices.FirstOrDefault()?.Message?.Content;
+            if (message is not null && tokenizer is not null)
+            {
+               cumulativeCompletionTokens += tokenizer.Encode(message).Count;
+            }
+
             yield return new DefaultConversationalStreamedResponse
             {
-               GeneratedMessage = streamedResponse?.Choices.FirstOrDefault()?.Message?.Content,
-               PromptTokens = streamedResponse?.Usage?.PromptTokens,
-               CumulativeTotalTokens = streamedResponse?.Usage?.TotalTokens,
-               CumulativeCompletionTokens = streamedResponse?.Usage?.CompletionTokens,
+               GeneratedMessage = message,
+               PromptTokens = streamedResponse.Usage?.PromptTokens,
+               CumulativeTotalTokens = streamedResponse.Usage?.TotalTokens,
+               CumulativeCompletionTokens = cumulativeCompletionTokens,
                CumulativeResponseTime = sw.Elapsed
             };
          }
       }
+      sw.Stop();
    }
 
    /// <summary>
@@ -215,37 +217,25 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream)
+   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream) => new ChatCompletionRequest
    {
-      //measure request token size
-      try
+      FrequencyPenalty = request.RepetitionPenalityRange,
+      MaxTokens = request.MaxGeneratedTokens,
+      Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
       {
-         var tokenizer = SharpToken.GptEncoding.GetEncodingForModel(request.ModelId ?? DefaultModel);
-         var tokenCount = tokenizer.Encode(string.Join('\n', request.Messages.Select(m => m.Content))).Count;
-         _logger.LogDebug("Request token size: approx {TokenCount}", tokenCount);
-      }
-      catch { _logger.LogDebug("Request token size: unknown"); }
-
-      return new ChatCompletionRequest
-      {
-         FrequencyPenalty = request.RepetitionPenalityRange,
-         MaxTokens = request.MaxGeneratedTokens,
-         Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
-         {
-            Content = m.Content,
-            Name = SanitizeName(m.Name),
-            Role = MapRole(m.Role)
-         }).ToList(),
-         Model = request.ModelId ?? DefaultModel,
-         PresencePenalty = request.RepetitionPenality,
-         N = request.CompletionResults,
-         Stop = request.StopSequences,
-         Stream = requireStream,
-         Temperature = request.Temperature,
-         TopP = request.TopPSamplings,
-         User = request.UserId,
-      };
-   }
+         Content = m.Content,
+         Name = SanitizeName(m.Name),
+         Role = MapRole(m.Role)
+      }).ToList(),
+      Model = request.ModelId ?? DefaultModel,
+      PresencePenalty = request.RepetitionPenality,
+      N = request.CompletionResults,
+      Stop = request.StopSequences,
+      Stream = requireStream,
+      Temperature = request.Temperature,
+      TopP = request.TopPSamplings,
+      User = request.UserId,
+   };
 
    /// <summary>
    /// Sanitizes a name to be used in the request.

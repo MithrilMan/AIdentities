@@ -12,7 +12,8 @@ public class PlayAudioStream : IPlayAudioStream
    }
 
    public async Task PlayAudioFileStream(DotNetStreamReference streamReference)
-   {
-      await _jsRuntime.InvokeVoidAsync("playAudioFileStream", streamReference).ConfigureAwait(false);
-   }
+      => await _jsRuntime.InvokeVoidAsync("playAudioFileStream", streamReference).ConfigureAwait(false);
+
+   public async Task StopAudioFiles()
+      => await _jsRuntime.InvokeVoidAsync("stopAudioFiles").ConfigureAwait(false);
 }

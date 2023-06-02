@@ -82,8 +82,21 @@ public record ConversationMessage
       Text = text;
    }
 
+   /// <summary>
+   /// Updates the message text.
+   /// </summary>
+   /// <param name="text">The new text.</param>
    public void UpdateText(string text)
    {
       Text = text;
+   }
+
+   /// <summary>
+   /// Sets the audio data.
+   /// </summary>
+   /// <param name="audio">The audio data.</param>
+   public void SetAudio(byte[]? audio)
+   {
+      Audio = audio;
    }
 }
