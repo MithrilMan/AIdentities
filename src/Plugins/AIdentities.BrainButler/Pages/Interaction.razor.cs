@@ -15,7 +15,6 @@ public partial class Interaction : AppPage<Interaction>
    const string LIST_ID = "message-list-wrapper";
    const string LIST_SELECTOR = $"#{LIST_ID}";
 
-   [Inject] private IDialogService DialogService { get; set; } = null!;
    [Inject] private IConnectorsManager ConnectorsManager { get; set; } = default!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
    [Inject] private IPromptGenerator PromptGenerator { get; set; } = null!;

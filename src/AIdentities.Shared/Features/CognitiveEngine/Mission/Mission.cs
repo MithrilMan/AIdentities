@@ -89,15 +89,10 @@ public class Mission<TMissionContext> : IMission, IDisposable
    /// </summary>
    /// <param name="prompt">The prompt that the mission runner has to handle.</param>
    /// <param name="cancellationToken">The operation cancellation token.</param>
-   public virtual async IAsyncEnumerable<Thought> TalkToMissionRunnerAsync(Prompt prompt, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+   public virtual IAsyncEnumerable<Thought> TalkToMissionRunnerAsync(Prompt prompt, CancellationToken cancellationToken = default)
    {
       if (!IsRunning) throw new InvalidOperationException("The mission is not running.");
 
-      var thoughts = MissionRunner.HandlePromptAsync(prompt, Context, cancellationToken).ConfigureAwait(false);
-
-      await foreach (var thought in thoughts)
-      {
-         yield return thought;
-      }
+      return MissionRunner.HandlePromptAsync(prompt, Context, cancellationToken);
    }
 }

@@ -15,6 +15,5 @@ public class ConversationMessageTypeConfiguration : IEntityTypeConfiguration<Con
 
    public void Configure(EntityTypeBuilder<ConversationMessage> builder)
    {
-      builder.Ignore(c => c.Features);
    }
 }

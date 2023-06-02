@@ -18,7 +18,6 @@ public class ConversationDbContext : DbContext
    }
 
    public DbSet<Conversation> Conversations { get; set; }
-   //public DbSet<ConversationMessage> ConversationMessages { get; set; }
 
    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
    {
@@ -28,7 +27,8 @@ public class ConversationDbContext : DbContext
 
       optionsBuilder
          .UseSqlite($"Data Source={_pluginStorage?.GetPluginStoragePath()}/conversations.db")
-         //.UseLoggerFactory(_loggerFactory)
+         .UseLazyLoadingProxies()
+         .UseLoggerFactory(_loggerFactory)
          .EnableSensitiveDataLogging();
    }
 

@@ -36,7 +36,7 @@ public class Conversation
    /// <summary>
    /// The title of the conversation.
    /// </summary>
-   public string Title { get; private set; }
+   public string Title { get; private set; } = default!;
 
    /// <summary>
    /// The date and time the conversation was last updated.
@@ -48,24 +48,16 @@ public class Conversation
    /// </summary>
    public int MessageCount { get; private set; }
 
-   private readonly FeatureCollection? _features;
-   /// <summary>
-   /// The features of the Conversation.
-   /// This is an extension point Plugin developers can use this to manage custom features
-   /// to conversations or access other plugins' features.
-   /// </summary>
-   public IEnumerable<KeyValuePair<Type, object>> Features => _features ?? Enumerable.Empty<KeyValuePair<Type, object>>();
-
-   private List<ConversationMessage> _messages { get; init; } = new();
+   private readonly List<ConversationMessage> _messages = new();
    /// <summary>
    /// The messages of the conversation.
    /// </summary>
-   public IReadOnlyCollection<ConversationMessage> Messages => _messages;
+   public virtual IReadOnlyCollection<ConversationMessage> Messages => _messages;
 
    /// <summary>
    /// An open door to ORM that can take advantage of this constructor (e.g. EF Core).
    /// </summary>
-   private Conversation() { }
+   protected Conversation() { }
 
    public Conversation(string title)
    {

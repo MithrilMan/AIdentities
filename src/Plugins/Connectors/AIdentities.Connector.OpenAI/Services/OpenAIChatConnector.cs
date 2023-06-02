@@ -160,37 +160,13 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       };
       httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-      var res = await _retryPolicy.ExecuteAsync(async () =>
-      {
-         await Task.CompletedTask.ConfigureAwait(false);
-         try
-         {
-            return ConsumeStream(httpRequestMessage, cancellationToken);
-         }
-         catch (Exception ex)
-         {
-            _logger.LogError(ex, "Error while consuming stream");
-            return AsyncEnumerable.Empty<IConversationalStreamedResponse>();
-         }
-      }).ConfigureAwait(false);
-
-      await foreach (var item in res.ConfigureAwait(false))
-      {
-         yield return item;
-      }
-   }
-
-   private async IAsyncEnumerable<IConversationalStreamedResponse> ConsumeStream(
-      HttpRequestMessage httpRequestMessage,
-      [EnumeratorCancellation] CancellationToken cancellationToken)
-   {
       var sw = Stopwatch.StartNew();
 
       var response = await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
       using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
       await using var streamScope = stream.ConfigureAwait(false);
       using var streamReader = new StreamReader(stream);
-      while (streamReader.EndOfStream is false)
+      while (streamReader.EndOfStream is false) //TODO change this code in order to be catchable and retryable
       {
          cancellationToken.ThrowIfCancellationRequested();
          var line = (await streamReader.ReadLineAsync(cancellationToken).ConfigureAwait(false))!;

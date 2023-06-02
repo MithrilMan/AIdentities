@@ -1,7 +1,6 @@
-﻿using AIdentities.Chat.Persistence;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
-namespace AIdentities.Chat.Services;
+namespace AIdentities.Chat.Persistence;
 
 public class CognitiveChatStorage : ICognitiveChatStorage
 {
@@ -20,7 +19,6 @@ public class CognitiveChatStorage : ICognitiveChatStorage
 
       var convesation = await _dbContext
          .Conversations
-         .Include(c => c.Messages)
          .FirstOrDefaultAsync(c => c.Id == conversationId)
          .ConfigureAwait(false);
 
@@ -51,12 +49,7 @@ public class CognitiveChatStorage : ICognitiveChatStorage
    {
       try
       {
-         return (await _dbContext
-            .Conversations
-            .Include(c => c.Messages)
-            .FirstOrDefaultAsync(c => c.Id == conversationId)
-            .ConfigureAwait(false)
-            )!;
+         return (await _dbContext.Conversations.FindAsync(conversationId).ConfigureAwait(false))!;
       }
       catch (Exception ex)
       {
@@ -90,9 +83,7 @@ public class CognitiveChatStorage : ICognitiveChatStorage
       if (message != null)
       {
          if (conversation.RemoveMessage(message.Id))
-         {
             _dbContext.Entry(message).State = EntityState.Deleted;
-         }
       }
       await _dbContext.SaveChangesAsync().ConfigureAwait(false);
       await trx.CommitAsync().ConfigureAwait(false);

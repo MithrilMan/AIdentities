@@ -8,10 +8,10 @@ public record AIdentityUserExchange
    /// <summary>
    /// The example of a message sent by the user.
    /// </summary>
-   public string UserMessage { get; set; } 
+   public string? UserMessage { get; set; } 
 
    /// <summary>
    /// The example of a message sent by the AIdentity.
    /// </summary>
-   public string AIdentityMessage { get; set; } 
+   public string? AIdentityMessage { get; set; } 
 }

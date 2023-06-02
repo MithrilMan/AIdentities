@@ -43,10 +43,10 @@ public static class PropertyBuilderExtensions
    {
       options ??= _defaultSerializerOptions;
 
-      ValueConverter<TSequence?, string> converter = new ValueConverter<TSequence?, string>
+      ValueConverter<TSequence, string> converter = new ValueConverter<TSequence, string>
       (
          v => JsonSerializer.Serialize(v, options),
-         v => JsonSerializer.Deserialize<TConcreteCollection>(v, options)
+         v => JsonSerializer.Deserialize<TConcreteCollection>(v, options)!
       );
 
       ValueComparer<TSequence?> comparer = new ValueComparer<TSequence?>

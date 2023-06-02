@@ -27,6 +27,10 @@ public class ConversationTypeConfiguration : IEntityTypeConfiguration<Conversati
          .HasSequenceJsonConversion<Guid, IReadOnlyCollection<Guid>, HashSet<Guid>>(_jsonOptions)
          .Metadata.SetPropertyAccessMode(PropertyAccessMode.Field);
 
-      builder.Ignore(c => c.Features);
+      builder.HasMany(b => b.Messages)
+         .WithOne()
+         .HasForeignKey("ConversationId")
+         .OnDelete(DeleteBehavior.Cascade)
+         .Metadata.PrincipalToDependent!.SetPropertyAccessMode(PropertyAccessMode.Field);
    }
 }
