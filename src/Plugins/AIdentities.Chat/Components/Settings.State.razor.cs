@@ -18,6 +18,7 @@ public partial class Settings
       public ICollection<string> EnabledSkills { get; set; } = new HashSet<string>();
 
       public bool EnableSpeechRecognition { get; set; }
+      public bool EnableContinuousSpeechRecognition { get; set; }
       public string? SpeechRecognitionLanguage { get; set; }
       public CultureInfo SpeechRecognitionCulture { get; set; } = CultureInfo.CurrentCulture;
 
@@ -28,9 +29,11 @@ public partial class Settings
          EnableSkills = pluginSettings.EnableSkills;
          EnabledSkills = pluginSettings.EnabledSkills.Intersect(AllKnownSkillNames).ToHashSet();
          EnableTextToSpeech = pluginSettings.EnableTextToSpeech;
-         EnableSpeechRecognition = pluginSettings.EnableSpeechRecognition;
          DefaultTextToSpeechConnector = pluginSettings.DefaultTextToSpeechConnector;
          TextToSpeechMode = pluginSettings.TextToSpeechMode;
+
+         EnableSpeechRecognition = pluginSettings.EnableSpeechRecognition;
+         EnableContinuousSpeechRecognition = pluginSettings.EnableContinuousSpeechRecognition;
          SpeechRecognitionLanguage = pluginSettings.SpeechRecognitionLanguage;
 
          try

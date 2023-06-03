@@ -274,15 +274,22 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
 
    private async ValueTask OnHotkeyVoiceRecognition()
    {
-      if (_state.CanSendMessage) return;
+      if (!_state.CanSendMessage) return;
 
-      if (_state.IsRecognizingVoice)
+      try
       {
-         await StopVoiceRecognition().ConfigureAwait(false);
+         if (_state.IsRecognizingVoice)
+         {
+            await StopVoiceRecognition().ConfigureAwait(false);
+         }
+         else
+         {
+            await StartVoiceRecognition().ConfigureAwait(false);
+         }
       }
-      else
+      catch (Exception ex)
       {
-         await StartVoiceRecognition().ConfigureAwait(false);
+         NotificationService.ShowError($"Error while starting voice recognition: {ex.Message}");
       }
    }
 
@@ -495,9 +502,11 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
          //final thought are saved in the database because are meaningful conversation messages
          await ChatStorage.UpdateConversationAsync(_state.CurrentConversation, message).ConfigureAwait(false);
 
-         if (!_chatSettings.EnableTextToSpeech || _state.TextToSpeechConnector is null) return;
-
-         await GenerateTextToSpeech(AIdentityProvider.Get(generatingThought.AIdentityId), message).ConfigureAwait(false);
+         if (_state.TextToSpeechConnector is not null
+            && _chatSettings is { TextToSpeechMode: TextToSpeechMode.Automatic, EnableTextToSpeech: true })
+         {
+            await GenerateTextToSpeech(AIdentityProvider.Get(generatingThought.AIdentityId), message).ConfigureAwait(false);
+         }
       }
    }
 
@@ -569,43 +578,55 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
          .OrderBy(m => m.CreationDate);
    }
 
-   async Task StartVoiceRecognition() => await SpeechRecognitionService
-         .StartSpeechRecognitionAsync(_chatSettings.SpeechRecognitionLanguage ?? "EN-US", true, true)
-         .ConfigureAwait(false);
+   async Task StartVoiceRecognition() => await SpeechRecognitionService.StartSpeechRecognitionAsync(
+      language: _chatSettings.SpeechRecognitionLanguage ?? "EN-US",
+      continuous: true,
+      interimResults: true
+      ).ConfigureAwait(false);
 
    async Task StopVoiceRecognition() => await SpeechRecognitionService
-         .CancelSpeechRecognitionAsync(true)
+         .CancelSpeechRecognitionAsync(false)
          .ConfigureAwait(false);
 
    #region SpeechRecognition listener
-   public Func<string, Task> OnRecognized => async (message) =>
+   public async Task OnVoiceRecognized(string transcript, bool isFinal)
    {
-      _state.Message = message;
+      if (_state.NoConversation) return;
+
+      _state.Message = transcript;
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+
+      // we stop voice recognition when the user stop talking
+      // if continuous speech recognition is disabled
+      if (isFinal && !_chatSettings.EnableContinuousSpeechRecognition)
+      {
+         await StopVoiceRecognition().ConfigureAwait(false);
+      }
 
       //send the message only if we are not waiting for a reply
-      if (!_state.IsWaitingReply)
+      if (!_state.IsWaitingReply && isFinal)
       {
          await SendMessageAsync().ConfigureAwait(false);
       }
-   };
+   }
 
-   public Func<Task>? OnStarted => () =>
+   public async Task OnVoiceRecognitionStarted()
    {
       _state.IsRecognizingVoice = true;
-      return Task.CompletedTask;
-   };
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+   }
 
-   public Func<Task>? OnFinished => () =>
+   public async Task OnVoiceRecognitionFinished()
    {
       _state.IsRecognizingVoice = false;
-      return Task.CompletedTask;
-   };
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+   }
 
-   public Func<SpeechRecognitionErrorEvent, Task>? OnError => error =>
+   public async Task OnVoiceRecognitionError(SpeechRecognitionError error)
    {
       NotificationService.ShowError($"Error while recognizing speech: {error.Error}");
-      return Task.CompletedTask;
-   };
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+   }
    #endregion
 
    public override void Dispose()

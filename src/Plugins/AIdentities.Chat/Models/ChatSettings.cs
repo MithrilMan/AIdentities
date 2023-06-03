@@ -23,6 +23,11 @@ public class ChatSettings : IPluginSettings
    public string? SpeechRecognitionLanguage { get; set; }
 
    /// <summary>
+   /// True if the speech recognition should be continuous.
+   /// </summary>
+   public bool EnableContinuousSpeechRecognition { get; set; }
+
+   /// <summary>
    /// If TextToSpeech is enabled, this property will determine when the text to speech will be used.
    /// </summary>
    public TextToSpeechMode TextToSpeechMode { get; set; }

@@ -32,11 +32,31 @@
 
    <PluginSettingsSection Title="Speech Recognition" CanBeDisabled="true" @bind-IsEnabled="_state.EnableSpeechRecognition"
                           Info="Speech Recognition allows you to speak to the AIdentities.">
+      <MudTooltip Arrow="true" Text="Continuous Speech Recognition allows you to speak to the AIdentities without having to press the button every time"
+            Placement="Placement.Right">
+         <ChildContent>
+            <MudStack Row="true" Spacing="5" AlignItems="AlignItems.Center">
+               <MudSwitchM3 @bind-Checked="_state.EnableContinuousSpeechRecognition" Label="Enable Continuous Speech Recognition" />
+               <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Large" Class="ml-2" />
+            </MudStack>
+         </ChildContent>
+         <TooltipContent>
+            <MudText Typo="Typo.subtitle1">
+               <p>Continuous Speech Recognition allows you to speak to the AIdentities without having to press the button every time.</p>
+               <p>In order to have a good experience with Continuous Speech Recognition, you should be in a quiet environment.</p>
+            </MudText>
+         </TooltipContent>
+      </MudTooltip>
+
+
       <MudSelectExtended T="System.Globalization.CultureInfo" ItemCollection="@GetSpeechRecognitionCultures()"
                          ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium" InputClass="ma-0"
                          ToStringFunc="@(c => c?.EnglishName)"
       @bind-Value="_state.SpeechRecognitionCulture"
       @bind-Value:after="@(()=>_state.SpeechRecognitionLanguage = _state.SpeechRecognitionCulture.IetfLanguageTag)" />
+      <MudText Typo="Typo.subtitle1">
+         <p>Select the language you want to use for Speech Recognition.</p>
+      </MudText>
    </PluginSettingsSection>
 
    <PluginSettingsSection Title="Text To Speech" CanBeDisabled="true" @bind-IsEnabled="_state.EnableTextToSpeech"

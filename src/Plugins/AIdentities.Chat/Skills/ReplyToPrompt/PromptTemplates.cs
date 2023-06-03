@@ -28,7 +28,7 @@ internal static class PromptTemplates
 
    const string ADDITIONAL_GUARDRAIL = $$"""
       INSTRUCTION: Don't mimic other replies style, use {{TOKEN_AIDENTITY_NAME}}'s PERSONALITY style and mood in your responses and don't forget your BACKGROUND if you have one.
-      Now reply to the last message, considering previous messages, without greet, don't repeate your name, don't be repetitive.
+      Now reply to the last message using its used language, considering previous messages, without greet, don't repeate your name, don't be repetitive.
       """;
 
    public static IEnumerable<DefaultConversationalMessage> BuildPromptMessages(AIdentity aIdentity, IEnumerable<ConversationMessage> chatHistory)

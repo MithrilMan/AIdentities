@@ -1,11 +1,11 @@
-﻿using Microsoft.JSInterop;
+﻿using System.Diagnostics.CodeAnalysis;
+using Microsoft.JSInterop;
 
 namespace AIdentities.Shared.Features.Core.SpeechRecognition;
 
 internal sealed class BrowserSpeechRecognitionService : ISpeechRecognitionService, IAsyncDisposable
 {
    private ISpeechRecognitionListener? _speechRecognitionListener;
-   private bool _isRecognizing;
    private IJSObjectReference _module = default!;
    readonly IJSRuntime _jsRuntime;
 
@@ -24,12 +24,14 @@ internal sealed class BrowserSpeechRecognitionService : ISpeechRecognitionServic
              identifier: "import",
              args: "/_content/AIDentities.Shared/scripts/speech-recognition.js"
              ).ConfigureAwait(false);
+
+      await CancelSpeechRecognitionAsync(isAborted: true).ConfigureAwait(false);
    }
 
    /// <inheritdoc />
    public async Task CancelSpeechRecognitionAsync(bool isAborted)
    {
-      if (_speechRecognitionListener is null) throw new InvalidOperationException("Browser speech recognition service is not initialized.");
+      EnsureIsInitialized();
 
       await _module.InvokeVoidAsync("cancelSpeechRecognition", isAborted).ConfigureAwait(false);
    }
@@ -37,14 +39,7 @@ internal sealed class BrowserSpeechRecognitionService : ISpeechRecognitionServic
    /// <inheritdoc />
    public async Task StartSpeechRecognitionAsync(string language, bool continuous, bool interimResults)
    {
-      if (_speechRecognitionListener is null) throw new InvalidOperationException("Browser speech recognition service is not initialized.");
-
-      if (_isRecognizing) throw new InvalidOperationException("Browser speech recognition service is already recognizing.");
-      lock (_lock)
-      {
-         if (_isRecognizing) throw new InvalidOperationException("Browser speech recognition service is already recognizing.");
-         _isRecognizing = true;
-      }
+      EnsureIsInitialized();
 
       await _module.InvokeVoidAsync(
           "startSpeechRecognition",
@@ -61,38 +56,42 @@ internal sealed class BrowserSpeechRecognitionService : ISpeechRecognitionServic
    [JSInvokable]
    public async Task OnStartedAsync()
    {
-      if (!_isRecognizing) return;
-      if (_speechRecognitionListener?.OnStarted is null) return;
+      EnsureIsInitialized();
 
-      await _speechRecognitionListener.OnStarted().ConfigureAwait(false);
+      await _speechRecognitionListener.OnVoiceRecognitionStarted().ConfigureAwait(false);
    }
 
    [JSInvokable]
    public async Task OnFinishedAsync()
    {
-      if (!_isRecognizing) return;
-      if (_speechRecognitionListener?.OnFinished is null) return;
+      EnsureIsInitialized();
 
-      await _speechRecognitionListener.OnFinished().ConfigureAwait(false);
+      await _speechRecognitionListener.OnVoiceRecognitionFinished().ConfigureAwait(false);
    }
 
    [JSInvokable]
-   public async Task OnRecognitionErrorAsync(SpeechRecognitionErrorEvent errorEvent)
+   public async Task OnRecognitionErrorAsync(SpeechRecognitionError errorEvent)
    {
-      if (!_isRecognizing) return;
-      if (_speechRecognitionListener?.OnError is null) return;
+      EnsureIsInitialized();
 
-      await _speechRecognitionListener.OnError(errorEvent).ConfigureAwait(false);
+      await _speechRecognitionListener.OnVoiceRecognitionError(errorEvent).ConfigureAwait(false);
    }
 
    [JSInvokable]
    public async Task OnSpeechRecongizedAsync(string transcript, bool isFinal)
    {
-      if (!_isRecognizing) return;
-      if (_speechRecognitionListener?.OnRecognized is null) return;
+      EnsureIsInitialized();
 
-      if (isFinal)
-         await _speechRecognitionListener.OnRecognized(transcript).ConfigureAwait(false);
+      //if (isFinal)
+      //{
+      await _speechRecognitionListener.OnVoiceRecognized(transcript, isFinal).ConfigureAwait(false);
+      //}
+   }
+
+   [MemberNotNull(nameof(_speechRecognitionListener))]
+   private void EnsureIsInitialized()
+   {
+      if (_speechRecognitionListener is null) throw new InvalidOperationException("Browser speech recognition service is not initialized.");
    }
 
    async ValueTask IAsyncDisposable.DisposeAsync()

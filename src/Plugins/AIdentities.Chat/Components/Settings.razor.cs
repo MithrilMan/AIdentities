@@ -40,6 +40,7 @@ public partial class Settings : BasePluginSettingsTab<ChatSettings, Settings.Sta
          TextToSpeechMode = _state.TextToSpeechMode,
 
          EnableSpeechRecognition = _state.EnableSpeechRecognition,
+         EnableContinuousSpeechRecognition = _state.EnableContinuousSpeechRecognition,
          SpeechRecognitionLanguage = _state.SpeechRecognitionLanguage
       });
    }

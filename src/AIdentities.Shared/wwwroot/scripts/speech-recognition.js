@@ -41,8 +41,6 @@ export const startSpeechRecognition = (
       return;
    }
 
-   cancelSpeechRecognition(true);
-
    let implementation = null;
    if (typeof SpeechRecognition !== 'undefined' && implementation == null) {
       implementation = SpeechRecognition;
