@@ -163,6 +163,21 @@
             }
             else
             {
+               @if (_chatSettings.EnableSpeechRecognition)
+               {
+                  @if (_state.IsRecognizingVoice)
+                  {
+                     <MudIconButton Icon="@Icons.Material.Filled.Stop" Color="Color.Error" ButtonType="ButtonType.Button" Size="Size.Medium"
+                                    Title="Stop voice recognition"
+                                    OnClick="StopVoiceRecognition" />
+                  }
+                  else
+                  {
+                     <MudIconButton Icon="@Icons.Material.Filled.Mic" Color="Color.Secondary" ButtonType="ButtonType.Button" Size="Size.Medium"
+                                    Title="Start voice recognition" Disabled="!_state.CanSendMessage"
+                                    OnClick="StartVoiceRecognition" />
+                  }
+               }
                <MudIconButton Icon="@Icons.Material.Filled.Send" Color="Color.Secondary" ButtonType="ButtonType.Button" Size="Size.Medium"
                               OnClick="SendMessageAsync" Disabled="@(!_state.CanSendMessage)" />
             }

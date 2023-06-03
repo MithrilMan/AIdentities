@@ -81,6 +81,11 @@ public partial class CognitiveChat
       /// </summary>
       public bool IsChatKeeperThinking { get; set; }
 
+      /// <summary>
+      /// True if the user is currently talking to the microphone.
+      /// </summary>
+      public bool IsRecognizingVoice { get; set; }
+
       public void Initialize(CognitiveChatMission cognitiveChatMission, IAIdentityProvider aidentityProvider, IPlayAudioStream playAudioStream)
       {
          CognitiveChatMission = cognitiveChatMission;

@@ -1,5 +1,5 @@
 ﻿using System.Collections.Concurrent;
-using System.IO;
+using AIdentities.Shared.Features.Core.SpeechRecognition;
 using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
@@ -9,7 +9,7 @@ namespace AIdentities.Chat.Pages;
 
 [Route(PAGE_URL)]
 [PageDefinition(PAGE_TITLE, IconsEx.CHAT_PLUS, PAGE_URL, Description = PAGE_DESCRIPTION)]
-public partial class CognitiveChat : AppPage<CognitiveChat>
+public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionListener
 {
    const int CHAT_KEEPER_THINKING_ANIMATION_DURATION = 3000;
    const string PAGE_TITLE = "Cognitive Chat";
@@ -27,6 +27,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
    [Inject] private IPluginResourcePath PluginResourcePath { get; set; } = null!;
    [Inject] private IEnumerable<ITextToSpeechConnector> TextToSpeechConnectors { get; set; } = null!;
    [Inject] private IPlayAudioStream PlayAudioStream { get; set; } = null!;
+   [Inject] private ISpeechRecognitionService SpeechRecognitionService { get; set; } = null!;
 
    /// <summary>
    /// The mission that will be assigned to the <see cref="_chatKeeper"/> instance.
@@ -65,6 +66,11 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
 
       CognitiveChatMission.Start(PageCancellationToken);
       _ = StartConsumingThoughts(PageCancellationToken);
+
+      if (_chatSettings.EnableSpeechRecognition)
+      {
+         SpeechRecognitionService.InitializeSpeechRecognitionAsync(this);
+      }
    }
 
 
@@ -77,6 +83,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       hotKeysContext.Add(ModCode.None, Code.ArrowUp, OnHotkeyArrowUp, "Select the previous message");
       hotKeysContext.Add(ModCode.None, Code.ArrowDown, OnHotkeyArrowDown, "Select the next message");
       hotKeysContext.Add(ModCode.Ctrl, Code.R, OnHotkeyResend, "Resend last message");
+      hotKeysContext.Add(ModCode.Ctrl, Code.Space, OnHotkeyVoiceRecognition, "Resend last message");
    }
 
    private async Task StartConsumingThoughts(CancellationToken cancellationToken)
@@ -263,6 +270,20 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
       if (!_state.HasMessageGenerationFailed) return;
 
       await Resend().ConfigureAwait(false);
+   }
+
+   private async ValueTask OnHotkeyVoiceRecognition()
+   {
+      if (_state.CanSendMessage) return;
+
+      if (_state.IsRecognizingVoice)
+      {
+         await StopVoiceRecognition().ConfigureAwait(false);
+      }
+      else
+      {
+         await StartVoiceRecognition().ConfigureAwait(false);
+      }
    }
 
    private async Task SendMessageAsync()
@@ -547,6 +568,45 @@ public partial class CognitiveChat : AppPage<CognitiveChat>
          .Union(_streamingMessages.Values.ToList())
          .OrderBy(m => m.CreationDate);
    }
+
+   async Task StartVoiceRecognition() => await SpeechRecognitionService
+         .StartSpeechRecognitionAsync(_chatSettings.SpeechRecognitionLanguage ?? "EN-US", true, true)
+         .ConfigureAwait(false);
+
+   async Task StopVoiceRecognition() => await SpeechRecognitionService
+         .CancelSpeechRecognitionAsync(true)
+         .ConfigureAwait(false);
+
+   #region SpeechRecognition listener
+   public Func<string, Task> OnRecognized => async (message) =>
+   {
+      _state.Message = message;
+
+      //send the message only if we are not waiting for a reply
+      if (!_state.IsWaitingReply)
+      {
+         await SendMessageAsync().ConfigureAwait(false);
+      }
+   };
+
+   public Func<Task>? OnStarted => () =>
+   {
+      _state.IsRecognizingVoice = true;
+      return Task.CompletedTask;
+   };
+
+   public Func<Task>? OnFinished => () =>
+   {
+      _state.IsRecognizingVoice = false;
+      return Task.CompletedTask;
+   };
+
+   public Func<SpeechRecognitionErrorEvent, Task>? OnError => error =>
+   {
+      NotificationService.ShowError($"Error while recognizing speech: {error.Error}");
+      return Task.CompletedTask;
+   };
+   #endregion
 
    public override void Dispose()
    {

@@ -30,6 +30,15 @@
       }
    </PluginSettingsSection>
 
+   <PluginSettingsSection Title="Speech Recognition" CanBeDisabled="true" @bind-IsEnabled="_state.EnableSpeechRecognition"
+                          Info="Speech Recognition allows you to speak to the AIdentities.">
+      <MudSelectExtended T="System.Globalization.CultureInfo" ItemCollection="@GetSpeechRecognitionCultures()"
+                         ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium" InputClass="ma-0"
+                         ToStringFunc="@(c => c?.EnglishName)"
+      @bind-Value="_state.SpeechRecognitionCulture"
+      @bind-Value:after="@(()=>_state.SpeechRecognitionLanguage = _state.SpeechRecognitionCulture.IetfLanguageTag)" />
+   </PluginSettingsSection>
+
    <PluginSettingsSection Title="Text To Speech" CanBeDisabled="true" @bind-IsEnabled="_state.EnableTextToSpeech"
                           Info="Text To Speech allows you to hear the messages sent by the AIdentities.">
       <MudRadioGroup @bind-SelectedOption="@_state.TextToSpeechMode" Class="py-2">

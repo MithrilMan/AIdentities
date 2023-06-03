@@ -17,6 +17,12 @@ public partial class Settings
             .WithMessage("The selected connector is not available.")
             .Must(x => _connectors.Any(y => y.Enabled))
             .WithMessage("The selected connector is not available because it has been disabled.");
+
+         When(x => x.EnableSpeechRecognition, () =>
+         {
+            RuleFor(x => x.SpeechRecognitionLanguage)
+               .NotEmpty();
+         });
       }
    }
 

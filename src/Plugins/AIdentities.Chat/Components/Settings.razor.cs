@@ -1,4 +1,5 @@
-﻿using AIdentities.Shared.Features.CognitiveEngine.Skills;
+﻿using System.Globalization;
+using AIdentities.Shared.Features.CognitiveEngine.Skills;
 using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 
 namespace AIdentities.Chat.Components;
@@ -36,7 +37,10 @@ public partial class Settings : BasePluginSettingsTab<ChatSettings, Settings.Sta
          EnabledSkills = _state.EnabledSkills.ToList(),
          EnableTextToSpeech = _state.EnableTextToSpeech,
          DefaultTextToSpeechConnector = _state.DefaultTextToSpeechConnector,
-         TextToSpeechMode = _state.TextToSpeechMode
+         TextToSpeechMode = _state.TextToSpeechMode,
+
+         EnableSpeechRecognition = _state.EnableSpeechRecognition,
+         SpeechRecognitionLanguage = _state.SpeechRecognitionLanguage
       });
    }
 
@@ -47,4 +51,6 @@ public partial class Settings : BasePluginSettingsTab<ChatSettings, Settings.Sta
       var connector = connectors.FirstOrDefault(x => x.Name == connectorName);
       return connector == null ? true : !connector.Enabled;
    }
+
+   ICollection<CultureInfo> GetSpeechRecognitionCultures() => CultureInfo.GetCultures(CultureTypes.SpecificCultures);
 }

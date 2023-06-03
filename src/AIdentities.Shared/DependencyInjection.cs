@@ -4,6 +4,7 @@ using AIdentities.Shared.Features.CognitiveEngine.Components;
 using AIdentities.Shared.Features.CognitiveEngine.Engines.Reflexive;
 using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 using AIdentities.Shared.Features.Core.Services;
+using AIdentities.Shared.Features.Core.SpeechRecognition;
 using AIdentities.Shared.Plugins.Connectors;
 using AIdentities.Shared.Services.EventBus;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,6 +32,8 @@ public static class DependencyInjection
          .AddScoped<ISkillManager, SkillManager>();
 
       services.AddScoped(typeof(IConnectorsManager<>), typeof(ConnectorsManager<>));
+
+      services.AddScoped<ISpeechRecognitionService, BrowserSpeechRecognitionService>();
 
       RegisterCogntiveEngines(services);
 

@@ -13,6 +13,16 @@ public class ChatSettings : IPluginSettings
    public bool EnableTextToSpeech { get; set; }
 
    /// <summary>
+   /// True if the chat plugin should use speech recognition to listen to the user.
+   /// </summary>
+   public bool EnableSpeechRecognition { get; set; }
+
+   /// <summary>
+   /// BCP 47 language tag for the speech recognition culture.
+   /// </summary>
+   public string? SpeechRecognitionLanguage { get; set; }
+
+   /// <summary>
    /// If TextToSpeech is enabled, this property will determine when the text to speech will be used.
    /// </summary>
    public TextToSpeechMode TextToSpeechMode { get; set; }
