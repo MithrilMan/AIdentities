@@ -73,10 +73,10 @@ try
          AutoHideMenuBar = true
       };
 
-      // Open the Electron-Window here
       var window = await Electron.WindowManager.CreateWindowAsync(options).ConfigureAwait(false);
       window.Maximize();
 
+      Console.WriteLine("Shutting down");
       app.WaitForShutdown();
    }
    else
