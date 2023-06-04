@@ -9,6 +9,6 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
       services.AddScoped<IConversationalConnector, TextGenerationChatConnector>();
       services.AddScoped<ICompletionConnector, TextGenerationCompletionConnector>();
 
-      RegisterPluginSettings<TextGenerationSettings, Settings>("TextGeneration");
+      RegisterPluginSettings<TextGenerationSettings, Settings>("Text-Generation");
    }
 }

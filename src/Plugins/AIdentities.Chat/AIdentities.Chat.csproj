@@ -15,13 +15,15 @@
    <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.5" />
       <PackageReference Include="LibSassBuilder" Version="3.0.0" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="7.0.5">
+        <PrivateAssets>all</PrivateAssets>
+        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      </PackageReference>
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Proxies" Version="7.0.5" />
+      <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.5" />
    </ItemGroup>
 
    <ItemGroup>
       <ProjectReference Include="..\..\AIdentities.Shared\AIdentities.Shared.csproj" />
-   </ItemGroup>
-
-   <ItemGroup>
-     <Folder Include="wwwroot\" />
    </ItemGroup>
 </Project>

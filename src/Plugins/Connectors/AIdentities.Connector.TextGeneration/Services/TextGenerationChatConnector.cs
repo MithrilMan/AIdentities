@@ -75,7 +75,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request)
+   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request, CancellationToken cancellationToken)
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
@@ -87,12 +87,12 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
          JsonContent content = JsonContent.Create(apiRequest, mediaType: null, null);
          // oobabooga TextGeneration API implementation requires content-lenght
          await content.LoadIntoBufferAsync().ConfigureAwait(false);
-         using HttpResponseMessage response = await _client.PostAsync(ChatEndPoint, content, CancellationToken.None).ConfigureAwait(false);
-         _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+         using HttpResponseMessage response = await _client.PostAsync(ChatEndPoint, content, cancellationToken).ConfigureAwait(false);
+         _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
          if (response.IsSuccessStatusCode)
          {
-            var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
+            var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
             sw.Stop();
             return new DefaultConversationalResponse
@@ -106,7 +106,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
          }
          else
          {
-            _logger.LogError("Request failed: {Error}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+            _logger.LogError("Request failed: {Error}", response.StatusCode);
             throw new Exception($"Request failed with status code {response.StatusCode}");
          }
       }
@@ -135,7 +135,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    public async IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       // stream is not supported yet, fallback to normal request
-      var response = await RequestChatCompletionAsync(request).ConfigureAwait(false);
+      var response = await RequestChatCompletionAsync(request, cancellationToken).ConfigureAwait(false);
 
       //using (ClientWebSocket webSocket = new ClientWebSocket())
       //{
@@ -234,7 +234,15 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       var sb = new StringBuilder();
       foreach (var message in request.Messages)
       {
-         sb.AppendLine($"\n{message.Role}: {message.Content}"); // we add a new line to space more the messages belonging to different roles, not sure if it's needed
+         // we add a new line to space more the messages belonging to different roles, not sure if it's needed
+         if (message.Role == DefaultConversationalRole.System)
+         {
+            sb.AppendLine($"\nSystem: {message.Content}");
+         }
+         else
+         {
+            sb.AppendLine($"\n{message.Role} ({message.Name}): {message.Content}");
+         }
       }
       sb.AppendLine(ASSISTANT_ROLE_PREFIX); //append already the assistant role, so the completion will start from here and we can remove it later
 
@@ -261,6 +269,8 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       // request.TailFreeSampling
       // request.TopASamplings
       // request.UserId
+
+      _logger.LogDebug("Built request {@chatRequest}", chatRequest);
 
       return chatRequest;
    }

@@ -5,7 +5,11 @@ using System.Runtime.CompilerServices;
 using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors.Completion;
+using Bogus;
 using Microsoft.AspNetCore.Http.Features;
+using Polly;
+using Polly.Retry;
+using static AIdentities.Connector.OpenAI.Services.SseReader;
 
 namespace AIdentities.Connector.OpenAI.Services;
 
@@ -31,6 +35,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
    protected string DefaultModel => _settingsManager.Get<OpenAISettings>().DefaultCompletionModel;
 
    private HttpClient _client = default!;
+   readonly AsyncRetryPolicy _retryPolicy;
    private readonly JsonSerializerOptions _serializerOptions;
 
    public OpenAICompletionConnector(ILogger<OpenAICompletionConnector> logger, IPluginSettingsManager settingsManager)
@@ -43,8 +48,37 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
          DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
       };
 
+      _retryPolicy = CreateRetryPolicy();
+
       _settingsManager.OnSettingsUpdated += OnSettingsUpdated;
       ApplySettings(_settingsManager.Get<OpenAISettings>());
+   }
+
+   /// <summary>
+   /// Creates the retry policy for the cognitive engine.
+   /// This is applied everytime a call to a generation API fails with an
+   /// exception specified in the retry policy.
+   /// The default implementation is a simple exponential backoff that tries 3 times
+   /// and catch all exceptions.
+   /// </summary>
+   /// <returns></returns>
+   private AsyncRetryPolicy CreateRetryPolicy()
+   {
+      // Define the retry policy
+      var retryPolicy = Policy
+         .Handle<Exception>()
+         .WaitAndRetryAsync(
+         3,
+         retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+         (exception, timeSpan, retryCount, context) =>
+         {
+            _logger.LogWarning("Retry {RetryCount} due to {ExceptionType} with message {Message}",
+                               retryCount,
+                               exception.GetType().Name,
+                               exception.Message);
+         });
+
+      return retryPolicy;
    }
 
    /// <summary>
@@ -100,20 +134,23 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       _settingsManager.OnSettingsUpdated -= OnSettingsUpdated;
    }
 
-   public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request)
+   public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request, CancellationToken cancellationToken)
    {
       var apiRequest = BuildCreateCompletionRequest(request, false);
 
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
       var sw = Stopwatch.StartNew();
 
-      using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
+      using var response = await _retryPolicy.ExecuteAsync(async () =>
+      {
+         return await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
+      }).ConfigureAwait(false);
 
-      _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+      _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
       if (response.IsSuccessStatusCode)
       {
-         var responseData = await response.Content.ReadFromJsonAsync<CreateCompletionResponse>().ConfigureAwait(false);
+         var responseData = await response.Content.ReadFromJsonAsync<CreateCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
          sw.Stop();
          return new DefaultCompletionResponse
@@ -129,7 +166,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       }
       else
       {
-         _logger.LogError("Request failed: {Error}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+         _logger.LogError("Request failed: {Error}", response.StatusCode);
          throw new Exception($"Request failed with status code {response.StatusCode}");
       }
    }
@@ -139,55 +176,56 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       CreateCompletionRequest apiRequest = BuildCreateCompletionRequest(request, true);
       _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
 
-      var sw = Stopwatch.StartNew();
-
       using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
       {
          Content = JsonContent.Create(apiRequest, null, _serializerOptions)
       };
       httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-      using var httpResponseMessage = await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+      var sw = Stopwatch.StartNew();
 
-      var stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-      await using var streamScope = stream.ConfigureAwait(false);
-      using var streamReader = new StreamReader(stream);
-      while (streamReader.EndOfStream is false)
+      using var response = await _retryPolicy.ExecuteAsync(async () =>
       {
-         cancellationToken.ThrowIfCancellationRequested();
-         var line = (await streamReader.ReadLineAsync(cancellationToken).ConfigureAwait(false))!;
+         return await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+      }).ConfigureAwait(false);
+      using var sseReader = new SseReader(await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false));
 
-         if (line.StartsWith(STREAM_DATA_MARKER))
-            line = line[_streamDataMarkerLength..];
+      SharpToken.GptEncoding? tokenizer = null;
+      try
+      {
+         tokenizer = SharpToken.GptEncoding.GetEncodingForModel(request.ModelId ?? DefaultModel);
+      }
+      catch { _logger.LogDebug("Unable to find tokenizer for model {ModelId}, token counter not available", request.ModelId); }
 
-         if (string.IsNullOrWhiteSpace(line)) continue; //empty line
+      int cumulativeCompletionTokens = 0;
+      while (true && !cancellationToken.IsCancellationRequested)
+      {
+         SseLine? sseEvent = await sseReader.TryReadSingleFieldEventAsync().ConfigureAwait(false);
+         if (sseEvent == null) break;
 
-         if (line == "[DONE]") break;
+         ReadOnlyMemory<char> name = sseEvent.Value.FieldName;
+         if (!name.Span.SequenceEqual("data".AsSpan())) throw new InvalidDataException();
 
-         CreateCompletionResponse? streamedResponse = null;
-         try
-         {
-            streamedResponse = JsonSerializer.Deserialize<CreateCompletionResponse>(line);
-         }
-         catch (Exception)
-         {
-            // if we can't deserialize the response, it's probably because it's an error, try to deserialize
-            // the rest of the stream as an error message
-            line += await streamReader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-            var error = JsonSerializer.Deserialize<ErrorResponse>(line);
-            if (error?.Error is not null)
-               throw new Exception($"Request failed with status code {error.Error.Code}: {error.Error.Message}");
-         }
+         ReadOnlyMemory<char> value = sseEvent.Value.FieldValue;
+         if (value.Span.SequenceEqual("[DONE]".AsSpan())) yield break;
+
+         var streamedResponse = JsonSerializer.Deserialize<CreateCompletionResponse>(value.Span, (JsonSerializerOptions?)null);
 
          if (streamedResponse is not null)
          {
+            var message = streamedResponse.Choices.FirstOrDefault()?.Text;
+            if (message is not null && tokenizer is not null)
+            {
+               cumulativeCompletionTokens += tokenizer.Encode(message).Count;
+            }
+
             yield return new DefaultCompletionStreamedResponse
             {
                ModelId = streamedResponse.Model,
-               GeneratedMessage = streamedResponse.Choices?.FirstOrDefault()?.Text,
+               GeneratedMessage = message,
                PromptTokens = streamedResponse.Usage?.PromptTokens,
                CumulativeTotalTokens = streamedResponse.Usage?.TotalTokens,
-               CumulativeCompletionTokens = streamedResponse.Usage?.CompletionTokens,
+               CumulativeCompletionTokens = cumulativeCompletionTokens,
                CumulativeResponseTime = sw.Elapsed,
                FinishReason = streamedResponse.Choices?.FirstOrDefault()?.FinishReason
             };

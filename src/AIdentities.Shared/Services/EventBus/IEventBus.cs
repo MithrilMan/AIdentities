@@ -20,5 +20,5 @@ public interface IEventBus
    /// Publishes an event on the event bus.
    /// </summary>
    /// <param name="event">The event to publish.</param>
-   Task Publish(object @event);
+   Task PublishAsync(object @event);
 }

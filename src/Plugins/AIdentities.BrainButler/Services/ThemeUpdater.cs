@@ -64,7 +64,7 @@ public class ThemeUpdater
          var darkPaletteDto = JsonSerializer.Deserialize<PaletteReference>(darkPalette, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
          if (darkPaletteDto != null)
          {
-            theme.Palette = PaletteMapper.CreateDarkPalette(darkPaletteDto);
+            theme.PaletteDark = PaletteMapper.CreateDarkPalette(darkPaletteDto);
          }
       }
 

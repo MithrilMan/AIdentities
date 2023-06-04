@@ -56,7 +56,7 @@ public class BooruAIdentityImporter : IAIdentityImporter
 
             var description = tEXt.Tags[0].Description;
 
-            if (!description?.StartsWith(BOORU_METADATA_PREFIX) ?? false)
+            if (!(description?.StartsWith(BOORU_METADATA_PREFIX) ?? false))
             {
                _logger.LogError(ERROR_NO_BOORU_METADATA, aIdentityFile.Name);
                return null;

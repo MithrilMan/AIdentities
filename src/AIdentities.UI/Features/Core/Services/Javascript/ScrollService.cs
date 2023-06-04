@@ -31,4 +31,10 @@ public class ScrollService : IScrollService
    {
       await _jsRuntime.InvokeVoidAsync("scrollElementToBottom", selector).ConfigureAwait(false);
    }
+
+   public async Task EnsureIsVisible(string selector)
+   {
+      await _jsRuntime.InvokeVoidAsync("ensureIsVisible", selector).ConfigureAwait(false);
+   }
+   
 }

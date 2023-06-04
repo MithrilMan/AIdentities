@@ -5,7 +5,7 @@ public partial class Settings
 {
    public class State : BaseState
    {
-      public bool? Enabled { get; set; }
+      public bool Enabled { get; set; }
       public string? ChatEndPoint { get; set; } = default!;
       public string? DefaultChatModel { get; set; }
       public string? CompletionEndPoint { get; set; } = default!;

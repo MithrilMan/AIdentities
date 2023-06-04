@@ -19,6 +19,14 @@ public interface IAIdentityProvider
    AIdentity? Get(Guid id);
 
    /// <summary>
+   /// Gets a <see cref="AIdentity"/> by its name.
+   /// Name isn't unique, so this method returns the first <see cref="AIdentity"/> with the given name.
+   /// </summary>
+   /// <param name="id">The Id of the <see cref="AIdentity"/> to get.</param>
+   /// <returns>The first <see cref="AIdentity"/> with the given name, or null if not found.</returns>
+   AIdentity? Get(string name);
+
+   /// <summary>
    /// Creates a new <see cref="AIdentity"/>.
    /// </summary>
    /// <param name="newAIdentity">The <see cref="AIdentity"/> to create.</param>

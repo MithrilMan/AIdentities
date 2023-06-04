@@ -123,4 +123,13 @@ public interface IPluginStorage
    /// <param name="backupFileName">Name of the backup file. If the file exists, it will be overwritten.</param>
    /// <returns>True if the file was backed up, false otherwise.</returns>
    ValueTask<bool> BackupFileAsync(string fileName, string backupFileName);
+
+
+   /// <summary>
+   /// Get the path of the plugin's storage folder.
+   /// While developing plugins, you may want to use this method to get the path of the plugin's folder
+   /// and you shouldn't navigate to parent folders.
+   /// </summary>
+   /// <returns>The path of the plugin's storage folder.</returns>
+   string GetPluginStoragePath();
 }

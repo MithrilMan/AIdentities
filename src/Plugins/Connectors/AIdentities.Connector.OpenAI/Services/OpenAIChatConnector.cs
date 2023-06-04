@@ -2,9 +2,16 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
 using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Services;
+using Bogus.Bson;
 using Microsoft.AspNetCore.Http.Features;
+using MudBlazor.Charts;
+using Polly;
+using Polly.Retry;
+using static AIdentities.Connector.OpenAI.Services.SseReader;
+using static MudBlazor.CategoryTypes;
 
 namespace AIdentities.Connector.OpenAI.Services;
 public class OpenAIChatConnector : IConversationalConnector, IDisposable
@@ -29,7 +36,9 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    protected string DefaultModel => _settingsManager.Get<OpenAISettings>().DefaultChatModel;
 
    private HttpClient _client = default!;
+   readonly AsyncRetryPolicy _retryPolicy;
    private readonly JsonSerializerOptions _serializerOptions;
+   private readonly JsonSerializerOptions _debuggingSerializerOptions;
 
    public OpenAIChatConnector(ILogger<OpenAIChatConnector> logger, IPluginSettingsManager settingsManager)
    {
@@ -41,8 +50,43 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
          DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
       };
 
+      _debuggingSerializerOptions = new JsonSerializerOptions()
+      {
+         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
+         WriteIndented = true
+      };
+
+      _retryPolicy = CreateRetryPolicy();
+
       _settingsManager.OnSettingsUpdated += OnSettingsUpdated;
       ApplySettings(_settingsManager.Get<OpenAISettings>());
+   }
+
+   /// <summary>
+   /// Creates the retry policy for the cognitive engine.
+   /// This is applied everytime a call to a generation API fails with an
+   /// exception specified in the retry policy.
+   /// The default implementation is a simple exponential backoff that tries 3 times
+   /// and catch all exceptions.
+   /// </summary>
+   /// <returns></returns>
+   private AsyncRetryPolicy CreateRetryPolicy()
+   {
+      // Define the retry policy
+      var retryPolicy = Policy
+         .Handle<Exception>()
+         .WaitAndRetryAsync(
+         3,
+         retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+         (exception, timeSpan, retryCount, context) =>
+         {
+            _logger.LogWarning("Retry {RetryCount} due to {ExceptionType} with message {Message}",
+                               retryCount,
+                               exception.GetType().Name,
+                               exception.Message);
+         });
+
+      return retryPolicy;
    }
 
    /// <summary>
@@ -72,20 +116,23 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request)
+   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request, CancellationToken cancellationToken)
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
+      _logger.LogDebug("Performing request {apiRequest}", JsonSerializer.Serialize(apiRequest.Messages, _debuggingSerializerOptions));
       var sw = Stopwatch.StartNew();
 
-      using HttpResponseMessage response = await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions).ConfigureAwait(false);
+      using HttpResponseMessage response = await _retryPolicy.ExecuteAsync(async () =>
+      {
+         return await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
+      }).ConfigureAwait(false);
 
-      _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+      _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
       if (response.IsSuccessStatusCode)
       {
-         var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
+         var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
          sw.Stop();
          return new DefaultConversationalResponse
@@ -99,7 +146,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       }
       else
       {
-         _logger.LogError("Request failed: {Error}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+         _logger.LogError("Request failed: {Error}", response.StatusCode);
          throw new Exception($"Request failed with status code {response.StatusCode}");
       }
    }
@@ -107,9 +154,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    public async IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, true);
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
-
-      var sw = Stopwatch.StartNew();
+      _logger.LogDebug("Performing stream request {apiRequest}", JsonSerializer.Serialize(apiRequest.Messages, _debuggingSerializerOptions));
 
       using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
       {
@@ -117,50 +162,54 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       };
       httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
 
-      using var httpResponseMessage = await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+      var sw = Stopwatch.StartNew();
 
-      var stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-      await using var streamScope = stream.ConfigureAwait(false);
-      using var streamReader = new StreamReader(stream);
-      while (streamReader.EndOfStream is false)
+      using var response = await _retryPolicy.ExecuteAsync(async () =>
       {
-         cancellationToken.ThrowIfCancellationRequested();
-         var line = (await streamReader.ReadLineAsync(cancellationToken).ConfigureAwait(false))!;
+         return await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+      }).ConfigureAwait(false);
+      using var sseReader = new SseReader(await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false));
 
-         if (line.StartsWith(STREAM_DATA_MARKER))
-            line = line[_streamDataMarkerLength..];
+      SharpToken.GptEncoding? tokenizer = null;
+      try
+      {
+         tokenizer = SharpToken.GptEncoding.GetEncodingForModel(request.ModelId ?? DefaultModel);
+      }
+      catch { _logger.LogDebug("Unable to find tokenizer for model {ModelId}, token counter not available", request.ModelId); }
 
-         if (string.IsNullOrWhiteSpace(line)) continue; //empty line
+      int cumulativeCompletionTokens = 0;
+      while (true && !cancellationToken.IsCancellationRequested)
+      {
+         SseLine? sseEvent = await sseReader.TryReadSingleFieldEventAsync().ConfigureAwait(false);
+         if (sseEvent == null) break;
 
-         if (line == "[DONE]") break;
+         ReadOnlyMemory<char> name = sseEvent.Value.FieldName;
+         if (!name.Span.SequenceEqual("data".AsSpan())) throw new InvalidDataException();
 
-         ChatCompletionResponse? streamedResponse = null;
-         try
-         {
-            streamedResponse = JsonSerializer.Deserialize<ChatCompletionResponse>(line);
-         }
-         catch (Exception)
-         {
-            // if we can't deserialize the response, it's probably because it's an error, try to deserialize
-            // the rest of the stream as an error message
-            line += await streamReader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-            var error = JsonSerializer.Deserialize<ErrorResponse>(line);
-            if (error?.Error is not null)
-               throw new Exception($"Request failed with status code {error.Error.Code}: {error.Error.Message}");
-         }
+         ReadOnlyMemory<char> value = sseEvent.Value.FieldValue;
+         if (value.Span.SequenceEqual("[DONE]".AsSpan())) yield break;
+
+         var streamedResponse = JsonSerializer.Deserialize<ChatCompletionResponse>(value.Span, (JsonSerializerOptions?)null);
 
          if (streamedResponse is not null)
          {
+            var message = streamedResponse.Choices.FirstOrDefault()?.Message?.Content;
+            if (message is not null && tokenizer is not null)
+            {
+               cumulativeCompletionTokens += tokenizer.Encode(message).Count;
+            }
+
             yield return new DefaultConversationalStreamedResponse
             {
-               GeneratedMessage = streamedResponse?.Choices.FirstOrDefault()?.Message?.Content,
-               PromptTokens = streamedResponse?.Usage?.PromptTokens,
-               CumulativeTotalTokens = streamedResponse?.Usage?.TotalTokens,
-               CumulativeCompletionTokens = streamedResponse?.Usage?.CompletionTokens,
+               GeneratedMessage = message,
+               PromptTokens = streamedResponse.Usage?.PromptTokens,
+               CumulativeTotalTokens = streamedResponse.Usage?.TotalTokens,
+               CumulativeCompletionTokens = cumulativeCompletionTokens,
                CumulativeResponseTime = sw.Elapsed
             };
          }
       }
+      sw.Stop();
    }
 
    /// <summary>
@@ -175,7 +224,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
       {
          Content = m.Content,
-         Name = m.Name,
+         Name = SanitizeName(m.Name),
          Role = MapRole(m.Role)
       }).ToList(),
       Model = request.ModelId ?? DefaultModel,
@@ -187,6 +236,32 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       TopP = request.TopPSamplings,
       User = request.UserId,
    };
+
+   /// <summary>
+   /// Sanitizes a name to be used in the request.
+   /// OpenAI's API doesn't allow names to contain spaces, so we replace them with underscores.
+   /// Accepted characters are letters, digits, underscores, and hyphens.
+   /// Regex pattern: ^[a-zA-Z0-9_-]{1,64}
+   /// </summary>
+   /// <param name="name"></param>
+   /// <returns></returns>
+   /// <exception cref="NotImplementedException"></exception>
+   private static string? SanitizeName(string? name)
+   {
+      if (name is null) return null;
+
+      //trim the name if too long
+      if (name.Length > 64)
+      {
+         name = name[..64];
+      }
+
+      string pattern = @"[^a-zA-Z0-9_-]"; // matches any character that is not a letter, digit, underscore, or hyphen
+      string replacement = "_";
+      string sanitized = Regex.Replace(name, pattern, replacement);
+
+      return sanitized;
+   }
 
    private static ChatCompletionRoleEnum? MapRole(DefaultConversationalRole role) => role switch
    {

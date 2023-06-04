@@ -1,8 +1,12 @@
-﻿using AIdentities.Shared.Common;
+﻿namespace AIdentities.BrainButler.Models;
 
-namespace AIdentities.BrainButler.Models;
-public record ConversationPiece : Entity
+public record ConversationPiece
 {
+   /// <summary>
+   /// The id of this conversation piece.
+   /// </summary>
+   public Guid Id { get; set; } = Guid.NewGuid();
+
    /// <summary>
    /// The date and time the message was created.
    /// </summary>

@@ -1,0 +1,30 @@
+<MudCard>
+   <MudCardHeader Class="pb-1">
+      <CardHeaderAvatar>
+         <MudTooltip Arrow="true" Placement="Placement.Right" Text="@Info">
+            <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Large" />
+         </MudTooltip>
+      </CardHeaderAvatar>
+      <CardHeaderContent>
+         <MudText Typo="Typo.h4" Color="Color.Primary">@Title</MudText>
+      </CardHeaderContent>
+      <CardHeaderActions>
+         @if (CanBeDisabled)
+         {
+            <MudSwitchM3 Label="Enable" @bind-Checked="_isEnabled" @bind-Checked:after="OnSectionEnabledChanged" />
+         }
+      </CardHeaderActions>
+   </MudCardHeader>
+   <MudCardContent Class="py-1">
+      <div class="wrapper">
+         @if (!CanBeDisabled || _isEnabled)
+         {
+            @(EnabledTemplate ?? ChildContent)
+         }
+         else
+         {
+            @DisabledTemplate
+         }
+      </div>
+   </MudCardContent>
+</MudCard>

@@ -14,19 +14,19 @@
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.18.1" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.5" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.30.0" />
-    <PackageReference Include="Serilog.AspNetCore" Version="6.1.0" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.30.1" />
+    <PackageReference Include="Serilog.AspNetCore" Version="7.0.0" />
     <PackageReference Include="LibSassBuilder" Version="3.0.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\AIdentities.Shared\AIdentities.Shared.csproj" />
-    <ProjectReference Include="..\Plugins\AIdentities.BrainButler\AIdentities.BrainButler.csproj" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Plugins\AIdentities.Chat\AIdentities.Chat.csproj" />
     <ProjectReference Include="..\Plugins\AIdentities.BooruAIdentityImporter\AIdentities.BooruAIdentityImporter.csproj" />
     <ProjectReference Include="..\Plugins\Connectors\AIdentities.Connector.OpenAI\AIdentities.Connector.OpenAI.csproj" />
     <ProjectReference Include="..\Plugins\Connectors\AIdentities.Connector.TextGeneration\AIdentities.Connector.TextGeneration.csproj" />
+    <ProjectReference Include="..\Plugins\Connectors\AIdentities.Connector.TTS.ElevenLabs\AIdentities.Connector.TTS.ElevenLabs.csproj" />
   </ItemGroup>
   <Target Name="Restore Local Tools" BeforeTargets="Compile">
     <Exec Command="dotnet tool restore" />

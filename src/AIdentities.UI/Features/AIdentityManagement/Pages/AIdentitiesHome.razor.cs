@@ -14,7 +14,6 @@ public partial class AIdentitiesHome : AppPage<AIdentitiesHome>
    [Inject] IEnumerable<AIdentityFeatureRegistration> AIdentityFeatureRegistrations { get; set; } = null!;
    [Inject] IEnumerable<AIdentitySafetyCheckerRegistration> AIdentitySafetyCheckerRegistrations { get; set; } = null!;
    [Inject] public IAIdentityProvider AIdentityProvider { get; set; } = default!;
-   [Inject] IDialogService DialogService { get; set; } = null!;
    [Inject] IDownloadService DownloadService { get; set; } = null!;
 
    MudTabs? _tabs = default!;
@@ -43,7 +42,7 @@ public partial class AIdentitiesHome : AppPage<AIdentitiesHome>
          }
       }
 
-      Logger.LogDebug("Deleting AIdentity {AIdentity}", aIdentity);
+      Logger.LogDebug("Deleting AIdentity {AIdentity}", aIdentity.Name ?? aIdentity.Id.ToString());
       AIdentityProvider.Delete(aIdentity);
       if (_state.CurrentAIDentity == aIdentity)
       {

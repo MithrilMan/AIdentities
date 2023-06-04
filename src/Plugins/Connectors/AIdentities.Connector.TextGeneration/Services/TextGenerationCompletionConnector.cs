@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Net.Http.Json;
+using System.Runtime.CompilerServices;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors.Completion;
 using Microsoft.AspNetCore.Http.Features;
@@ -74,7 +75,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request)
+   public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request, CancellationToken cancellationToken)
    {
       var apiRequest = BuildCompletionRequest(request, false);
 
@@ -86,12 +87,12 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
          JsonContent content = JsonContent.Create(apiRequest, mediaType: null, null);
          // oobabooga TextGeneration API implementation requires content-lenght
          await content.LoadIntoBufferAsync().ConfigureAwait(false);
-         using HttpResponseMessage response = await _client.PostAsync(EndPoint, content, CancellationToken.None).ConfigureAwait(false);
-         _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+         using HttpResponseMessage response = await _client.PostAsync(EndPoint, content, cancellationToken).ConfigureAwait(false);
+         _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
          if (response.IsSuccessStatusCode)
          {
-            var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>().ConfigureAwait(false);
+            var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
             sw.Stop();
             return new DefaultCompletionResponse
@@ -105,7 +106,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
          }
          else
          {
-            _logger.LogError("Request failed: {Error}", await response.Content.ReadAsStringAsync().ConfigureAwait(false));
+            _logger.LogError("Request failed: {Error}", response.StatusCode);
             throw new Exception($"Request failed with status code {response.StatusCode}");
          }
       }
@@ -131,10 +132,10 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       return response;
    }
 
-   public async IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, CancellationToken cancellationToken)
+   public async IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       // stream is not supported yet, fallback to normal request
-      var response = await RequestCompletionAsync(request).ConfigureAwait(false);
+      var response = await RequestCompletionAsync(request, cancellationToken).ConfigureAwait(false);
 
       //using (ClientWebSocket webSocket = new ClientWebSocket())
       //{
@@ -249,6 +250,8 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       // request.TailFreeSampling
       // request.TopASamplings
       // request.UserId
+
+      _logger.LogDebug("Built request {@chatRequest}", completionRequest);
 
       return completionRequest;
    }

@@ -5,9 +5,9 @@ public class ChatAIdentitySafetyChecker : IAIdentitySafetyChecker
 {
 
    readonly ILogger<ChatAIdentitySafetyChecker> _logger;
-   readonly IChatStorage _chatStorage;
+   readonly ICognitiveChatStorage _chatStorage;
 
-   public ChatAIdentitySafetyChecker(ILogger<ChatAIdentitySafetyChecker> logger, IChatStorage chatStorage)
+   public ChatAIdentitySafetyChecker(ILogger<ChatAIdentitySafetyChecker> logger, ICognitiveChatStorage chatStorage)
    {
       _logger = logger;
       _chatStorage = chatStorage;
@@ -19,10 +19,10 @@ public class ChatAIdentitySafetyChecker : IAIdentitySafetyChecker
 
       int convestationsCount = 0;
       var conversations = await _chatStorage.GetConversationsAsync().ConfigureAwait(false);
-      foreach (var chat in conversations)
+      foreach (var metadata in conversations)
       {
          // increment the number of conversations the AIdentity has had
-         if (chat.AIdentityId == aIdentity.Id) convestationsCount++;
+         if (metadata.AIdentityIds.Contains(aIdentity.Id)) convestationsCount++;
       }
 
       result.Conversations = new(convestationsCount, $"{convestationsCount} conversations");

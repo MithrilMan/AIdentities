@@ -26,6 +26,13 @@ function scrollElementToBottom(element) {
    }
 }
 
+window.ensureIsVisible = (childSelector) => {
+   const child = document.querySelector(childSelector);
+   if (child != null) {
+      child.scrollIntoView({ behavior: 'smooth' });
+   }
+}
+
 window.downloadFileFromStream = async (fileName, contentStreamReference) => {
    const arrayBuffer = await contentStreamReference.arrayBuffer();
    const blob = new Blob([arrayBuffer]);
@@ -36,4 +43,26 @@ window.downloadFileFromStream = async (fileName, contentStreamReference) => {
    anchorElement.click();
    anchorElement.remove();
    URL.revokeObjectURL(url);
+}
+
+
+window.playAudioFileStream = async (contentStreamReference) => {
+   const arrayBuffer = await contentStreamReference.arrayBuffer();
+   const blob = new Blob([arrayBuffer]);
+   const url = URL.createObjectURL(blob);
+
+   var sound = document.createElement('audio');
+   sound.src = url;
+   sound.type = 'audio/mpeg';
+   document.body.appendChild(sound);
+   sound.load();
+   sound.play();
+   sound.onended = function () {
+      document.body.removeChild(sound);
+      URL.revokeObjectURL(url);
+   };
+}
+
+window.stopAudioFiles = () => {
+   document.querySelectorAll('audio').forEach(el => el.pause());
 }

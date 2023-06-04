@@ -1,27 +1,21 @@
 @inherits BasePluginSettingsTab<OpenAISettings, Settings.State>
 
 <MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix overflow-y-auto gap-2">
-   <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-2">
-      <MudCard>
-         <MudSwitchM3 @bind-Checked="_state.Enabled" Label="Enabled" For="()=>_state.Enabled" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.ChatEndPoint" Label="Chat Endpoint" Variant="Variant.Text" For="()=>_state.ChatEndPoint" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.DefaultChatModel" Label="Default Model" Variant="Variant.Text" For="()=>_state.DefaultChatModel" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.CompletionEndPoint" Label="Completion Endpoint" Variant="Variant.Text" For="()=>_state.CompletionEndPoint" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.DefaultCompletionModel" Label="Default Model" Variant="Variant.Text" For="()=>_state.DefaultCompletionModel" />
-      </MudCard>
-      <MudCard>
-         <MudPasswordField @bind-Value="_state.ApiKey" Label="API Key" Variant="Variant.Text" For="()=>_state.ApiKey" />
-      </MudCard>
-      <MudCard>
-         <MudNumericField @bind-Value="_state.Timeout" Label="Timeout" Variant="Variant.Text" For="()=>_state.Timeout" />
-      </MudCard>
-   </MudPaper>
+   <PluginSettingsSection Title="Open AI API" CanBeDisabled="true" @bind-IsEnabled="_state.Enabled"
+                          Info="Enable or disable all Open AI API connectors.">
+      <MudText Typo="Typo.h6" Color="Color.Primary">General</MudText>
+      <MudPasswordField @bind-Value="_state.ApiKey" Label="API Key" Variant="Variant.Text" For="()=>_state.ApiKey" />
+      <MudNumericField @bind-Value="_state.Timeout" Label="Timeout" Variant="Variant.Text" For="()=>_state.Timeout" />
+      <MudDivider />
+
+      <MudText Typo="Typo.h6" Color="Color.Primary">Chat</MudText>
+      <MudTextField @bind-Value="_state.ChatEndPoint" Label="Chat Endpoint" Variant="Variant.Text" For="()=>_state.ChatEndPoint" />
+      <MudTextField @bind-Value="_state.DefaultChatModel" Label="Default Model" Variant="Variant.Text" For="()=>_state.DefaultChatModel" />
+      <MudDivider />
+
+      <MudText Typo="Typo.h6" Color="Color.Primary">Completion</MudText>
+      <MudTextField @bind-Value="_state.CompletionEndPoint" Label="Completion Endpoint" Variant="Variant.Text" For="()=>_state.CompletionEndPoint" />
+      <MudTextField @bind-Value="_state.DefaultCompletionModel" Label="Default Model" Variant="Variant.Text" For="()=>_state.DefaultCompletionModel" />
+   </PluginSettingsSection>
+
 </MudForm>

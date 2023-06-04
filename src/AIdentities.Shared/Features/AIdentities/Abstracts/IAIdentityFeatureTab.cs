@@ -16,6 +16,19 @@ public interface IAIdentityFeatureTab
    /// </summary>
    /// <returns></returns>
    Task UndoChangesAsync();
+
+   /// <summary>
+   /// This is the parameter a tab has to implement to be able to be used in the 
+   /// <see cref="AIdentityFeatureTab"/> component.
+   /// It is used to signal that a tab has been changed and needs to be saved.
+   /// </summary>
+   bool IsChanged { get; set; }
+   /// <summary>
+   /// This is the parameter a tab has to implement to be able to be used in the
+   /// <see cref="AIdentityFeatureTab"/> component.
+   /// It is used to specify the AIdentity the feature belongs to.
+   /// </summary>
+   AIdentity AIdentity { get; set; }
 }
 
 public interface IAIdentityFeatureTab<TFeature> : IAIdentityFeatureTab
@@ -35,4 +48,11 @@ public interface IAIdentityFeatureTab<TFeature> : IAIdentityFeatureTab
    /// </summary>
    /// <returns></returns>
    new Task UndoChangesAsync();
+
+   /// <summary>
+   /// This is the parameter a tab has to implement to be able to be used in the
+   /// <see cref="AIdentityFeatureTab"/> component.
+   /// It is used to specify the feature to be edited.
+   /// </summary>
+   TFeature Feature { get; set; }
 }

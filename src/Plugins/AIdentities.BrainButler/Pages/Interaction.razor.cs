@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Components.Web;
+﻿using System.Text.RegularExpressions;
+using Microsoft.AspNetCore.Components.Web;
 using MudExtensions;
 
 namespace AIdentities.BrainButler.Pages;
@@ -14,7 +15,6 @@ public partial class Interaction : AppPage<Interaction>
    const string LIST_ID = "message-list-wrapper";
    const string LIST_SELECTOR = $"#{LIST_ID}";
 
-   [Inject] private IDialogService DialogService { get; set; } = null!;
    [Inject] private IConnectorsManager ConnectorsManager { get; set; } = default!;
    [Inject] private IScrollService ScrollService { get; set; } = null!;
    [Inject] private IPromptGenerator PromptGenerator { get; set; } = null!;
@@ -24,7 +24,7 @@ public partial class Interaction : AppPage<Interaction>
    protected override void OnInitialized()
    {
       base.OnInitialized();
-      
+
       _state.CompletionConnector = ConnectorsManager.GetCompletionConnector();
       _state.ConversationalConnector = ConnectorsManager.GetConversationalConnector();
    }
@@ -35,7 +35,7 @@ public partial class Interaction : AppPage<Interaction>
       await ScrollService.ScrollToBottom(LIST_SELECTOR).ConfigureAwait(false);
    }
 
-   Task Resend() => ReplyToUserRequest(_state.ConversationPieces.LastOrDefault()?.Message);
+   Task Resend() => ReplyToUserRequest(_state.ConversationPieces.LastOrDefault()?.Message ?? "");
 
    async Task OnKeyDown(KeyboardEventArgs e)
    {
@@ -115,16 +115,44 @@ public partial class Interaction : AppPage<Interaction>
          var response = await _state.CompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest
          {
             Prompt = prompt,
-         }).ConfigureAwait(false);
+            MaxGeneratedTokens = 250
+         }, _state.MessageGenerationCancellationTokenSource.Token).ConfigureAwait(false);
 
-         var detectedCommand = response!.GeneratedMessage;
+         var detectedCommand = ExtractCommandName().Match(response!.GeneratedMessage!).Value;
+
+         //var detectedCommand = response!.GeneratedMessage;
 
          if (detectedCommand is null || detectedCommand == "DUNNO")
          {
             //await AppendAIReply("Sorry, I didn't understand your request").ConfigureAwait(false);
             // if it doesn't understand the request, let's try to reply in conversational style
 
+            _state.StreamedResponse = new AIResponse { };
+            var streamedResponse = _state.ConversationalConnector!.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest
+            {
+               Messages = new List<IConversationalMessage>()
+               {
+                   new DefaultConversationalMessage(
+                      Role: DefaultConversationalRole.System,
+                      Content: "You are Brain Butler, a funny helpful AI agent that loves to make joke when giving back informations.",
+                      null
+                      ),
+                   new DefaultConversationalMessage(
+                      Role: DefaultConversationalRole.User,
+                      Content: userRequest,
+                      null
+                      ),
+               },
+               MaxGeneratedTokens = 500
+            }, _state.MessageGenerationCancellationTokenSource.Token).ConfigureAwait(false);
 
+            await foreach (var fragment in streamedResponse)
+            {
+               _state.StreamedResponse.Message += fragment.GeneratedMessage;
+            }
+
+            await AppendAIReply(_state.StreamedResponse.Message).ConfigureAwait(false);
+            _state.StreamedResponse = null;
 
             return;
          }
@@ -143,7 +171,7 @@ public partial class Interaction : AppPage<Interaction>
          {
             Prompt = prompt,
             MaxGeneratedTokens = 500
-         }).ConfigureAwait(false);
+         }, _state.MessageGenerationCancellationTokenSource.Token).ConfigureAwait(false);
 
          if (response is null || commandToExecute is null)
          {
@@ -181,4 +209,7 @@ public partial class Interaction : AppPage<Interaction>
          _state.IsWaitingReply = false;
       }
    }
+
+   [GeneratedRegex("(?<=Command:\\s+)\\w+")]
+   private static partial Regex ExtractCommandName();
 }

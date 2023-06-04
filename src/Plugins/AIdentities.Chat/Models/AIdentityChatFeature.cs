@@ -2,7 +2,7 @@
 /// <summary>
 /// An AIdentity feature that allows the AIdentity to chat with the player in an Role Play style.
 /// </summary>
-public record AIdentityChatFeature: IAIdentityFeature
+public record AIdentityChatFeature : IAIdentityFeature
 {
    /// <summary>
    /// AIdentity's background.
@@ -19,9 +19,10 @@ public record AIdentityChatFeature: IAIdentityFeature
    public string? FullPrompt { get; set; }
 
    /// <summary>
-   /// The first message sent by the AIdentity when a new conversation starts.
+   /// A list of example messages between the User and the AIdentity.
+   /// This is useful to show the LLM the way the AIdentity should respond to the user.
    /// </summary>
-   public string? FirstMessage { get; set; }
+   public List<AIdentityUserExchange> ExampleMessages { get; set; } = new();
 
    /// <summary>
    /// Whether the AIdentity should use the full prompt or not.

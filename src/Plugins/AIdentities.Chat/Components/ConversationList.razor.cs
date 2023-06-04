@@ -4,15 +4,15 @@ namespace AIdentities.Chat.Components;
 
 public partial class ConversationList : ComponentBase
 {
-   [Inject] public IChatStorage ChatStorage { get; set; } = default!;
+   [Inject] public ICognitiveChatStorage CognitiveChatStorage { get; set; } = default!;
    [Inject] IDialogService DialogService { get; set; } = null!;
    [Inject] INotificationService NotificationService { get; set; } = null!;
    [Inject] IAIdentityProvider AIdentityProvider { get; set; } = null!;
    [Inject] private IConversationExporter ConversationExporter { get; set; } = null!;
 
    [Parameter] public string? Class { get; set; }
-   [Parameter] public ConversationMetadata? Conversation { get; set; }
-   [Parameter] public EventCallback<ConversationMetadata> ConversationChanged { get; set; }
+   [Parameter] public Conversation? Conversation { get; set; }
+   [Parameter] public EventCallback<Conversation> ConversationChanged { get; set; }
 
    protected override void OnInitialized()
    {
@@ -28,12 +28,12 @@ public partial class ConversationList : ComponentBase
 
    protected override async Task OnInitializedAsync()
    {
-      var conversations = await ChatStorage.GetConversationsAsync().ConfigureAwait(false);
+      var conversations = await CognitiveChatStorage.GetConversationsAsync().ConfigureAwait(false);
       await _state.Conversations.LoadItemsAsync(conversations).ConfigureAwait(false);
       await ApplyFilterAsync().ConfigureAwait(false);
    }
 
-   public ValueTask<IEnumerable<ConversationMetadata>> ConversationFilter(IEnumerable<ConversationMetadata> unfilteredItems)
+   public ValueTask<IEnumerable<Conversation>> ConversationFilter(IEnumerable<Conversation> unfilteredItems)
    {
       if (!string.IsNullOrWhiteSpace(_state.ConversationSearchText))
       {
@@ -48,7 +48,7 @@ public partial class ConversationList : ComponentBase
 
    private Task ApplyFilterAsync() => _state.Conversations.ApplyFilterAsync().AsTask();
 
-   async Task OnSelectConversation(ConversationMetadata conversation)
+   async Task OnSelectConversation(Conversation conversation)
    {
       if (conversation == _state.SelectedConversation) return;
 
@@ -69,29 +69,29 @@ public partial class ConversationList : ComponentBase
       var result = await dialog.Result.ConfigureAwait(false);
       if (result.Data is not Conversation conversation) return;
 
-      await ChatStorage.StartConversationAsync(conversation).ConfigureAwait(false);
-      await _state.Conversations.AppendItemAsync(conversation.Metadata).ConfigureAwait(false);
-      await InvokeAsync(() => OnSelectConversation(conversation.Metadata)).ConfigureAwait(false);
+      await CognitiveChatStorage.StartConversationAsync(conversation).ConfigureAwait(false);
+      await _state.Conversations.AppendItemAsync(conversation).ConfigureAwait(false);
+      await InvokeAsync(() => OnSelectConversation(conversation)).ConfigureAwait(false);
       await ApplyFilterAsync().ConfigureAwait(false);
    }
 
-   void EnableRenameConversation(ConversationMetadata conversation)
+   void EnableRenameConversation(Conversation conversation)
    {
       _state.SelectedConversation = conversation; //it seems like this should be unnecessary but mudlist doesn't update otherwise
       _state.IsEditingConversation = true;
       _state.EditingTitle = conversation.Title;
    }
 
-   async Task RenameConversation(ConversationMetadata conversation)
+   async Task RenameConversation(Conversation conversation)
    {
       _state.IsEditingConversation = false;
-      _state.SelectedConversation!.Title = _state.EditingTitle;
-      await ChatStorage.UpdateConversationAsync(conversation, null).ConfigureAwait(false);
+      _state.SelectedConversation?.UpdateTitle(_state.EditingTitle);
+      await CognitiveChatStorage.UpdateConversationAsync(conversation, null).ConfigureAwait(false);
       await ApplyFilterAsync().ConfigureAwait(false);
       await InvokeAsync(() => ConversationChanged.InvokeAsync(conversation)).ConfigureAwait(false);
    }
 
-   async Task DeleteConversation(ConversationMetadata conversation)
+   async Task DeleteConversation(Conversation conversation)
    {
       bool deletingCurrentConversation = conversation == _state.SelectedConversation;
 
@@ -102,7 +102,7 @@ public partial class ConversationList : ComponentBase
 
       if (result != true) return;
 
-      await ChatStorage.DeleteConversationAsync(conversation.ConversationId).ConfigureAwait(false);
+      await CognitiveChatStorage.DeleteConversationAsync(conversation.Id).ConfigureAwait(false);
       await _state.Conversations.RemoveItemAsync(conversation).ConfigureAwait(false);
 
       if (deletingCurrentConversation)
@@ -126,7 +126,7 @@ public partial class ConversationList : ComponentBase
       }
    }
 
-   async Task ExportConversation(ConversationMetadata conversationMetadata)
+   async Task ExportConversation(Conversation conversation)
    {
       bool? result = await DialogService.ShowMessageBox(
           "Do you want to export tshe conversation?",
@@ -135,9 +135,9 @@ public partial class ConversationList : ComponentBase
       if (result != true) return;
 
       await ConversationExporter.ExportConversationAsync(
-         conversationMetadata.ConversationId,
+         conversation.Id,
          ConversationExportFormat.Html).ConfigureAwait(false);
 
-      NotificationService.ShowSuccess($"Conversation {conversationMetadata.Title} exported successfully");
+      NotificationService.ShowSuccess($"Conversation {conversation.Title} exported successfully");
    }
 }

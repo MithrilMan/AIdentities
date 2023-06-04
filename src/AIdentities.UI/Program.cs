@@ -65,7 +65,7 @@ try
    if (HybridSupport.IsElectronActive)
    {
       await app.StartAsync().ConfigureAwait(false);
-
+      
       BrowserWindowOptions options = new()
       {
          //Title = "AIdentities",
@@ -74,7 +74,8 @@ try
       };
 
       // Open the Electron-Window here
-      await Electron.WindowManager.CreateWindowAsync(options).ConfigureAwait(false);
+      var window = await Electron.WindowManager.CreateWindowAsync(options).ConfigureAwait(false);
+      window.Maximize();
 
       app.WaitForShutdown();
    }

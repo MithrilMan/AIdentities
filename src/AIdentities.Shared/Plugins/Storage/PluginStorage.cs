@@ -152,4 +152,6 @@ public class PluginStorage<TPluginEntry> : IPluginStorage<TPluginEntry>
       File.Copy(originalPath, backupPath, true);
       return new ValueTask<bool>();
    }
+
+   public string GetPluginStoragePath() => _pluginStorageRoot;
 }

@@ -1,10 +1,10 @@
 ﻿<MudTabPanel Text="@FeatureRegistration.UITitle">
    <DynamicComponent Type="@FeatureRegistration.FeatureTabUIType" Parameters="_state.Parameters" @ref="_featureTab" />
    <MudToolBar Dense="true" DisableGutters="true" Class="ma-1 gap-2">
-      <MudButton Variant="Variant.Filled" Color="Color.Error" FullWidth="true" IconSize="Size.Large" StartIcon="@Icons.Material.Filled.Undo"
+      <MudButton Variant="Variant.Filled" Color="Color.Error" Class="flex-1" IconSize="Size.Large" StartIcon="@Icons.Material.Filled.Undo"
                  Disabled="!IsEditing"
                  OnClick="@UndoChangesAsync" Size="Size.Large">Undo</MudButton>
-      <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" IconSize="Size.Large" EndIcon="@Icons.Material.Filled.Save"
+      <MudButton Variant="Variant.Filled" Color="Color.Success" Class="flex-1" IconSize="Size.Large" EndIcon="@Icons.Material.Filled.Save"
                  Disabled="!IsEditing"
                  OnClick="@SaveAsync" Size="Size.Large">Save</MudButton>
    </MudToolBar>

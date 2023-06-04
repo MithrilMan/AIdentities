@@ -1,4 +1,5 @@
-﻿using AIdentities.Shared.Services;
+﻿using AIdentities.Shared.Features.Core.Components;
+using AIdentities.Shared.Services;
 using Microsoft.AspNetCore.Components;
 using Toolbelt.Blazor.HotKeys2;
 
@@ -12,22 +13,23 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
    [Inject] protected ILogger<TAppComponent> Logger { get; set; } = default!;
    [Inject] protected IAppComponentSettingsManager ComponentSettingsManager { get; set; } = default!;
    [Inject] protected INotificationService NotificationService { get; set; } = default!;
+   [Inject] protected IDialogService DialogService { get; set; } = default!;
    [Inject] private HotKeys Hotkeys { get; set; } = default!;
 
    [Parameter] public string SettingsKey { get; set; } = typeof(TAppPageSettings).Name;
 
    private readonly CancellationTokenSource _cts = new CancellationTokenSource();
 
-   protected TAppPageSettings _settings = null;
+   protected TAppPageSettings? _settings = null;
    protected static bool HasConfiguration => typeof(EmptyAppPageSettings).IsAssignableFrom(typeof(TAppPageSettings)) == false;
    protected bool SettingsLoaded { get; set; } = false;
 
    private HotKeysContext? _hotKeysContext;
 
    /// <summary>
-   /// Gets the reference to the cancellation token used to signal that the component has been disposed.
+   /// Gets the reference to the cancellation token used to signal that the page component has been disposed.
    /// </summary>
-   public CancellationToken CancellationToken => _cts.Token;
+   public CancellationToken PageCancellationToken => _cts.Token;
 
 
    protected override void OnInitialized()
@@ -113,10 +115,11 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
    protected async Task<bool> SaveSettings()
    {
       if (!HasConfiguration) return true;
+      if (_settings == null) return true;
 
       if (ComponentSettingsManager.SetSettings(GetSettingsKey(), _settings))
       {
-         if (!await ComponentSettingsManager.SaveSettingsAsync(CancellationToken).ConfigureAwait(false))
+         if (!await ComponentSettingsManager.SaveSettingsAsync(PageCancellationToken).ConfigureAwait(false))
          {
             NotificationService.ShowError("Failed to save component settings.");
 
@@ -146,7 +149,27 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
          await actionAsync(arg).ConfigureAwait(false);
          StateHasChanged();
       }).ConfigureAwait(false);
-   }, interval, CancellationToken);
+   }, interval, PageCancellationToken);
+
+   /// <summary>
+   /// Debounces the specified action.
+   /// <paramref name="interval"/> is the time to wait before executing the action and is reset each time the action is invoked.
+   /// </summary>
+   /// <param name="actionAsync">The action to debounce.</param>
+   /// <param name="interval">
+   /// The interval to wait before executing the action.
+   /// It is reset each time the action is invoked.
+   /// </param>
+   /// <returns></returns>
+   protected Action DebounceAsync(Func<Task> actionAsync, TimeSpan interval)
+      => ThrottlerDebouncer.Debounce(async () =>
+      {
+         await InvokeAsync(async () =>
+         {
+            await actionAsync().ConfigureAwait(false);
+            StateHasChanged();
+         }).ConfigureAwait(false);
+      }, interval, PageCancellationToken);
 
 
    /// <summary>
@@ -165,7 +188,7 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
             await actionAsync(arg).ConfigureAwait(false);
             StateHasChanged();
          }).ConfigureAwait(false);
-      }, interval, CancellationToken);
+      }, interval, PageCancellationToken);
 
    /// <summary>
    /// Throttles the specified action.
@@ -182,7 +205,21 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
             await actionAsync().ConfigureAwait(false);
             StateHasChanged();
          }).ConfigureAwait(false);
-      }, interval, CancellationToken);
+      }, interval, PageCancellationToken);
+
+
+   protected Task ShowHotKeysCheatSheet()
+      => DialogService.ShowAsync<HotKeyCheatSheet>("Current Page HotKeys", new DialogParameters
+      {
+         { nameof(HotKeyCheatSheet.HotKeysContext), _hotKeysContext }
+      }, new DialogOptions()
+      {
+         CloseButton = true,
+         CloseOnEscapeKey = true,
+         Position = DialogPosition.Center,
+         FullWidth = true,
+      });
+
 
    public virtual void Dispose()
    {

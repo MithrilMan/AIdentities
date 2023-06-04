@@ -1,33 +1,113 @@
 @inherits BasePluginSettingsTab<ChatSettings, Settings.State>
 
-<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix gap-2">
-   <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-2">
-      <MudStack Class="flex-grow-0">
-         <MudText Typo="Typo.h6" Class="mb-2">Default Connector</MudText>
-         <MudSelectExtended T="string" ItemCollection="@_state.AvailableConnectors.Keys" @bind-Value="_state.DefaultConnector"
-                            AutoFocus="true">
-            <ItemTemplate>
-               @if (IsConnectorDisabled(context.Value))
-               {
-                  <MudText Typo="Typo.body2" Color="Color.Warning">@context.Value</MudText>
-               }
-               else
-               {
-                  <MudText Typo="Typo.body2">@context.Value</MudText>
-               }
-            </ItemTemplate>
-         </MudSelectExtended>
-      </MudStack>
-      <MudText Typo="Typo.subtitle1" Class="mb-2">
-         <p>This parameters specify which connector to use, by default, to perform chat completion.</p>
+<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix overflow-y-auto gap-2">
+   <PluginSettingsSection Title="Text Generation"
+                          Info="Text Generation is the core feature of this plugin. It allows you to generate text from a given prompt.">
+      <MudText Typo="Typo.h6" Color="Color.Primary">Default Conversational Connector</MudText>
+      <MudSelectExtended T="string" ItemCollection="@_state.AvailableConnectors.Keys" @bind-Value="_state.DefaultConnector"
+                         ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium"
+                         InputClass="ma-0" AutoFocus="true">
+         <ItemTemplate>
+            @if (IsConnectorDisabled(context.Value, ConversationalConnectors))
+            {
+               <MudText Typo="Typo.body2" Color="Color.Warning">@context.Value</MudText>
+            }
+            else
+            {
+               <MudText Typo="Typo.body2">@context.Value</MudText>
+            }
+         </ItemTemplate>
+      </MudSelectExtended>
+      <MudText Typo="Typo.subtitle1">
+         <p>This parameters specify which conversational connector to use, by default, to perform chat completion.</p>
          <p>Note that if the specified connector is Disabled it will not be used.</p>
       </MudText>
-      @if (IsConnectorDisabled(_state.DefaultConnector))
+      @if (IsConnectorDisabled(_state.DefaultConnector, ConversationalConnectors))
       {
-         <MudAlert Severity="MudBlazor.Severity.Warning" Class="mb-2">
+         <MudAlert Severity="MudBlazor.Severity.Warning">
             The default connector is disabled. Chat completion will not work.
          </MudAlert>
       }
-      <MudSpacer />
-   </MudPaper>
+   </PluginSettingsSection>
+
+   <PluginSettingsSection Title="Speech Recognition" CanBeDisabled="true" @bind-IsEnabled="_state.EnableSpeechRecognition"
+                          Info="Speech Recognition allows you to speak to the AIdentities.">
+      <MudTooltip Arrow="true" Text="Continuous Speech Recognition allows you to speak to the AIdentities without having to press the button every time"
+            Placement="Placement.Right">
+         <ChildContent>
+            <MudStack Row="true" Spacing="5" AlignItems="AlignItems.Center">
+               <MudSwitchM3 @bind-Checked="_state.EnableContinuousSpeechRecognition" Label="Enable Continuous Speech Recognition" />
+               <MudIcon Icon="@Icons.Material.Filled.Info" Size="Size.Large" Class="ml-2" />
+            </MudStack>
+         </ChildContent>
+         <TooltipContent>
+            <MudText Typo="Typo.subtitle1">
+               <p>Continuous Speech Recognition allows you to speak to the AIdentities without having to press the button every time.</p>
+               <p>In order to have a good experience with Continuous Speech Recognition, you should be in a quiet environment.</p>
+            </MudText>
+         </TooltipContent>
+      </MudTooltip>
+
+
+      <MudSelectExtended T="System.Globalization.CultureInfo" ItemCollection="@GetSpeechRecognitionCultures()"
+                         ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium" InputClass="ma-0"
+                         ToStringFunc="@(c => c?.EnglishName)"
+      @bind-Value="_state.SpeechRecognitionCulture"
+      @bind-Value:after="@(()=>_state.SpeechRecognitionLanguage = _state.SpeechRecognitionCulture.IetfLanguageTag)" />
+      <MudText Typo="Typo.subtitle1">
+         <p>Select the language you want to use for Speech Recognition.</p>
+      </MudText>
+   </PluginSettingsSection>
+
+   <PluginSettingsSection Title="Text To Speech" CanBeDisabled="true" @bind-IsEnabled="_state.EnableTextToSpeech"
+                          Info="Text To Speech allows you to hear the messages sent by the AIdentities.">
+      <MudRadioGroup @bind-SelectedOption="@_state.TextToSpeechMode" Class="py-2">
+         <MudTooltip Arrow="true" Text="Every message sent by an AIdentity will be read out loud">
+            <MudRadio Option="@TextToSpeechMode.Automatic" Color="Color.Primary" Dense="true">Automatic</MudRadio>
+         </MudTooltip>
+         <MudTooltip Arrow="true" Text="The user will be able to hear the message by clicking on a button at a message level">
+            <MudRadio Option="@TextToSpeechMode.OnDemand" Color="Color.Primary" Dense="true">On Demand</MudRadio>
+         </MudTooltip>
+      </MudRadioGroup>
+
+      <MudText Typo="Typo.h6" Color="Color.Primary" Class="">Default Text To Speech</MudText>
+      <MudSelectExtended T="string" ItemCollection="@_state.AvailableTTSConnectors.Keys" @bind-Value="_state.DefaultTextToSpeechConnector"
+                         ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium"
+                         Disabled="@(!_state.EnableTextToSpeech)" InputClass="ma-0" AutoFocus="true">
+         <ItemTemplate>
+            @if (IsConnectorDisabled(context.Value, TextToSpeechConnectors))
+            {
+               <MudText Typo="Typo.body2" Color="Color.Warning">@context.Value</MudText>
+            }
+            else
+            {
+               <MudText Typo="Typo.body2">@context.Value</MudText>
+            }
+         </ItemTemplate>
+      </MudSelectExtended>
+      <MudText Typo="Typo.subtitle1">
+         <p>This parameters specify which Text To Speech connector to use, by default, to perform chat completion.</p>
+         <p>Depending on the used connector, each AIdentity may chose its own settings to customize the voice and other parameters.</p>
+         <p>Note that if the specified connector is Disabled it will not be used.</p>
+      </MudText>
+      @if (IsConnectorDisabled(_state.DefaultTextToSpeechConnector, TextToSpeechConnectors))
+      {
+         <MudAlert Severity="MudBlazor.Severity.Warning">
+            The default connector is disabled. Text To Speech will not work.
+         </MudAlert>
+      }
+   </PluginSettingsSection>
+
+   <PluginSettingsSection Title="Skills" CanBeDisabled="true" @bind-IsEnabled="_state.EnableSkills"
+                          Info="Skills are used to perform teorethical any kind of task.">
+      <MudText Typo="Typo.subtitle1">
+         <p>You can select which skill to enable in the Chat.</p>
+         <p>If you disable skills completly, the conversation will be generated faster and will be cheaper (if you use paid connectors) but you won't have access to advanced conversation features.</p>
+      </MudText>
+      @if (_state.EnableSkills)
+      {
+         <SkillGallery CanBeSelected="true" @bind-SelectedSkills="_state.EnabledSkills" />
+      }
+   </PluginSettingsSection>
+   <MudSpacer />
 </MudForm>

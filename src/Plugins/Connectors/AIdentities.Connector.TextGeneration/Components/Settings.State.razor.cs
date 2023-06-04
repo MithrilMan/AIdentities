@@ -4,7 +4,7 @@ public partial class Settings
 {
    public class State : BaseState
    {
-      public bool? Enabled { get; set; }
+      public bool Enabled { get; set; }
       public string? CompletionEndPoint { get; set; } = default!;
       public string? StreamedCompletionEndPoint { get; set; } = default!;
       public string? DefaultModel { get; set; }
@@ -22,6 +22,7 @@ public partial class Settings
          CompletionEndPoint = pluginSettings.CompletionEndPoint?.ToString();
          StreamedCompletionEndPoint = pluginSettings.StreamedCompletionEndPoint?.ToString();
          Timeout = pluginSettings.Timeout;
+         Parameters = pluginSettings.DefaultParameters;
       }
    }
 }
