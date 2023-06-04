@@ -56,6 +56,10 @@ public static class DependencyInjection
                options.PackageFolder = appData;
                Console.WriteLine("Electron is active, setting package folder to: " + options.PackageFolder);
             }
+            else
+            {
+               options.PackageFolder = @"C:\temp\";
+            }
          });
 
       // inject the services from the Shared project

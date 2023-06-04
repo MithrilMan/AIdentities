@@ -16,7 +16,7 @@
       "buildVersion": "0.0.1",
       "compression": "maximum",
       "directories": {
-         "output": "../../../../../bin/Desktop"
+         "output": "../../../bin/Desktop"
       },
       "win": {
          "icon": "../../../wwwroot/Icon-256.png"

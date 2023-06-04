@@ -20,6 +20,7 @@ public class PluginFoldersProvider : IPluginFoldersProvider
       _hostEnvironment = hostEnvironment;
 
       var packageFolderRoot = PathUtils.GetAbsolutePath(_options.Value.PackageFolder, _hostEnvironment.ContentRootPath);
+      logger.LogDebug("Plugin package folder root: {PackageFolderRoot}", packageFolderRoot);
 
       _pluginAssetsPath = Path.Combine(packageFolderRoot, AppConstants.SpecialFolders.PLUGINS);
       if (!Directory.Exists(_pluginAssetsPath))
