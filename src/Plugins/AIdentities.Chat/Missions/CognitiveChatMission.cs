@@ -4,6 +4,7 @@ using AIdentities.Chat.Skills.IntroduceYourself;
 using AIdentities.Chat.Skills.InviteToChat.Events;
 using AIdentities.Shared.Features.CognitiveEngine.Engines.Conversational;
 using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
+using AIdentities.Shared.Plugins.Connectors.Completion;
 using AIdentities.Shared.Services.EventBus;
 using Polly;
 
@@ -22,8 +23,12 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
    readonly ISkillManager _skillManager;
    readonly ICognitiveEngineProvider _cognitiveEngineProvider;
    readonly IEventBus _eventBus;
+   readonly IEnumerable<IConversationalConnector> _conversationalConnectors;
+   readonly IEnumerable<ICompletionConnector> _completionConnectors;
    readonly IConversationHistory _conversationHistory;
    readonly ChatSettings _settings;
+   private readonly ICompletionConnector _defaultCompletionConnector;
+   private readonly IConversationalConnector _defaultConversationalConnector;
 
    /// <summary>
    /// This channel is used to communicate the thoughts as they arrive from cognitive engines working on the mission.
@@ -50,6 +55,8 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
                                ISkillManager skillManager,
                                ICognitiveEngineProvider cognitiveEngineProvider,
                                IEventBus eventBus,
+                               IEnumerable<IConversationalConnector> conversationalConnectors,
+                               IEnumerable<ICompletionConnector> completionConnectors,
                                IConversationHistory conversationHistory)
    {
       _logger = logger;
@@ -57,8 +64,16 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       _skillManager = skillManager;
       _cognitiveEngineProvider = cognitiveEngineProvider;
       _eventBus = eventBus;
+      _conversationalConnectors = conversationalConnectors;
+      _completionConnectors = completionConnectors;
       _conversationHistory = conversationHistory;
       _settings = pluginSettingsManager.Get<ChatSettings>();
+
+      _defaultCompletionConnector = _completionConnectors.FirstOrDefault(c => c.Enabled && c.Name == _settings.DefaultConnector)
+            ?? _completionConnectors.FirstOrDefault(c => c.Enabled) ?? throw new InvalidOperationException("No completion connector is enabled");
+
+      _defaultConversationalConnector = _conversationalConnectors.FirstOrDefault(c => c.Enabled && c.Name == _settings.DefaultConnector)
+         ?? _conversationalConnectors.FirstOrDefault(c => c.Enabled) ?? throw new InvalidOperationException("No conversational connector is enabled");
 
       _eventBus.Subscribe(this);
 
@@ -93,7 +108,14 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
 
    public void Start(CancellationToken cancellationToken)
    {
-      Start(_cognitiveEngineProvider.CreateCognitiveEngine<ChatKeeperCognitiveEngine>(ChatKeeper), cancellationToken);
+      Start(_cognitiveEngineProvider.CreateCognitiveEngine<ChatKeeperCognitiveEngine>(
+         ChatKeeper,
+         configure =>
+         {
+            configure.SetDefaultCompletionConnector(_defaultCompletionConnector);
+            configure.SetDefaultConversationalConnector(_defaultConversationalConnector);
+         }
+         ), cancellationToken);
    }
 
 
@@ -119,7 +141,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
 
       foreach (var aidentityId in conversation.AIdentityIds)
       {
-         AddParticipant(aidentityId);
+         AddParticipant(aidentityId, false);
       }
 
       Context.NextTalker = Context.ParticipatingAIdentities.Count > 0 ? Context.ParticipatingAIdentities.FirstOrDefault().Value.AIdentity : null;
@@ -181,15 +203,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
    public async Task HandleAsync(InviteToConversation message)
    {
       var aidentity = message.AIdentity;
-      if (!Context.ParticipatingAIdentities.ContainsKey(aidentity.Id))
-      {
-         // all the AIdentities that participate to the conversation are using ConversationalCognitiveEngine
-         var participatingAIdentity = new ParticipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity));
-         // we create a new cognitive engine for each AIdentity that participate to the conversation.
-         Context.ParticipatingAIdentities.Add(aidentity.Id, participatingAIdentity);
-
-         await MakeAIdentityIntroduce(participatingAIdentity.CognitiveEngine).ConfigureAwait(false);
-      }
+      await AddParticipant(aidentity.Id, makeAIdentityIntroduceItself: true).ConfigureAwait(false);
    }
 
    public void SetNextTalker(AIdentity aIdentity)
@@ -226,7 +240,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       }
    }
 
-   internal void AddParticipant(Guid aIdentityId)
+   public async Task AddParticipant(Guid aIdentityId, bool makeAIdentityIntroduceItself)
    {
       if (Context.CurrentConversation is null) throw new InvalidOperationException("The conversation is not started.");
 
@@ -237,11 +251,27 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
          return;
       }
 
-      Context.CurrentConversation.AddAIdentity(aidentity);
-      // we create a new cognitive engine for each AIdentity that participate to the conversation.
-      Context.ParticipatingAIdentities.Add(
-         aIdentityId,
-         new ParticipatingAIdentity(_cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity))
-         );
+      if (!Context.ParticipatingAIdentities.ContainsKey(aidentity.Id))
+      {
+         // all the AIdentities that participate to the conversation are using ConversationalCognitiveEngine
+         var cognitiveEngine = _cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity, configure: (c) =>
+         {
+            c.SetDefaultCompletionConnector(_defaultCompletionConnector);
+            c.SetDefaultConversationalConnector(_defaultConversationalConnector);
+         });
+         var participatingAIdentity = new ParticipatingAIdentity(cognitiveEngine);
+
+         Context.CurrentConversation.AddAIdentity(aidentity);
+         // we create a new cognitive engine for each AIdentity that participate to the conversation.
+         Context.ParticipatingAIdentities.Add(
+            aIdentityId,
+            participatingAIdentity
+            );
+
+         if (makeAIdentityIntroduceItself)
+         {
+            await MakeAIdentityIntroduce(participatingAIdentity.CognitiveEngine).ConfigureAwait(false);
+         }
+      }
    }
 }

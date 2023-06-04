@@ -1,46 +1,82 @@
 @inherits BasePluginSettingsTab<TextGenerationSettings, Settings.State>
 
 <MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix overflow-y-auto gap-2">
-   <MudPaper Class="d-flex flex-column flex-grow-1 pa-2">
-      <MudCard>
-         <MudSwitchM3 @bind-Checked="_state.Enabled" Label="Enabled" For="()=>_state.Enabled" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.CompletionEndPoint" Label="Chat Endpoint" Variant="Variant.Text" For="()=>_state.CompletionEndPoint" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.StreamedCompletionEndPoint" Label="Streamed Chat Endpoint" Variant="Variant.Text" For="()=>_state.StreamedCompletionEndPoint" />
-      </MudCard>
-      <MudCard>
-         <MudTextField @bind-Value="_state.DefaultModel" Label="Default Model" Variant="Variant.Text" For="()=>_state.DefaultModel" />
-      </MudCard>
-      <MudCard>
-         <MudNumericField @bind-Value="_state.Timeout" Label="Timeout" Variant="Variant.Text" For="()=>_state.Timeout" />
-      </MudCard>
-   </MudPaper>
-   <MudPaper Elevation="2" Class="pa-4 flex-grow-1">
-      <MudTextField @bind-Value="_state.Parameters.MaxNewTokens" Label="Max New Tokens" />
-      <MudSwitch @bind-Checked="_state.Parameters.DoSample" Label="Do Sample" />
-      <MudSlider T="float" @bind-Value="_state.Parameters.Temperature" Label="Temperature" Min="0.01f" Max="1.99f" Step="0.01f" />
-      <MudSlider T="float" @bind-Value="_state.Parameters.TopP" Label="Top P" Min="0" Max="1" Step="0.01f" />
-      <MudSlider T="float" @bind-Value="_state.Parameters.TypicalP" Label="Typical P" Min="0" Max="1" Step="0.01f" />
-      <MudSlider T="float" @bind-Value="_state.Parameters.RepetitionPenalty" Label="Repetition Penalty" Min="1" Max="1.5f" Step="0.01f" />
-      <MudSlider T="float" @bind-Value="_state.Parameters.EncoderRepetitionPenalty" Label="Encoder Repetition Penalty" Min="0.8f" Max="1.5f" Step="0.01f" />
-      <MudSlider T="int" @bind-Value="_state.Parameters.TopK" Label="Top K" Min="0" Max="200" />
-      <MudSlider T="int" @bind-Value="_state.Parameters.MinLength" Label="Min Length" Min="0" Max="2000" />
-      <MudSlider T="int" @bind-Value="_state.Parameters.NoRepeatNgramSize" Label="No Repeat Ngram Size" Min="0" Max="20" />
-      <MudSlider T="int" @bind-Value="_state.Parameters.NumBeams" Label="Num Beams" Min="1" Max="20" />
-      <MudSlider T="float" @bind-Value="_state.Parameters.LengthPenalty" Label="Length Penalty" Min="1" Max="20" Step="0.01f" />
-      <MudSwitch @bind-Checked="_state.Parameters.EarlyStopping" Label="Early Stopping" />
-      <MudSlider T="float" @bind-Value="_state.Parameters.PenaltyAlpha" Label="Penalty Alpha" Min="0" Max="5" Step="0.01f" />
-      <MudTextField @bind-Value="_state.Parameters.Seed" Label="Seed" />
-      <MudSwitch @bind-Checked="_state.Parameters.AddBosToken" Label="Add Bos Token" />
-      <MudTextField @bind-Value="_state.Parameters.TruncationLength" Label="Truncation Length" />
-      <MudSwitch @bind-Checked="_state.Parameters.BanEosToken" Label="Ban Eos Token" />
-      <MudSwitch @bind-Checked="_state.Parameters.SkipSpecialTokens" Label="Skip Special Tokens" />
+   <PluginSettingsSection Title="Text Generation API" CanBeDisabled="true" @bind-IsEnabled="_state.Enabled"
+                          Info="Enable or disable Oobabooga Text Generation connectors.">
+      <MudText Typo="Typo.h6" Color="Color.Primary">General</MudText>
+      <MudTextField @bind-Value="_state.CompletionEndPoint" Label="Chat Endpoint" Variant="Variant.Text" For="()=>_state.CompletionEndPoint" />
+      <MudTextField @bind-Value="_state.StreamedCompletionEndPoint" Label="Streamed Chat Endpoint" Variant="Variant.Text" For="()=>_state.StreamedCompletionEndPoint" />
+      <MudTextField @bind-Value="_state.DefaultModel" Label="Default Model" Variant="Variant.Text" For="()=>_state.DefaultModel" />
+      <MudNumericField @bind-Value="_state.Timeout" Label="Timeout" Variant="Variant.Text" For="()=>_state.Timeout" />
+   </PluginSettingsSection>
 
-      <!-- Assuming StoppingStrings is a list of strings -->
-      <MudChipField T="string" @bind-Values="_state.Parameters.StoppingStrings" Delimiter="@(' ')" WrapChips="true"
-                    ChipColor="Color.Primary" ChipVariant="Variant.Filled" Closeable="true" Variant="Variant.Text" Label="Stopping Strings" />
-   </MudPaper>
+   @if (_state.Enabled)
+   {
+      <PluginSettingsSection Title="Default Request Parameters" Info="Define default parameters for the text generation API.">
+         <MudGrid>
+            <MudItem xs="12" sm="6" md="4">
+               <MudTextField @bind-Value="_state.Parameters.MaxNewTokens" Label="Max New Tokens" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSwitchM3 @bind-Checked="_state.Parameters.DoSample" Label="Do Sample" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="float" @bind-Value="_state.Parameters.Temperature" Min="0.01f" Max="1.99f" Step="0.01f" ValueLabel="true" Immediate="true">Temperature: @_state.Parameters.Temperature</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="float" @bind-Value="_state.Parameters.TopP" Min="0" Max="1" Step="0.01f" ValueLabel="true" Immediate="true">Top P: @_state.Parameters.TopP</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="float" @bind-Value="_state.Parameters.TypicalP" Min="0" Max="1" Step="0.01f" ValueLabel="true" Immediate="true">Typical P: @_state.Parameters.TypicalP</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="float" @bind-Value="_state.Parameters.RepetitionPenalty" Min="1" Max="1.5f" Step="0.01f" ValueLabel="true" Immediate="true">Repetition Penalty: @_state.Parameters.RepetitionPenalty</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="float" @bind-Value="_state.Parameters.EncoderRepetitionPenalty" Min="0.8f" Max="1.5f" Step="0.01f" ValueLabel="true" Immediate="true">Encoder Repetition Penalty: @_state.Parameters.EncoderRepetitionPenalty</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="int" @bind-Value="_state.Parameters.TopK" Min="0" Max="200" ValueLabel="true" Immediate="true">Top K: @_state.Parameters.TopK</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="int" @bind-Value="_state.Parameters.MinLength" Min="0" Max="2000" ValueLabel="true" Immediate="true">Min Length: @_state.Parameters.MinLength</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="int" @bind-Value="_state.Parameters.NoRepeatNgramSize" Min="0" Max="20" ValueLabel="true" Immediate="true">No Repeat Ngram Size: @_state.Parameters.NoRepeatNgramSize</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="int" @bind-Value="_state.Parameters.NumBeams" Min="1" Max="20" ValueLabel="true" Immediate="true">Num Beams: @_state.Parameters.NumBeams</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="float" @bind-Value="_state.Parameters.LengthPenalty" Min="1" Max="20" Step="0.01f" ValueLabel="true" Immediate="true">Length Penalty: @_state.Parameters.LengthPenalty</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSwitchM3 @bind-Checked="_state.Parameters.EarlyStopping" Label="Early Stopping" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSlider T="float" @bind-Value="_state.Parameters.PenaltyAlpha" Min="0" Max="5" Step="0.01f" ValueLabel="true" Immediate="true">Penalty Alpha: @_state.Parameters.PenaltyAlpha</MudSlider>
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudTextField @bind-Value="_state.Parameters.Seed" Label="Seed" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSwitchM3 @bind-Checked="_state.Parameters.AddBosToken" Label="Add Bos Token" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudTextField @bind-Value="_state.Parameters.TruncationLength" Label="Truncation Length" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSwitchM3 @bind-Checked="_state.Parameters.BanEosToken" Label="Ban Eos Token" />
+            </MudItem>
+            <MudItem xs="12" sm="6" md="4">
+               <MudSwitchM3 @bind-Checked="_state.Parameters.SkipSpecialTokens" Label="Skip Special Tokens" />
+            </MudItem>
+            <MudItem xs="12">
+               <!-- Assuming StoppingStrings is a list of strings -->
+               <MudChipField T="string" @bind-Values="_state.Parameters.StoppingStrings" Delimiter="@(' ')" WrapChips="true"
+                             ChipColor="Color.Primary" ChipVariant="Variant.Filled" Closeable="true" Variant="Variant.Text" Label="Stopping Strings" />
+            </MudItem>
+         </MudGrid>
+      </PluginSettingsSection>
+   }
 </MudForm>

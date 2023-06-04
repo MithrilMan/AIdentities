@@ -5,12 +5,10 @@ namespace AIdentities.Chat.Skills.IntroduceYourself;
 public partial class IntroduceYourself : Skill
 {
    readonly ILogger<IntroduceYourself> _logger;
-   readonly IConnectorsManager<IConversationalConnector> _conversationalConnectors;
 
-   public IntroduceYourself(ILogger<IntroduceYourself> logger, IConnectorsManager<IConversationalConnector> conversationalConnectors)
+   public IntroduceYourself(ILogger<IntroduceYourself> logger)
    {
       _logger = logger;
-      _conversationalConnectors = conversationalConnectors;
    }
 
    protected override bool ValidateInputs(
@@ -29,7 +27,8 @@ public partial class IntroduceYourself : Skill
    {
       SetPresentation(context, null);
 
-      var connector = _conversationalConnectors.GetFirstEnabled()
+      // if a skill doesn't depend explicitly on a connector, it should use the one defined in the cognitive engine
+      var connector = context.CognitiveContext.CognitiveEngine.GetDefaultConnector<IConversationalConnector>()
          ?? throw new InvalidOperationException("No completion connector is enabled");
 
       var aidentity = context.AIdentity;

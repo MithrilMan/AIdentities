@@ -1,6 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
-using AIdentities.Shared.Services.Javascript;
 
 namespace AIdentities.Chat.Pages;
 

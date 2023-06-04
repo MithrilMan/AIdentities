@@ -190,11 +190,12 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
       CancellationToken cancellationToken)
    {
       var instruction = PromptTemplates.BuildFindSkillPrompt(prompt, availableSkills);
-      var response = await _defaultCompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest
+      var response = await GetDefaultConnector<ICompletionConnector>().RequestCompletionAsync(new DefaultCompletionRequest
       {
          Prompt = instruction,
          MaxGeneratedTokens = 250,
-         Temperature = 0,
+         Temperature = 0.01m,
+         TopPSamplings = 1,
       }, cancellationToken).ConfigureAwait(false);
 
       var detectedSkill = SkillRegexUtils.ExtractSkillName().Match(response!.GeneratedMessage!).Value;
@@ -212,11 +213,12 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
             {
                // try to detect arguments out of the prompt
                instruction = PromptTemplates.BuildGenerateSkillParametersJson(prompt, skill);
-               response = await _defaultCompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest
+               response = await GetDefaultConnector<ICompletionConnector>().RequestCompletionAsync(new DefaultCompletionRequest
                {
                   Prompt = instruction,
                   MaxGeneratedTokens = 500, //TODO: make this configurable
-                  Temperature = 0,
+                  Temperature = 0.01m,
+                  TopPSamplings = 1,
                }, cancellationToken).ConfigureAwait(false);
 
                jsonArgs = SkillRegexUtils.ExtractJson().Match(response!.GeneratedMessage!).Value;

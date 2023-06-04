@@ -234,7 +234,15 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       var sb = new StringBuilder();
       foreach (var message in request.Messages)
       {
-         sb.AppendLine($"\n{message.Role}: {message.Content}"); // we add a new line to space more the messages belonging to different roles, not sure if it's needed
+         // we add a new line to space more the messages belonging to different roles, not sure if it's needed
+         if (message.Role == DefaultConversationalRole.System)
+         {
+            sb.AppendLine($"\nSystem: {message.Content}");
+         }
+         else
+         {
+            sb.AppendLine($"\n{message.Role} ({message.Name}): {message.Content}");
+         }
       }
       sb.AppendLine(ASSISTANT_ROLE_PREFIX); //append already the assistant role, so the completion will start from here and we can remove it later
 
@@ -261,6 +269,8 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       // request.TailFreeSampling
       // request.TopASamplings
       // request.UserId
+
+      _logger.LogDebug("Built request {@chatRequest}", chatRequest);
 
       return chatRequest;
    }

@@ -2,12 +2,15 @@
 
 public class CognitiveContext
 {
-   public AIdentity AIdentity { get; }
+   public ICognitiveEngine CognitiveEngine { get; }
+
+   public AIdentity AIdentity => CognitiveEngine.AIdentity;
+
    public Dictionary<string, object?> State { get; set; } = new();
 
-   public CognitiveContext(AIdentity aIdentity)
+   public CognitiveContext(ICognitiveEngine cognitiveEngine)
    {
-      AIdentity = aIdentity;
+      CognitiveEngine = cognitiveEngine;
    }
 
    /// <summary>

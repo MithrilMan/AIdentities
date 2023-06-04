@@ -1,5 +1,6 @@
 ﻿namespace AIdentities.Connector.TextGeneration.Models.API;
 
+[Serializable]
 public class ChatCompletionRequest
 {
    [JsonPropertyName("prompt")]

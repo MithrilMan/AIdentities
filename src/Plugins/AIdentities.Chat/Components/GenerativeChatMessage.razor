@@ -25,15 +25,10 @@
                               Class="absolute ma-auto"
                               Style="left:0;right:0;top:0;bottom:0;" />
                   }
-                  else if (HasAudio && !_isPlaying)
+                  else if (HasAudio)
                   {
                      <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Medium" Variant="Variant.Filled"
                                     Color="Color.Primary" OnClick="PlayAudio" />
-                  }
-                  else if (HasAudio && _isPlaying)
-                  {
-                     <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Medium" Variant="Variant.Filled"
-                                    Color="Color.Error" OnClick="StopAudio" />
                   }
                </div>
                <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@MessageStyle">
@@ -88,15 +83,10 @@
                               Class="absolute ma-auto "
                               Style="left:0;right:0;top:0;bottom:0;" />
                   }
-                  else if (HasAudio && !_isPlaying)
+                  else if (HasAudio)
                   {
                      <MudIconButton Icon="@Icons.Material.Filled.PlayArrow" Size="Size.Medium" Variant="Variant.Filled"
                                     Color="Color.Primary" OnClick="PlayAudio" />
-                  }
-                  else if (HasAudio && _isPlaying)
-                  {
-                     <MudIconButton Icon="@Icons.Material.Filled.Stop" Size="Size.Medium" Variant="Variant.Filled"
-                                    Color="Color.Error" OnClick="StopAudio" />
                   }
                </div>
             </MudStack>

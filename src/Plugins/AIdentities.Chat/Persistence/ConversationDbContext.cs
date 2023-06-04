@@ -28,7 +28,7 @@ public class ConversationDbContext : DbContext
       optionsBuilder
          .UseSqlite($"Data Source={_pluginStorage?.GetPluginStoragePath()}/conversations.db")
          .UseLazyLoadingProxies()
-         .UseLoggerFactory(_loggerFactory)
+         //.UseLoggerFactory(_loggerFactory)
          .EnableSensitiveDataLogging();
    }
 

@@ -1,6 +1,10 @@
 ﻿using AIdentities.Shared.Features.CognitiveEngine.Mission;
 using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
+using AIdentities.Shared.Plugins.Connectors;
+using AIdentities.Shared.Plugins.Connectors.Completion;
+using AIdentities.Shared.Plugins.Connectors.Conversational;
+using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 
 namespace AIdentities.Shared.Features.CognitiveEngine;
 
@@ -25,6 +29,38 @@ public interface ICognitiveEngine
    /// executed by this AIdentity in a specific context.
    /// </summary>
    CognitiveContext Context { get; }
+
+   /// <summary>
+   /// Sets the default conversational connector to use.
+   /// The used connector depends on the implementation of the cognitive engine and the context (e.g. a skill
+   /// execution may override the default value).
+   /// </summary>
+   /// <typeparam name="TConnector"></typeparam>
+   void SetDefaultConversationalConnector<TConnector>(TConnector connector) where TConnector : IConversationalConnector;
+
+   /// <summary>
+   /// Sets the default completion connector to use.
+   /// The used connector depends on the implementation of the cognitive engine and the context (e.g. a skill
+   /// execution may override the default value).
+   /// </summary>
+   /// <typeparam name="TConnector"></typeparam>
+   void SetDefaultCompletionConnector<TConnector>(TConnector connector) where TConnector : ICompletionConnector;
+
+   /// <summary>
+   /// Sets the default text to speech connector to use.
+   /// The used connector depends on the implementation of the cognitive engine and the context (e.g. a skill
+   /// execution may override the default value).
+   /// </summary>
+   /// <typeparam name="TConnector"></typeparam>
+   void SetDefaultTextToSpeechConnector<TConnector>(TConnector connector) where TConnector : ITextToSpeechConnector;
+
+   /// <summary>
+   /// Gets the default connector to use.
+   /// Usually you pass an interface of a specific type of connector, e.g. IConversationalConnector, ICompletionConnector, ITextToSpeechConnector.
+   /// </summary>
+   /// <typeparam name="TConnector">the interface of the connector to get.</typeparam>
+   /// <returns>The instance of the connector to use.</returns>
+   TConnector GetDefaultConnector<TConnector>() where TConnector : IConnector;
 
    /// <summary>
    /// Handle a prompt, returning a stream of thoguhts.

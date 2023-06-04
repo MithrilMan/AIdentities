@@ -36,16 +36,20 @@
                     Immediate="true" Variant="Variant.Filled" Step="0.05f">Similarity Boost: @_state.VoiceSimilarityBoost</MudSlider>
       </MudStack>
    </PluginSettingsSection>
-   <PluginSettingsSection Title="Try the voice" Info="Try the voice by using current settings.">
-      <MudStack Row="true">
-         <MudButton StartIcon="@Icons.Material.Filled.Speaker" Color="Color.Success" Variant="Variant.Filled" OnClick="TryVoice">
-            Try the voice
-         </MudButton>
-         <MudText Typo="Typo.subtitle2">
-            <p>If you try the voice, current settings will be saved.</p>
-            <p>Testing a voice costs credits, so use it wisely.</p>
-         </MudText>
-         <MudTextField @bind-Value="_state.TestingText" Label="Message to speech" Placeholder="Type a text to speech with current settings."></MudTextField>
-      </MudStack>
-   </PluginSettingsSection>
+
+   @if (_state.Enabled)
+   {
+      <PluginSettingsSection Title="Try the voice" Info="Try the voice by using current settings.">
+         <MudStack Row="true">
+            <MudButton StartIcon="@Icons.Material.Filled.Speaker" Color="Color.Success" Variant="Variant.Filled" OnClick="TryVoice">
+               Try the voice
+            </MudButton>
+            <MudText Typo="Typo.subtitle2">
+               <p>If you try the voice, current settings will be saved.</p>
+               <p>Testing a voice costs credits, so use it wisely.</p>
+            </MudText>
+            <MudTextField @bind-Value="_state.TestingText" Label="Message to speech" Placeholder="Type a text to speech with current settings."></MudTextField>
+         </MudStack>
+      </PluginSettingsSection>
+   }
 </MudForm>

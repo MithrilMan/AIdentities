@@ -473,7 +473,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
          return;
       }
 
-      CognitiveChatMission.AddParticipant(aIdentity.Id);
+      await CognitiveChatMission.AddParticipant(aIdentity.Id, true).ConfigureAwait(false);
       await ChatStorage.UpdateConversationAsync(_state.CurrentConversation, null).ConfigureAwait(false);
    }
 

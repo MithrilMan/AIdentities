@@ -1,6 +1,6 @@
 @inherits BasePluginSettingsTab<ChatSettings, Settings.State>
 
-<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix gap-2 overflow-y-auto ">
+<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix overflow-y-auto gap-2">
    <PluginSettingsSection Title="Text Generation"
                           Info="Text Generation is the core feature of this plugin. It allows you to generate text from a given prompt.">
       <MudText Typo="Typo.h6" Color="Color.Primary">Default Conversational Connector</MudText>

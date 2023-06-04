@@ -25,7 +25,7 @@ public class DefaultReflexiveCognitiveEngine : ReflexiveCognitiveEngine<Cognitiv
                                 ISkillManager skillManager)
      : base(logger, aIdentity, defaultConversationalConnector, defaultCompletionConnector, skillManager) { }
 
-   public override CognitiveContext CreateCognitiveContext() => new CognitiveContext(AIdentity);
+   public override CognitiveContext CreateCognitiveContext() => new CognitiveContext(this);
 
    protected override IAsyncEnumerable<Thought> HandleNoCommandDetected(
       Prompt prompt,

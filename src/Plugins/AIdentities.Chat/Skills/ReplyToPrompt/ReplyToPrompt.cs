@@ -14,18 +14,11 @@ public partial class ReplyToPrompt : Skill
    static readonly JsonSerializerOptions _jsonOptionExample = new() { WriteIndented = true };
 
    readonly ILogger<ReplyToPrompt> _logger;
-   readonly IConnectorsManager<IConversationalConnector> _conversationalConnectors;
-   readonly IPluginStorage<PluginEntry> _pluginStorage;
    readonly IAIdentityProvider _aIdentityProvider;
 
-   public ReplyToPrompt(ILogger<ReplyToPrompt> logger,
-                        IConnectorsManager<IConversationalConnector> conversationalConnectors,
-                        IPluginStorage<PluginEntry> pluginStorage,
-                        IAIdentityProvider aIdentityProvider)
+   public ReplyToPrompt(ILogger<ReplyToPrompt> logger, IAIdentityProvider aIdentityProvider)
    {
       _logger = logger;
-      _conversationalConnectors = conversationalConnectors;
-      _pluginStorage = pluginStorage;
       _aIdentityProvider = aIdentityProvider;
 
    }
@@ -34,7 +27,8 @@ public partial class ReplyToPrompt : Skill
       SkillExecutionContext context,
       [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      var connector = _conversationalConnectors.GetFirstEnabled()
+      // if a skill doesn't depend explicitly on a connector, it should use the one defined in the cognitive engine
+      var connector = context.CognitiveContext.CognitiveEngine.GetDefaultConnector<IConversationalConnector>()
          ?? throw new InvalidOperationException("No completion connector is enabled");
 
       var aidentity = context.AIdentity;

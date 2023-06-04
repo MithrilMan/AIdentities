@@ -24,7 +24,7 @@ public class ChatCognitiveEngine : CognitiveEngine<CognitiveContext>
       _replySkill = skillManager.Get<ReplyToPrompt>();
    }
 
-   public override CognitiveContext CreateCognitiveContext() => new CognitiveContext(AIdentity);
+   public override CognitiveContext CreateCognitiveContext() => new CognitiveContext(this);
 
    public override async IAsyncEnumerable<Thought> HandlePromptAsync(
       Prompt prompt,

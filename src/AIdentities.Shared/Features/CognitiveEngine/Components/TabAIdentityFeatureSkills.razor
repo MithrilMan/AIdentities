@@ -1,4 +1,4 @@
-﻿<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix gap-2">
+﻿<MudForm Model="@_state" @ref="@_form" Validation="@(_validator.ValidateValue)" ValidationDelay="0" Class="flex-grow-1 d-flex flex-column flex-h-fix overflow-y-auto gap-2">
    <MudPaper Class="d-flex flex-column flex-grow-1 overflow-y-auto pa-2">
       <MudSwitchM3 Label="Enable skills" @bind-Checked="_state.AreSkillsEnabled" Class="mb-2" />
       @if (_state.AreSkillsEnabled)

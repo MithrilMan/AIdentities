@@ -5,6 +5,9 @@ using AIdentities.Shared.Plugins.Connectors.Completion;
 using AIdentities.Shared.Plugins.Connectors.Conversational;
 using Polly.Retry;
 using Polly;
+using System.Collections.Concurrent;
+using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+using AIdentities.Shared.Plugins.Connectors;
 
 namespace AIdentities.Shared.Features.CognitiveEngine;
 
@@ -17,9 +20,12 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    where TCognitiveContext : CognitiveContext
 {
    protected readonly ILogger _logger;
-   protected readonly IConversationalConnector _defaultConversationalConnector;
-   protected readonly ICompletionConnector _defaultCompletionConnector;
    protected readonly ISkillManager _skillManager;
+
+   /// <summary>
+   /// Dictionary that holds the default connectors for each type of connector the cognitive engine supports.
+   /// </summary>
+   private readonly ConcurrentDictionary<Type, IConnector> _defaultConnectors = new();
 
    public AIdentity AIdentity { get; }
 
@@ -30,6 +36,8 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    protected DefaultConversationalMessage PersonalityInstruction { get; private set; } = default!;
 
    protected AsyncRetryPolicy RetryPolicy { get; private set; }
+
+   protected IConversationalConnector DefaultConversationalConnector => GetDefaultConnector<IConversationalConnector>();
 
    /// <summary>
    /// Holds a list of skills that are enabled for the AIdentity.
@@ -45,8 +53,10 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    {
       _logger = logger;
       AIdentity = aIdentity;
-      _defaultConversationalConnector = defaultConversationalConnector;
-      _defaultCompletionConnector = defaultCompletionConnector;
+
+      SetDefaultConversationalConnector(defaultConversationalConnector);
+      SetDefaultCompletionConnector(defaultCompletionConnector);
+
       _skillManager = skillManager;
 
       EnsureAIdentityIsValid();
@@ -241,5 +251,22 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
          });
 
       return retryPolicy;
+   }
+
+   public void SetDefaultConversationalConnector<TConnector>(TConnector connector) where TConnector : IConversationalConnector
+      => _defaultConnectors.AddOrUpdate(typeof(TConnector), connector, (_, _) => connector);
+
+   public void SetDefaultCompletionConnector<TConnector>(TConnector connector) where TConnector : ICompletionConnector
+      => _defaultConnectors.AddOrUpdate(typeof(TConnector), connector, (_, _) => connector);
+
+   public void SetDefaultTextToSpeechConnector<TConnector>(TConnector connector) where TConnector : ITextToSpeechConnector
+      => _defaultConnectors.AddOrUpdate(typeof(TConnector), connector, (_, _) => connector);
+
+   public TConnector GetDefaultConnector<TConnector>() where TConnector : IConnector
+   {
+      var connector = _defaultConnectors.GetOrAdd(typeof(TConnector), _
+         => throw new InvalidOperationException($"No default connector of type {typeof(TConnector).Name} has been set."));
+
+      return (TConnector)connector;
    }
 }

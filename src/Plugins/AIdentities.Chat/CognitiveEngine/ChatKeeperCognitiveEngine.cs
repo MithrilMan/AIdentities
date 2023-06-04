@@ -22,7 +22,7 @@ public class ChatKeeperCognitiveEngine : ReflexiveCognitiveEngine<CognitiveConte
                                  ISkillManager skillManager)
       : base(logger, aIdentity, defaultConversationalConnector, defaultCompletionConnector, skillManager) { }
 
-   public override CognitiveContext CreateCognitiveContext() => new CognitiveContext(AIdentity);
+   public override CognitiveContext CreateCognitiveContext() => new CognitiveContext(this);
 
    /// <summary>
    /// when no command is detected, pass the prompt to one of the current AIdentities in the conversation

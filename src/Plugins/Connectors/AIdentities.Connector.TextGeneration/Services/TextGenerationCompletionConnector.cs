@@ -251,6 +251,8 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       // request.TopASamplings
       // request.UserId
 
+      _logger.LogDebug("Built request {@chatRequest}", completionRequest);
+
       return completionRequest;
    }
 
