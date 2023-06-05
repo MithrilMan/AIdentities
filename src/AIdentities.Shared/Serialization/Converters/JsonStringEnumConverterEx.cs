@@ -1,6 +1,12 @@
 ﻿using System.Runtime.Serialization;
 
 namespace AIdentities.Shared.Serialization.Converters;
+
+/// <summary>
+/// This class converts enums to strings and back by using the EnumMember attribute.
+/// see https://github.com/dotnet/runtime/issues/74385
+/// </summary>
+/// <typeparam name="TEnum"></typeparam>
 public class JsonStringEnumConverterEx<TEnum> : JsonConverter<TEnum> where TEnum : struct, Enum
 {
    private readonly Dictionary<TEnum, string> _enumToString = new Dictionary<TEnum, string>();

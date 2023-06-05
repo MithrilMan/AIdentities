@@ -79,7 +79,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
+      _logger.LogDebug("Performing request {@apiRequest}", apiRequest);
       var sw = Stopwatch.StartNew();
 
       try
@@ -230,24 +230,38 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    {
       var defaultParameters = DefaultParameters;
 
-      // we need now to build the prompt since textgeneration api has just a single prompt field, not a list of messages with roles
-      var sb = new StringBuilder();
+      var history = new ChatCompletionHistoryMessage();
+
       foreach (var message in request.Messages)
       {
-         // we add a new line to space more the messages belonging to different roles, not sure if it's needed
-         if (message.Role == DefaultConversationalRole.System)
-         {
-            sb.AppendLine($"\nSystem: {message.Content}");
-         }
-         else
-         {
-            sb.AppendLine($"\n{message.Role} ({message.Name}): {message.Content}");
-         }
+         bool isAidentityMessage = message.Role == DefaultConversationalRole.Assistant && message.Name == request.AIdentity.Name;
+         history.Internal.Add($"{message.Name}: {message.Content}");
       }
-      sb.AppendLine(ASSISTANT_ROLE_PREFIX); //append already the assistant role, so the completion will start from here and we can remove it later
+
+      var userMessage = request.Messages.LastOrDefault();
+      if (history.Internal.Count > 0)
+      {
+         history.Internal.RemoveAt(history.Internal.Count - 1);
+      }
+
+      // we need now to build the prompt since textgeneration api has just a single prompt field, not a list of messages with roles
+      //var sb = new StringBuilder();
+      //foreach (var message in request.Messages)
+      //{
+      //   // we add a new line to space more the messages belonging to different roles, not sure if it's needed
+      //   if (message.Role == DefaultConversationalRole.System)
+      //   {
+      //      sb.AppendLine($"\nSystem: {message.Content}");
+      //   }
+      //   else
+      //   {
+      //      sb.AppendLine($"\n{message.Role} ({message.Name}): {message.Content}");
+      //   }
+      //}
+      //sb.AppendLine(ASSISTANT_ROLE_PREFIX); //append already the assistant role, so the completion will start from here and we can remove it later
 
       var chatRequest = new ChatCompletionRequest(
-         prompt: sb.ToString(),
+         userInput: request.sb.ToString(),
          parameters: defaultParameters
          );
 

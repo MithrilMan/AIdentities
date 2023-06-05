@@ -14,6 +14,11 @@ public interface IConversationalRequest
    string? ModelId { get; init; }
 
    /// <summary>
+   /// The AIdentity who will generate the text.
+   /// </summary>
+   public AIdentity AIdentity { get; init; }
+
+   /// <summary>
    /// The messages to generate chat completions for.
    /// </summary>
    IEnumerable<IConversationalMessage> Messages { get; init; }

@@ -1,6 +1,7 @@
 ﻿namespace AIdentities.Shared.Plugins.Connectors.Conversational;
-public class DefaultConversationalRequest : IConversationalRequest
+public record DefaultConversationalRequest(AIdentity AIdentity) : IConversationalRequest
 {
+   public AIdentity AIdentity { get; init; } = AIdentity;
    public string? ModelId { get; init; }
    public IEnumerable<IConversationalMessage> Messages { get; init; } = new List<DefaultConversationalMessage>();
    public int? CompletionResults { get; init; }
