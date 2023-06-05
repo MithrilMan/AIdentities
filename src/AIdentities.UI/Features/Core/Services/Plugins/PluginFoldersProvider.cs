@@ -21,7 +21,6 @@ public class PluginFoldersProvider : IPluginFoldersProvider
 
       var packageFolderRoot = PathUtils.GetAbsolutePath(_options.Value.PackageFolder, _hostEnvironment.ContentRootPath);
       logger.LogDebug("Plugin package folder root: {PackageFolderRoot}", packageFolderRoot);
-      if(packageFolderRoot.Contains("bin")) throw new Exception("Package folder root cannot be in bin folder");
 
       _pluginAssetsPath = Path.Combine(packageFolderRoot, AppConstants.SpecialFolders.PLUGINS);
       logger.LogDebug("Checking folder: {PackageFolderRoot}", _pluginAssetsPath);

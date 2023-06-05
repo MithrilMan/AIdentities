@@ -20,8 +20,6 @@ public static class DependencyInjection
          context.HostingEnvironment.WebRootFileProvider = new CompositeFileProvider(new[] { provider, context.HostingEnvironment.WebRootFileProvider });
       });
 
-      builder.UseElectronConfigurationOverrides();
-
       return builder;
    }
 
@@ -41,7 +39,7 @@ public static class DependencyInjection
 
             configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
             {
-               { "AIdentities__PackageFolder", packageFolder}
+               { "AIdentities:PackageFolder", packageFolder}
             });
          }
       });
