@@ -2,8 +2,8 @@
 using AIdentities.UI.Features.Core.Services.PageManager;
 using AIdentities.UI.Features.Core.Services.Plugins;
 using AIdentities.UI.Features.Core.Services.PluginStaticResources;
-using ElectronNET.API.Entities;
 using ElectronNET.API;
+using ElectronNET.API.Entities;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 using MudExtensions.Services;
@@ -19,6 +19,31 @@ public static class DependencyInjection
       {
          context.HostingEnvironment.WebRootFileProvider = new CompositeFileProvider(new[] { provider, context.HostingEnvironment.WebRootFileProvider });
       });
+
+      return builder;
+   }
+
+   /// <summary>
+   /// If electron is enabled, we need to override the package folder to the user data folder.
+   /// </summary>
+   /// <param name="builder"></param>
+   /// <returns></returns>
+   public static IWebHostBuilder UseElectronConfigurationOverrides(this IWebHostBuilder builder)
+   {
+      builder.ConfigureAppConfiguration((context, configBuilder) =>
+      {
+         if (HybridSupport.IsElectronActive)
+         {
+            var packageFolder = Electron.App.GetPathAsync(PathName.UserData).Result;
+            Console.WriteLine("Electron is active, setting package folder to: " + packageFolder);
+
+            configBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+               { "AIdentities:PackageFolder", packageFolder}
+            });
+         }
+      });
+
       return builder;
    }
 
@@ -47,16 +72,7 @@ public static class DependencyInjection
       // validators and use ValidateOnStart.
       services
          .AddOptions<AppOptions>()
-         .BindConfiguration(AppOptions.SECTION_NAME)
-         .PostConfigure(async options =>
-         {
-            if (HybridSupport.IsElectronActive)
-            {
-               var appData = await Electron.App.GetPathAsync(PathName.UserData).ConfigureAwait(false);
-               options.PackageFolder = appData;
-               Console.WriteLine("Electron is active, setting package folder to: " + options.PackageFolder);
-            }
-         });
+         .BindConfiguration(AppOptions.SECTION_NAME);
 
       // inject the services from the Shared project
       services.AddSharedServices();

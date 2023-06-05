@@ -16,7 +16,10 @@ builder.Host.UseSerilog((context, configuration) =>
 });
 
 // use electron
-builder.WebHost.UseElectron(args);
+builder.WebHost.UseElectron(args)
+   //our custom configuration overrides if Electron is running
+   .UseElectronConfigurationOverrides();
+
 // Is optional, but you can use the Electron.NET API-Classes directly with DI (relevant if you wont more encoupled code)
 builder.Services.AddElectron();
 
@@ -65,7 +68,7 @@ try
    if (HybridSupport.IsElectronActive)
    {
       await app.StartAsync().ConfigureAwait(false);
-      
+
       BrowserWindowOptions options = new()
       {
          //Title = "AIdentities",
@@ -73,10 +76,13 @@ try
          AutoHideMenuBar = true
       };
 
-      // Open the Electron-Window here
       var window = await Electron.WindowManager.CreateWindowAsync(options).ConfigureAwait(false);
-      window.Maximize();
+      window.OnReadyToShow += () =>
+      {
+         window.Maximize();
+      };
 
+      Console.WriteLine("Shutting down");
       app.WaitForShutdown();
    }
    else

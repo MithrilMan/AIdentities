@@ -20,14 +20,21 @@ public class PluginFoldersProvider : IPluginFoldersProvider
       _hostEnvironment = hostEnvironment;
 
       var packageFolderRoot = PathUtils.GetAbsolutePath(_options.Value.PackageFolder, _hostEnvironment.ContentRootPath);
+      logger.LogDebug("Plugin package folder root: {PackageFolderRoot}", packageFolderRoot);
 
       _pluginAssetsPath = Path.Combine(packageFolderRoot, AppConstants.SpecialFolders.PLUGINS);
+      logger.LogDebug("Checking folder: {PackageFolderRoot}", _pluginAssetsPath);
       if (!Directory.Exists(_pluginAssetsPath))
+      {
          Directory.CreateDirectory(_pluginAssetsPath);
+      }
 
       _pluginsStoragePath = Path.Combine(packageFolderRoot, AppConstants.SpecialFolders.STORAGE);
+      logger.LogDebug("Checking folder: {PackageFolderRoot}", _pluginsStoragePath);
       if (!Directory.Exists(_pluginsStoragePath))
+      {
          Directory.CreateDirectory(_pluginsStoragePath);
+      }
    }
 
    public string GetPluginAssetsPath() => _pluginAssetsPath;
