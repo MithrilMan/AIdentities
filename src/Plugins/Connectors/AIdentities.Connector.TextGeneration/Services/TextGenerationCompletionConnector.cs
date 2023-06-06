@@ -79,16 +79,18 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
    {
       var apiRequest = BuildCompletionRequest(request, false);
 
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
-      var sw = Stopwatch.StartNew();
+      _logger.DumpAsJson("Performing request", apiRequest);
 
+      var sw = Stopwatch.StartNew();
       try
       {
          JsonContent content = JsonContent.Create(apiRequest, mediaType: null, null);
+
          // oobabooga TextGeneration API implementation requires content-lenght
          await content.LoadIntoBufferAsync().ConfigureAwait(false);
          using HttpResponseMessage response = await _client.PostAsync(EndPoint, content, cancellationToken).ConfigureAwait(false);
-         _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+
+         _logger.DumpAsJson("Request completed", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
          if (response.IsSuccessStatusCode)
          {
@@ -235,13 +237,14 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       //TopASamplings ignored
       //if(request.TopASamplings != null) { }
       if (request.MaxGeneratedTokens != null) { completionRequest.MaxNewTokens = request.MaxGeneratedTokens; }
-      if (request.RepetitionPenality != null) { completionRequest.RepetitionPenalty = (double?)request.RepetitionPenality; }
-      if (request.RepetitionPenalityRange != null) { completionRequest.EncoderRepetitionPenalty = (double?)request.RepetitionPenalityRange; }
+      if (request.RepetitionPenality != null) { completionRequest.RepetitionPenalty = request.RepetitionPenality; }
+      if (request.RepetitionPenalityRange != null) { completionRequest.EncoderRepetitionPenalty = request.RepetitionPenalityRange; }
       if (request.StopSequences != null) { completionRequest.StoppingStrings = request.StopSequences; }
-      if (request.Temperature != null) { completionRequest.Temperature = (double?)request.Temperature; }
+      if (request.Temperature != null) { completionRequest.Temperature = request.Temperature; }
       if (request.TopKSamplings != null) { completionRequest.TopK = (int?)request.TopKSamplings; }
-      if (request.TopPSamplings != null) { completionRequest.TopP = (double?)request.TopPSamplings; }
-      if (request.TypicalSampling != null) { completionRequest.TypicalP = (double?)request.TypicalSampling; }
+      if (request.TopPSamplings != null) { completionRequest.TopP = request.TopPSamplings; }
+      if (request.TypicalSampling != null) { completionRequest.TypicalP = request.TypicalSampling; }
+      if (request.TopASamplings != null) { completionRequest.TopA = request.TopASamplings; }
       // ignored properties by TextGeneration API
       // request.CompletionResults
       // request.ContextSize
@@ -250,8 +253,6 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       // request.TailFreeSampling
       // request.TopASamplings
       // request.UserId
-
-      _logger.LogDebug("Built request {@chatRequest}", completionRequest);
 
       return completionRequest;
    }

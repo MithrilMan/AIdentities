@@ -10,7 +10,7 @@
    </PropertyGroup>
 
    <!-- This is the way I found to include easily a local package source -->
-   <PropertyGroup>
+   <PropertyGroup Condition="Exists($(PluginBuilderPackagePath))">
       <RestoreSources>$(RestoreSources);$(PluginBuilderPackagePath);https://api.nuget.org/v3/index.json;</RestoreSources>
    </PropertyGroup>
 

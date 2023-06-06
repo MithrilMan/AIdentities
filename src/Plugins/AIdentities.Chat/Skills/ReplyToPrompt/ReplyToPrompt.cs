@@ -65,7 +65,7 @@ public partial class ReplyToPrompt : Skill
          }
       }
 
-      var streamedResult = connector.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest
+      var streamedResult = connector.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest(aidentity)
       {
          Messages = PromptTemplates.BuildPromptMessages(aidentity, history),
          //MaxGeneratedTokens = 200

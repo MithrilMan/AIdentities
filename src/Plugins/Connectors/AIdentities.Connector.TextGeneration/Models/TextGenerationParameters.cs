@@ -13,7 +13,7 @@ public class TextGenerationParameters
    private const float DEFAULT_TOP_P = 1;
    private const float DEFAULT_TYPICAL_P = 1;
    private const float DEFAULT_REPETITION_PENALTY = 1.18f;
-   private const float DEFAULT_ENCODER_REPETITION_PENALTY = 1;
+   private const float DEFAULT_ENCODER_REPETITION_PENALTY = 1f;
    private const int DEFAULT_TOP_K = 0;
    private const int DEFAULT_MIN_LENGTH = 0;
    private const int DEFAULT_NO_REPEAT_NGRAM_SIZE = 0;
@@ -27,6 +27,13 @@ public class TextGenerationParameters
    private const bool DEFAULT_BAN_EOS_TOKEN = false;
    private const bool DEFAULT_SKIP_SPECIAL_TOKENS = true;
    private const string DEFAULT_STOPPING_STRING = "\nsystem:,\nuser:,\nhuman:,\nassistant:,\n###";
+   private const float DEFAULT_EPSILON_CUT_OFF = 0f;
+   private const float DEFAULT_ETA_CUT_OFF = 0f;
+   private const float DEFAULT_TFS = 1f;
+   private const float DEFAULT_TOP_A = 0f;
+   private const int DEFAULT_MIROSTAT_MODE = 0;
+   private const float DEFAULT_MIROSTAT_TAU = 5.0f;
+   private const float DEFAULT_MIROSTAT_ETA = 0.1f;
 
    public int MaxNewTokens { get; set; } = DEFAULT_MAX_NEW_TOKENS;
 
@@ -52,6 +59,35 @@ public class TextGenerationParameters
    /// </summary>
    [Range(0, 1)]
    public float TypicalP { get; set; } = DEFAULT_TYPICAL_P;
+
+   /// <summary>
+   /// This sets a probability floor below which tokens are excluded from being sampled.
+   /// Should be used with <see cref="TopP"/>, <see cref="TopK"/>, and <see cref="EtaCutOff"/> set to 0.
+   /// In units of 1e-4.
+   /// A reasonable value is 3.
+   /// </summary>
+   [Range(0f, 9.0f)]
+   public float EpsilonCutOff { get; set; } = DEFAULT_EPSILON_CUT_OFF;
+
+   /// <summary>
+   /// Should be used with <see cref="TopP"/>, <see cref="TopK"/>, and <see cref="EpsilonCutOff"/> set to 0.')
+   /// In units of 1e-4.
+   /// A reasonable value is 3. 
+   /// </summary>
+   [Range(0f, 20.0f)]
+   public float EtaCutOff { get; set; } = DEFAULT_ETA_CUT_OFF;
+
+   /// <summary>
+   /// ?
+   /// </summary>
+   [Range(0f, 1.0f)]
+   public float Tfs { get; set; } = DEFAULT_TFS;
+
+   /// <summary>
+   /// ?
+   /// </summary>
+   [Range(0f, 1.0f)]
+   public float TopA { get; set; } = DEFAULT_TOP_A;
 
    /// <summary>
    /// Exponential penalty factor for repeating prior tokens. 1 means no penalty, higher value = less repetition, lower value = more repetition.
@@ -101,18 +137,38 @@ public class TextGenerationParameters
    public float LengthPenalty { get; set; } = DEFAULT_LENGTH_PENALTY;
 
    /// <summary>
+   /// Contrastive search.
+   /// </summary>
+   [Range(0, 5)]
+   public float PenaltyAlpha { get; set; } = DEFAULT_PENALTY_ALPHA;
+
+   /// <summary>
    /// Beam search (uses a lot of VRAM)
    /// </summary>
    [Range(1, 20)]
    public bool EarlyStopping { get; set; } = DEFAULT_EARLY_STOPPING;
 
    /// <summary>
-   /// Contrastive search.
+   /// ?
    /// </summary>
-   [Range(0, 5)]
-   public float PenaltyAlpha { get; set; } = DEFAULT_PENALTY_ALPHA;
+   [Range(0, 2)]
+   public int MirostatMode { get; set; } = DEFAULT_MIROSTAT_MODE;
 
+   /// <summary>
+   /// ?
+   /// </summary>
+   [Range(0f, 10.0f)]
+   public float MirostatTau { get; set; } = DEFAULT_MIROSTAT_TAU;
 
+   /// <summary>
+   /// ?
+   /// </summary>
+   [Range(0f, 1.0f)]
+   public float MirostatEta { get; set; } = DEFAULT_MIROSTAT_ETA;
+
+   /// <summary>
+   /// -1 for random.
+   /// </summary>
    public int Seed { get; set; } = DEFAULT_SEED;
 
    /// <summary>

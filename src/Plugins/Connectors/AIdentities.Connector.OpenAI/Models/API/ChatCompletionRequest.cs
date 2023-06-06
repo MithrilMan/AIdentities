@@ -23,7 +23,7 @@ public record ChatCompletionRequest
    /// </summary>
    [Range(0, 2)]
    [JsonPropertyName("temperature")]
-   public decimal? Temperature { get; init; }
+   public float? Temperature { get; init; }
 
    /// <summary>
    /// An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass.
@@ -32,7 +32,7 @@ public record ChatCompletionRequest
    /// </summary>
    [Range(0, 1)]
    [JsonPropertyName("top_p")]
-   public decimal? TopP { get; init; }
+   public float? TopP { get; init; }
 
    /// <summary>
    /// How many chat completion choices to generate for each input message.
@@ -69,7 +69,7 @@ public record ChatCompletionRequest
    /// </summary>
    [Range(-2, 2)]
    [JsonPropertyName("presence_penalty")]
-   public decimal? PresencePenalty { get; init; }
+   public float? PresencePenalty { get; init; }
 
    /// <summary>
    /// Number between -2.0 and 2.0.
@@ -78,7 +78,7 @@ public record ChatCompletionRequest
    /// </summary>
    [Range(-2, 2)]
    [JsonPropertyName("frequency_penalty")]
-   public decimal? FrequencyPenalty { get; init; }
+   public float? FrequencyPenalty { get; init; }
 
    /// <summary>
    /// Modify the likelihood of specified tokens appearing in the completion.

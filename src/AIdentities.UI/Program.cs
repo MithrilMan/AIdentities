@@ -12,7 +12,8 @@ builder.Host.UseSerilog((context, configuration) =>
 {
    configuration
       .ReadFrom.Configuration(context.Configuration)
-      .Enrich.FromLogContext();
+      .Enrich.FromLogContext()
+      .Destructure.With<SerilogJsonDestructuringPolicy>();
 });
 
 // use electron
@@ -81,9 +82,14 @@ try
       {
          window.Maximize();
       };
+      window.WebContents.OpenDevTools();
+      window.WebContents.OnCrashed += (killed) =>
+      {
+         Console.WriteLine($"WebContents Crashed! Killed: {killed}");
+      };
 
-      Console.WriteLine("Shutting down");
       app.WaitForShutdown();
+      Console.WriteLine("Shutting down");
    }
    else
    {

@@ -97,8 +97,8 @@ internal static class PromptTemplates
 
       foreach (var exampleMessage in exampleMessages)
       {
-         sb.Append($"User: {exampleMessage.UserMessage}").AppendLine();
-         sb.Append($"{aidentityName}: {exampleMessage.AIdentityMessage}").AppendLine();
+         sb.AppendLine($"User: {exampleMessage.UserMessage}").AppendLine();
+         sb.AppendLine($"{aidentityName}: {exampleMessage.AIdentityMessage}").AppendLine();
       }
       sb.AppendLine("</DIALOGUE_EXAMPLE>");
 

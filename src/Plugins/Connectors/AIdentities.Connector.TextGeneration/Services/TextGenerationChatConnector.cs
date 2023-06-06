@@ -2,6 +2,7 @@
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
+using AIdentities.Shared.Features.AIdentities.Models;
 using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Http.Features;
 
@@ -10,7 +11,6 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
 {
    const string NAME = nameof(TextGenerationChatConnector);
    const string DESCRIPTION = "TextGeneration Chat Connector that uses ChatCompletion API.";
-   const string ASSISTANT_ROLE_PREFIX = "\nAssistant: ";
 
    /// <summary>
    /// marker of the starting streamed data.
@@ -79,7 +79,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
+      _logger.DumpAsJson("Performing request", apiRequest);
       var sw = Stopwatch.StartNew();
 
       try
@@ -88,7 +88,8 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
          // oobabooga TextGeneration API implementation requires content-lenght
          await content.LoadIntoBufferAsync().ConfigureAwait(false);
          using HttpResponseMessage response = await _client.PostAsync(ChatEndPoint, content, cancellationToken).ConfigureAwait(false);
-         _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+
+         _logger.DumpAsJson("Request completed", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
          if (response.IsSuccessStatusCode)
          {
@@ -97,7 +98,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
             sw.Stop();
             return new DefaultConversationalResponse
             {
-               GeneratedMessage = CleanUpResponse(responseData),
+               GeneratedMessage = CleanUpResponse(responseData, request.AIdentity),
                PromptTokens = default,
                TotalTokens = default,
                CompletionTokens = default,
@@ -117,16 +118,17 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       }
    }
 
-   private static string? CleanUpResponse(ChatCompletionResponse? responseData)
+   static string GetResponsePrefix(AIdentity aIdentity) => $"### {aIdentity.Name}: ";
+
+   private static string? CleanUpResponse(ChatCompletionResponse? responseData, AIdentity aIdentity)
    {
       var response = responseData?.Results?.FirstOrDefault()?.Text;
       if (response is null) return null;
 
-      // remove the eventual assistant reference from the response
-      // TODO: with a multi-character chat, we should remove the user names.
-      if (response.StartsWith(ASSISTANT_ROLE_PREFIX))
+      string textToSkip = GetResponsePrefix(aIdentity);
+      if (response.StartsWith(textToSkip))
       {
-         return response[ASSISTANT_ROLE_PREFIX.Length..];
+         return response[textToSkip.Length..];
       }
 
       return response;
@@ -237,14 +239,14 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
          // we add a new line to space more the messages belonging to different roles, not sure if it's needed
          if (message.Role == DefaultConversationalRole.System)
          {
-            sb.AppendLine($"\nSystem: {message.Content}");
+            sb.AppendLine($"INSTRUCTION: {message.Content}");
          }
          else
          {
-            sb.AppendLine($"\n{message.Role} ({message.Name}): {message.Content}");
+            sb.AppendLine($"### {message.Name}: {message.Content}");
          }
       }
-      sb.AppendLine(ASSISTANT_ROLE_PREFIX); //append already the assistant role, so the completion will start from here and we can remove it later
+      sb.AppendLine(GetResponsePrefix(request.AIdentity)); //append already the assistant role, so the completion will start from here and we can remove it later
 
       var chatRequest = new ChatCompletionRequest(
          prompt: sb.ToString(),
@@ -254,24 +256,20 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       //TopASamplings ignored
       //if(request.TopASamplings != null) { }
       if (request.MaxGeneratedTokens != null) { chatRequest.MaxNewTokens = request.MaxGeneratedTokens; }
-      if (request.RepetitionPenality != null) { chatRequest.RepetitionPenalty = (double?)request.RepetitionPenality; }
-      if (request.RepetitionPenalityRange != null) { chatRequest.EncoderRepetitionPenalty = (double?)request.RepetitionPenalityRange; }
+      if (request.RepetitionPenality != null) { chatRequest.RepetitionPenalty = request.RepetitionPenality; }
+      if (request.RepetitionPenalityRange != null) { chatRequest.EncoderRepetitionPenalty = request.RepetitionPenalityRange; }
       if (request.StopSequences != null) { chatRequest.StoppingStrings = request.StopSequences; }
-      if (request.Temperature != null) { chatRequest.Temperature = (double?)request.Temperature; }
+      if (request.Temperature != null) { chatRequest.Temperature = request.Temperature; }
       if (request.TopKSamplings != null) { chatRequest.TopK = (int?)request.TopKSamplings; }
-      if (request.TopPSamplings != null) { chatRequest.TopP = (double?)request.TopPSamplings; }
-      if (request.TypicalSampling != null) { chatRequest.TypicalP = (double?)request.TypicalSampling; }
+      if (request.TopPSamplings != null) { chatRequest.TopP = request.TopPSamplings; }
+      if (request.TypicalSampling != null) { chatRequest.TypicalP = request.TypicalSampling; }
+      if (request.TopASamplings != null) { chatRequest.TopA = request.TopASamplings; }
       // ignored properties by TextGeneration API
       // request.CompletionResults
       // request.ContextSize
       // request.LogitBias
       // request.ModelId
       // request.TailFreeSampling
-      // request.TopASamplings
-      // request.UserId
-
-      _logger.LogDebug("Built request {@chatRequest}", chatRequest);
-
       return chatRequest;
    }
 

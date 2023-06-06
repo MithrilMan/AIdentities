@@ -1,4 +1,5 @@
 ﻿using System.Runtime.CompilerServices;
+using AIdentities.BrainButler.AIdentiy;
 
 namespace AIdentities.BrainButler.Commands.WhatTimeIsIt;
 
@@ -68,7 +69,7 @@ public partial class WhatTimeIsIt : CommandDefinition
       var askedTime = DateTime.Now.AddSeconds(args.TimeDifference);
       string result = $"the result of the time {args.TimeDifference} seconds from now is {askedTime}";
 
-      var finalResponse = await connector.RequestChatCompletionAsync(new DefaultConversationalRequest()
+      var finalResponse = await connector.RequestChatCompletionAsync(new DefaultConversationalRequest(new AIdentiy.BrainButler())
       {
          Messages = new List<IConversationalMessage>() {
             new DefaultConversationalMessage(DefaultConversationalRole.System, "You are Brain Butler, a funny helpful AI agent that loves to make joke when giving back informations.",null),
