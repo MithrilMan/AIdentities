@@ -12,7 +12,8 @@ builder.Host.UseSerilog((context, configuration) =>
 {
    configuration
       .ReadFrom.Configuration(context.Configuration)
-      .Enrich.FromLogContext();
+      .Enrich.FromLogContext()
+      .Destructure.With<SerilogJsonDestructuringPolicy>();
 });
 
 // use electron

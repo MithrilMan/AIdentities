@@ -79,7 +79,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
-      _logger.LogDebug("Performing request {@apiRequest}", apiRequest);
+      _logger.DumpAsJson("Performing request", apiRequest);
       var sw = Stopwatch.StartNew();
 
       try
@@ -88,7 +88,8 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
          // oobabooga TextGeneration API implementation requires content-lenght
          await content.LoadIntoBufferAsync().ConfigureAwait(false);
          using HttpResponseMessage response = await _client.PostAsync(ChatEndPoint, content, cancellationToken).ConfigureAwait(false);
-         _logger.LogDebug("Request completed: {Response}", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
+
+         _logger.DumpAsJson("Request completed", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
          if (response.IsSuccessStatusCode)
          {
@@ -230,62 +231,44 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    {
       var defaultParameters = DefaultParameters;
 
-      var history = new ChatCompletionHistoryMessage();
-
+      // we need now to build the prompt since textgeneration api has just a single prompt field, not a list of messages with roles
+      var sb = new StringBuilder();
       foreach (var message in request.Messages)
       {
-         bool isAidentityMessage = message.Role == DefaultConversationalRole.Assistant && message.Name == request.AIdentity.Name;
-         history.Internal.Add($"{message.Name}: {message.Content}");
+         // we add a new line to space more the messages belonging to different roles, not sure if it's needed
+         if (message.Role == DefaultConversationalRole.System)
+         {
+            sb.AppendLine($"\nSystem: {message.Content}");
+         }
+         else
+         {
+            sb.AppendLine($"\n{message.Role} ({message.Name}): {message.Content}");
+         }
       }
-
-      var userMessage = request.Messages.LastOrDefault();
-      if (history.Internal.Count > 0)
-      {
-         history.Internal.RemoveAt(history.Internal.Count - 1);
-      }
-
-      // we need now to build the prompt since textgeneration api has just a single prompt field, not a list of messages with roles
-      //var sb = new StringBuilder();
-      //foreach (var message in request.Messages)
-      //{
-      //   // we add a new line to space more the messages belonging to different roles, not sure if it's needed
-      //   if (message.Role == DefaultConversationalRole.System)
-      //   {
-      //      sb.AppendLine($"\nSystem: {message.Content}");
-      //   }
-      //   else
-      //   {
-      //      sb.AppendLine($"\n{message.Role} ({message.Name}): {message.Content}");
-      //   }
-      //}
-      //sb.AppendLine(ASSISTANT_ROLE_PREFIX); //append already the assistant role, so the completion will start from here and we can remove it later
+      sb.AppendLine(ASSISTANT_ROLE_PREFIX); //append already the assistant role, so the completion will start from here and we can remove it later
 
       var chatRequest = new ChatCompletionRequest(
-         userInput: request.sb.ToString(),
+         prompt: sb.ToString(),
          parameters: defaultParameters
          );
 
       //TopASamplings ignored
       //if(request.TopASamplings != null) { }
       if (request.MaxGeneratedTokens != null) { chatRequest.MaxNewTokens = request.MaxGeneratedTokens; }
-      if (request.RepetitionPenality != null) { chatRequest.RepetitionPenalty = (double?)request.RepetitionPenality; }
-      if (request.RepetitionPenalityRange != null) { chatRequest.EncoderRepetitionPenalty = (double?)request.RepetitionPenalityRange; }
+      if (request.RepetitionPenality != null) { chatRequest.RepetitionPenalty = request.RepetitionPenality; }
+      if (request.RepetitionPenalityRange != null) { chatRequest.EncoderRepetitionPenalty = request.RepetitionPenalityRange; }
       if (request.StopSequences != null) { chatRequest.StoppingStrings = request.StopSequences; }
-      if (request.Temperature != null) { chatRequest.Temperature = (double?)request.Temperature; }
+      if (request.Temperature != null) { chatRequest.Temperature = request.Temperature; }
       if (request.TopKSamplings != null) { chatRequest.TopK = (int?)request.TopKSamplings; }
-      if (request.TopPSamplings != null) { chatRequest.TopP = (double?)request.TopPSamplings; }
-      if (request.TypicalSampling != null) { chatRequest.TypicalP = (double?)request.TypicalSampling; }
+      if (request.TopPSamplings != null) { chatRequest.TopP = request.TopPSamplings; }
+      if (request.TypicalSampling != null) { chatRequest.TypicalP = request.TypicalSampling; }
+      if (request.TopASamplings != null) { chatRequest.TopA = request.TopASamplings; }
       // ignored properties by TextGeneration API
       // request.CompletionResults
       // request.ContextSize
       // request.LogitBias
       // request.ModelId
       // request.TailFreeSampling
-      // request.TopASamplings
-      // request.UserId
-
-      _logger.LogDebug("Built request {@chatRequest}", chatRequest);
-
       return chatRequest;
    }
 

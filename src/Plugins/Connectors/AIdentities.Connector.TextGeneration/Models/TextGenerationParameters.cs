@@ -67,7 +67,7 @@ public class TextGenerationParameters
    /// A reasonable value is 3.
    /// </summary>
    [Range(0f, 9.0f)]
-   public float? EpsilonCutOff { get; set; } = DEFAULT_EPSILON_CUT_OFF;
+   public float EpsilonCutOff { get; set; } = DEFAULT_EPSILON_CUT_OFF;
 
    /// <summary>
    /// Should be used with <see cref="TopP"/>, <see cref="TopK"/>, and <see cref="EpsilonCutOff"/> set to 0.')
@@ -75,19 +75,19 @@ public class TextGenerationParameters
    /// A reasonable value is 3. 
    /// </summary>
    [Range(0f, 20.0f)]
-   public float? EtaCutOff { get; set; } = DEFAULT_ETA_CUT_OFF;
+   public float EtaCutOff { get; set; } = DEFAULT_ETA_CUT_OFF;
 
    /// <summary>
    /// ?
    /// </summary>
    [Range(0f, 1.0f)]
-   public float? Tfs { get; set; } = DEFAULT_TFS;
+   public float Tfs { get; set; } = DEFAULT_TFS;
 
    /// <summary>
    /// ?
    /// </summary>
    [Range(0f, 1.0f)]
-   public float? TopA { get; set; } = DEFAULT_TOP_A;
+   public float TopA { get; set; } = DEFAULT_TOP_A;
 
    /// <summary>
    /// Exponential penalty factor for repeating prior tokens. 1 means no penalty, higher value = less repetition, lower value = more repetition.
@@ -158,13 +158,13 @@ public class TextGenerationParameters
    /// ?
    /// </summary>
    [Range(0f, 10.0f)]
-   public float? MirostatTau { get; set; } = DEFAULT_MIROSTAT_TAU;
+   public float MirostatTau { get; set; } = DEFAULT_MIROSTAT_TAU;
 
    /// <summary>
    /// ?
    /// </summary>
    [Range(0f, 1.0f)]
-   public float? MirostatEta { get; set; } = DEFAULT_MIROSTAT_ETA;
+   public float MirostatEta { get; set; } = DEFAULT_MIROSTAT_ETA;
 
    /// <summary>
    /// -1 for random.

@@ -20,6 +20,7 @@ public partial class Interaction : AppPage<Interaction>
    [Inject] private IPromptGenerator PromptGenerator { get; set; } = null!;
 
    MudTextFieldExtended<string?> _messageTextField = default!;
+   AIdentiy.BrainButler _brainButler = new();
 
    protected override void OnInitialized()
    {
@@ -128,7 +129,7 @@ public partial class Interaction : AppPage<Interaction>
             // if it doesn't understand the request, let's try to reply in conversational style
 
             _state.StreamedResponse = new AIResponse { };
-            var streamedResponse = _state.ConversationalConnector!.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest
+            var streamedResponse = _state.ConversationalConnector!.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest(_brainButler)
             {
                Messages = new List<IConversationalMessage>()
                {

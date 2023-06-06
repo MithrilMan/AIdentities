@@ -11,3 +11,4 @@ global using AIdentities.Shared.Plugins.Connectors.Conversational;
 global using Microsoft.Extensions.DependencyInjection;
 global using Microsoft.Extensions.Hosting;
 global using Microsoft.Extensions.Logging;
+global using AIdentities.Shared.Utils;

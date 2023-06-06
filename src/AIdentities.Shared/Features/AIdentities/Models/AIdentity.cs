@@ -32,7 +32,7 @@ public record AIdentity
    /// The name of the AIdentity.
    /// This is how the LLM will refer to the AIdentity.
    /// </summary>
-   public string? Name { get; set; }
+   public string Name { get; set; } = default!;
 
    /// <summary>
    /// A base64 data URI of the AIdentity's image.

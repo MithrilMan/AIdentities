@@ -31,12 +31,13 @@ public static class PromptTemplates
       Find the skill that best matches the user prompt.
       You have to return just the skill name that matches better the user prompt.
       If you can't find any skill, just return the word "{UNKNOWN_SKILL}".
+      IMPORTANT: if you don't find any useful skll, reply with Skill: DUNNO as last line.
 
       <START Examples>
       {TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1}
 
       UserRequest: I want to know the weather in Rome
-      Reasoning : The user is asking for the weather in Rome, no available skill satisfy the request.
+      Reasoning: The user is asking for the weather in Rome, no available skill satisfy the request.
       Skill: {UNKNOWN_SKILL}
 
       {TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2}
@@ -96,8 +97,7 @@ public static class PromptTemplates
       <END Examples>
       
       UserRequest: {TOKEN_USER_PROMPT}
-      Reasoning:  
-
+      Reasoning: 
       """;
 
    public static string BuildFindSkillPrompt(Prompt userPrompt, IEnumerable<SkillDefinition> availableSkills)
@@ -128,7 +128,7 @@ public static class PromptTemplates
       var goodExample = examples.First();
       sb.Replace(TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE1, $"""
                                                      UserRequest: {goodExample.Example.UserRequest}
-                                                     Reasoning : {goodExample.Example.Reasoning}
+                                                     Reasoning: {goodExample.Example.Reasoning}
                                                      Skill: {goodExample.Skill.Name}
                                                      """);
 
@@ -138,7 +138,7 @@ public static class PromptTemplates
       }
       sb.Replace(TOKEN_GOOD_SKILL_DETECTOR_EXAMPLE2, $"""
                                                      UserRequest: {goodExample.Example.UserRequest}
-                                                     Reasoning : {goodExample.Example.Reasoning}
+                                                     Reasoning: {goodExample.Example.Reasoning}
                                                      Skill: {goodExample.Skill.Name}
                                                      """);
       return sb.ToString();

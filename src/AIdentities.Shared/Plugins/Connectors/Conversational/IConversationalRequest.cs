@@ -46,7 +46,7 @@ public interface IConversationalRequest
    /// In layman terms, the higher the temperature, the more creative the model is, the lower the temperature, the more logical the model is.
    /// Value from 0.1 to 2.0.
    /// </summary>
-   decimal? Temperature { get; init; }
+   float? Temperature { get; init; }
 
    /// <summary>
    /// Repetition penalty is used to prevent the model from repeating the same words over and over again.
@@ -54,14 +54,14 @@ public interface IConversationalRequest
    /// Increasing the value too much may result in the model not repeating the same words at all, which may result in the model not making sense and breaking the chat format.
    /// The standard value for chat is approximately 1.0 - 1.05 but may vary depending on the model.
    /// </summary>
-   decimal? RepetitionPenality { get; init; }
+   float? RepetitionPenality { get; init; }
 
    /// <summary>
    /// The range of influence of Repetition penalty in tokens.
    /// The repetition penalty is applied to the last N tokens, where N is the value of this parameter.
    /// </summary>
 
-   decimal? RepetitionPenalityRange { get; init; }
+   float? RepetitionPenalityRange { get; init; }
 
    /// <summary>
    /// Top-p sampling (aka nucleus sampling) tells the model to pick the next token from the top tokens based on the sum of their probabilities.
@@ -71,7 +71,7 @@ public interface IConversationalRequest
    /// A lower value will result in more predictable and repetitive text, while setting a higher value will result in more diverse but potentially more incoherent or nonsensical text.
    /// range is 0.0 to 1.0.
    /// </summary>
-   decimal? TopPSamplings { get; init; }
+   float? TopPSamplings { get; init; }
 
    /// <summary>
    /// Top-k sampling tells the model to pick the next token from the top 'k' tokens in its list, sorted by probability.
@@ -80,7 +80,7 @@ public interface IConversationalRequest
    /// Set to 0 to disable.
    /// Set it to 1 to only use the first token (the most likely word).
    /// </summary>
-   decimal? TopKSamplings { get; init; }
+   float? TopKSamplings { get; init; }
 
    /// <summary>
    /// Top-a sampling comes from BlinDL/RWKV-LM <see cref="https://github.com/BlinkDL/RWKV-LM"/>.
@@ -91,7 +91,7 @@ public interface IConversationalRequest
    /// - remove all entries whose probability is less than top_a * p_max^2.
    /// This sampling methods reduces randomness when the model is confident about the next token, but has little effect on creativity.
    /// </summary>
-   decimal? TopASamplings { get; init; }
+   float? TopASamplings { get; init; }
 
    /// <summary>
    /// Sets the probability threshold (probability mass) for the typical sampling method.
@@ -100,7 +100,7 @@ public interface IConversationalRequest
    /// In peak distributions this can result in a very small number of tokens being sampled, which can lead to repetitive text.
    /// In smoother distributions this can result in a broader range of tokens being sampled, which can lead to more creative text.
    /// </summary>
-   decimal? TypicalSampling { get; init; }
+   float? TypicalSampling { get; init; }
 
    /// <summary>
    /// Tail Free Sampling aims to remove low probability tokens without compromising the creativity of the generated text.
@@ -108,7 +108,7 @@ public interface IConversationalRequest
    /// This sampling method works well on longer pieces of text and can be used in conjunction with other sampling methods.
    /// A value of 1 disabled this sampling method.
    /// </summary>
-   decimal? TailFreeSampling { get; init; }
+   float? TailFreeSampling { get; init; }
 
    /// <summary>
    /// The maximum amount of tokens that a AI will generate to respond.

@@ -37,15 +37,15 @@ public class PromptGenerator : IPromptGenerator
 
          <START Examples>
          UserRequest: I don't like the color of the background, I'd like it to be blue
-         Reasoning : The user is asking to change the theme of the application, {ChangeTheme.NAME} satisfies the request.
+         Reasoning: The user is asking to change the theme of the application, {ChangeTheme.NAME} satisfies the request.
          Command: {ChangeTheme.NAME}
 
          UserRequest: I want to know the weather in Rome
-         Reasoning : The user is asking for the weather in Rome, no available command satisfy the request.
+         Reasoning: The user is asking for the weather in Rome, no available command satisfy the request.
          Command: DUNNO
 
          UserRequest: I'd like a colorful theme for the application
-         Reasoning : The user is asking to change the theme of the application, {ChangeTheme.NAME} satisfies the request.
+         Reasoning: The user is asking to change the theme of the application, {ChangeTheme.NAME} satisfies the request.
          Command: {ChangeTheme.NAME}
          <END Examples>
 

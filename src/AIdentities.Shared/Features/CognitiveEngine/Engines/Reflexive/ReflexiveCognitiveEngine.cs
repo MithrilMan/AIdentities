@@ -194,8 +194,6 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
       {
          Prompt = instruction,
          MaxGeneratedTokens = 250,
-         Temperature = 0.01m,
-         TopPSamplings = 1,
       }, cancellationToken).ConfigureAwait(false);
 
       var detectedSkill = SkillRegexUtils.ExtractSkillName().Match(response!.GeneratedMessage!).Value;
@@ -217,8 +215,6 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
                {
                   Prompt = instruction,
                   MaxGeneratedTokens = 500, //TODO: make this configurable
-                  Temperature = 0.01m,
-                  TopPSamplings = 1,
                }, cancellationToken).ConfigureAwait(false);
 
                jsonArgs = SkillRegexUtils.ExtractJson().Match(response!.GeneratedMessage!).Value;
