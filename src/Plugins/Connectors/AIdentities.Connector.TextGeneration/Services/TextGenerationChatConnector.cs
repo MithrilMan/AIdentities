@@ -2,6 +2,7 @@
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text;
+using AIdentities.Shared.Features.AIdentities.Models;
 using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Http.Features;
 
@@ -10,7 +11,6 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
 {
    const string NAME = nameof(TextGenerationChatConnector);
    const string DESCRIPTION = "TextGeneration Chat Connector that uses ChatCompletion API.";
-   const string ASSISTANT_ROLE_PREFIX = "\nAssistant: ";
 
    /// <summary>
    /// marker of the starting streamed data.
@@ -98,7 +98,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
             sw.Stop();
             return new DefaultConversationalResponse
             {
-               GeneratedMessage = CleanUpResponse(responseData),
+               GeneratedMessage = CleanUpResponse(responseData, request.AIdentity),
                PromptTokens = default,
                TotalTokens = default,
                CompletionTokens = default,
@@ -118,16 +118,17 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       }
    }
 
-   private static string? CleanUpResponse(ChatCompletionResponse? responseData)
+   static string GetResponsePrefix(AIdentity aIdentity) => $"### {aIdentity.Name}: ";
+
+   private static string? CleanUpResponse(ChatCompletionResponse? responseData, AIdentity aIdentity)
    {
       var response = responseData?.Results?.FirstOrDefault()?.Text;
       if (response is null) return null;
 
-      // remove the eventual assistant reference from the response
-      // TODO: with a multi-character chat, we should remove the user names.
-      if (response.StartsWith(ASSISTANT_ROLE_PREFIX))
+      string textToSkip = GetResponsePrefix(aIdentity);
+      if (response.StartsWith(textToSkip))
       {
-         return response[ASSISTANT_ROLE_PREFIX.Length..];
+         return response[textToSkip.Length..];
       }
 
       return response;
@@ -238,14 +239,14 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
          // we add a new line to space more the messages belonging to different roles, not sure if it's needed
          if (message.Role == DefaultConversationalRole.System)
          {
-            sb.AppendLine($"\nSystem: {message.Content}");
+            sb.AppendLine($"INSTRUCTION: {message.Content}");
          }
          else
          {
-            sb.AppendLine($"\n{message.Role} ({message.Name}): {message.Content}");
+            sb.AppendLine($"### {message.Name}: {message.Content}");
          }
       }
-      sb.AppendLine(ASSISTANT_ROLE_PREFIX); //append already the assistant role, so the completion will start from here and we can remove it later
+      sb.AppendLine(GetResponsePrefix(request.AIdentity)); //append already the assistant role, so the completion will start from here and we can remove it later
 
       var chatRequest = new ChatCompletionRequest(
          prompt: sb.ToString(),
