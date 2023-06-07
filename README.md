@@ -101,13 +101,86 @@ Here some media
 
 This is where you shape your own AIdentities. You can browse them, filter them by name or tags, create, edit, delete, import or export them.
 
-
-
 ![image-20230607104812970](media/README/image-20230607104812970.png)
 AIdentities Gallery
 
+
+
 ![image-20230607105129172](media/README/image-20230607105129172.png)
 AIdentity editing
+
+
+
+![image-20230607193716968](media/README/image-20230607193716968.png)
+Manage which skill an AIdentity can manage (WIP)
+
+
+
+![image-20230607200606933](media/README/image-20230607200606933.png)
+Each Plugin can have its own settings that each AIdentity can customize
+
+
+
+![image-20230607200709789](media/README/image-20230607200709789.png)
+With ElevenLabs integration, each AIdentity can have its own voice
+
+
+
+![image-20230607200802440](media/README/image-20230607200802440.png)
+Import booru characters or create your own importer (and exporter) as plugin
+
+
+
+## General Settings
+
+In general settings you can import new plugins or edit general settings that each plugin can implement
+
+![image-20230607201050776](media/README/image-20230607201050776.png)
+Implement your own plugin and import them. You can create everything from custom connectors, to skills, to brand new section of the application (the Chat is itself a plugin but for convenience I've referenced it as part of the core application)
+
+
+
+![image-20230607201233002](media/README/image-20230607201233002.png)
+Customize your chat experience, chose your Text Generation connector (actually Oobabooga and OpenAI are are supported), enable speech recognition, Text to Speech, Skills, etc.
+
+
+
+![image-20230607201404892](media/README/image-20230607201404892.png)
+Customize which model your OpenAI connector should use (if you want to use OpenAI)
+
+
+
+![image-20230607201452077](media/README/image-20230607201452077.png)
+Or oobabooga text-generation
+
+
+
+## Cognitive Chat
+
+This page allows you to have a chat with one or more AIdentities and you can make them talk each other, you can have multiple responses to the same prompt, and can add more AIdentity whenever you want.
+You can chose to make them talk and you can talk with them using speech recognition (not available on one click installer)
+
+> **Note**  
+> At the moment you have to control the flow of the conversation, soon other automatic way to manage the conversation will be implemented
+
+![image-20230607201836195](media/README/image-20230607201836195.png)
+Start a new conversation with an AIdentity
+
+
+
+![image-20230607202128728](media/README/image-20230607202128728.png)
+Add another AIdentity to the discussion by enabling multiple character discussion (1), search who you want to invite (2), and add him to the discussion (3).
+
+
+
+![image-20230607202326352](media/README/image-20230607202326352.png)
+Enable moderator mode and set the flow of the conversation, by hovering over the avatar of the AIdentity participating to the discussion, you can make them reply to your currently selected message or to the last produced one.
+Clicking on an avatar, make him the next to reply to your next message.
+
+
+
+![image-20230607202544556](media/README/image-20230607202544556.png)
+In this case, The Coder was the chosen one and he replied to my message.
 
 
 
