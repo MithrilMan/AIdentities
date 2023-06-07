@@ -33,7 +33,7 @@
    <PluginSettingsSection Title="Speech Recognition" CanBeDisabled="true" @bind-IsEnabled="_state.EnableSpeechRecognition"
                           Info="Speech Recognition allows you to speak to the AIdentities.">
       <MudTooltip Arrow="true" Text="Continuous Speech Recognition allows you to speak to the AIdentities without having to press the button every time"
-            Placement="Placement.Right">
+                  Placement="Placement.Right">
          <ChildContent>
             <MudStack Row="true" Spacing="5" AlignItems="AlignItems.Center">
                <MudSwitchM3 @bind-Checked="_state.EnableContinuousSpeechRecognition" Label="Enable Continuous Speech Recognition" />
@@ -51,6 +51,7 @@
 
       <MudSelectExtended T="System.Globalization.CultureInfo" ItemCollection="@GetSpeechRecognitionCultures()"
                          ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium" InputClass="ma-0"
+                         SearchBox="true" SearchBoxAutoFocus="true"
                          ToStringFunc="@(c => c?.EnglishName)"
       @bind-Value="_state.SpeechRecognitionCulture"
       @bind-Value:after="@(()=>_state.SpeechRecognitionLanguage = _state.SpeechRecognitionCulture.IetfLanguageTag)" />

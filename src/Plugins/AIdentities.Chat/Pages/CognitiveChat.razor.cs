@@ -550,6 +550,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
       finally
       {
          message.IsGeneratingSpeech = false;
+         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
       }
    }
 
