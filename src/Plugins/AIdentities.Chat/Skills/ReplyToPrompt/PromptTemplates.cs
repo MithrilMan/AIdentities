@@ -9,22 +9,31 @@ internal static class PromptTemplates
    const string TOKEN_AIDENTITY_PERSONALITY = "<AIDENTITY_PERSONALITY>";
    const string TOKEN_EXAMPLE_MESSAGES = "<EXAMPLE_MESSAGES>";
 
+   //const string CONVERSATION_PROMPT = $$"""
+   //   INSTRUCTION: You are {{TOKEN_AIDENTITY_NAME}}.
+   //   Your paste experiences impact how you behave:
+   //   <BACKGROUND>{{TOKEN_AIDENTITY_BACKGROUND}}</BACKGROUND>
+   //   Your responses should be consistent with {{TOKEN_AIDENTITY_NAME}}'s personality.
+   //   <PERSONALITY>{{TOKEN_AIDENTITY_PERSONALITY}}</PERSONALITY>
+   //   Respond only as {{TOKEN_AIDENTITY_NAME}} would, do not reveal that you are an AI language model, chatbot, or that you are pretending to be him.
+   //   Maintain the character of {{TOKEN_AIDENTITY_NAME}} throughout the conversation, even when directly challenged about your identity.
+   //   Do not admit or discuss that you are an AI language model or chatbot.
+   //   {{TOKEN_EXAMPLE_MESSAGES}}
+   //   """;
+   
    const string CONVERSATION_PROMPT = $$"""
-      INSTRUCTION: You are {{TOKEN_AIDENTITY_NAME}}.
-      Your paste experiences impact how you behave:
-      <BACKGROUND>{{TOKEN_AIDENTITY_BACKGROUND}}</BACKGROUND>
-      Your responses should be consistent with {{TOKEN_AIDENTITY_NAME}}'s personality.
-      <PERSONALITY>{{TOKEN_AIDENTITY_PERSONALITY}}</PERSONALITY>
-      Respond only as {{TOKEN_AIDENTITY_NAME}} would, do not reveal that you are an AI language model, chatbot, or that you are pretending to be him.
-      Maintain the character of {{TOKEN_AIDENTITY_NAME}} throughout the conversation, even when directly challenged about your identity.
-      Do not admit or discuss that you are an AI language model or chatbot.
+      You are {{TOKEN_AIDENTITY_NAME}} and you are participating to a conversation between you and other characters.
+      Personal background: {{TOKEN_AIDENTITY_BACKGROUND}}
+      Personality: {{TOKEN_AIDENTITY_PERSONALITY}}
+      Goal: Truly impersonate {{TOKEN_AIDENTITY_NAME}} and be consistend with his background and personality. Do not break the illusion under any circumstance. Maintain the character of {{TOKEN_AIDENTITY_NAME}} throughout the conversation, even when directly challenged about your identity.
+
       {{TOKEN_EXAMPLE_MESSAGES}}
+
+      Roleplay between you and other characters begins:
+
       """;
 
-   const string EXAMPLE_MESSAGES_INSTRUCTION = $$"""
-   Try to use {{TOKEN_AIDENTITY_NAME}} personality, style and mood in your responses, here is an example on how {{TOKEN_AIDENTITY_NAME}} would respond to the user:
-
-   """;
+   const string EXAMPLE_MESSAGES_INSTRUCTION = $"This is how {TOKEN_AIDENTITY_NAME} should talk";
 
    const string ADDITIONAL_GUARDRAIL = $$"""
       INSTRUCTION: Don't mimic other replies style, use {{TOKEN_AIDENTITY_NAME}}'s PERSONALITY style and mood in your responses and don't forget your BACKGROUND if you have one.
@@ -47,8 +56,14 @@ internal static class PromptTemplates
 
       var sb = new StringBuilder(CONVERSATION_PROMPT)
          .Replace(TOKEN_AIDENTITY_NAME, aIdentity.Name)
-         .Replace(TOKEN_AIDENTITY_BACKGROUND, chatFeature?.Background ?? "")
-         .Replace(TOKEN_AIDENTITY_PERSONALITY, aIdentity.Personality)
+         .Replace(TOKEN_AIDENTITY_BACKGROUND, chatFeature?.Background?
+            .Replace("\r\n", "")
+            .Replace("\n", "")
+            ?? "")
+         .Replace(TOKEN_AIDENTITY_PERSONALITY, aIdentity.Personality?
+            .Replace("\r\n", "")
+            .Replace("\n", "")
+            ?? "")
          .Replace(TOKEN_EXAMPLE_MESSAGES, BuildExamples(chatFeature, aIdentity.Name ?? "Assistant"));
 
 
@@ -86,21 +101,19 @@ internal static class PromptTemplates
    /// <param name="chatFeature">The chat feature of the AIdentity.</param>
    /// <param name="aidentityName">The name of the AIdentity.</param>
    /// <returns>The example messages prompt chunk, or null if no example messages are specified.</returns>
-   private static string? BuildExamples(AIdentityChatFeature? chatFeature, string aidentityName)
+   public static string? BuildExamples(AIdentityChatFeature? chatFeature, string aidentityName)
    {
       var exampleMessages = chatFeature?.ExampleMessages;
       if (exampleMessages is null or { Count: 0 }) return null;
 
       var sb = new StringBuilder(EXAMPLE_MESSAGES_INSTRUCTION)
-         .Replace(TOKEN_AIDENTITY_NAME, aidentityName)
-         .AppendLine("<DIALOGUE_EXAMPLE>");
+         .Replace(TOKEN_AIDENTITY_NAME, aidentityName);
 
       foreach (var exampleMessage in exampleMessages)
       {
-         sb.AppendLine($"User: {exampleMessage.UserMessage}").AppendLine();
-         sb.AppendLine($"{aidentityName}: {exampleMessage.AIdentityMessage}").AppendLine();
+         sb.AppendLine($"User: {exampleMessage.UserMessage}");
+         sb.AppendLine($"{aidentityName}: {exampleMessage.AIdentityMessage}");
       }
-      sb.AppendLine("</DIALOGUE_EXAMPLE>");
 
       return sb.ToString();
    }

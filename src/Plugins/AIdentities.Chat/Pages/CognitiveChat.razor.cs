@@ -365,6 +365,8 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
       try
       {
          conversation = await ChatStorage.LoadConversationAsync(conversation.Id).ConfigureAwait(false);
+         await ScrollToEndOfMessageList().ConfigureAwait(false);
+
          await _state.InitializeConversation(conversation).ConfigureAwait(false);
          await ScrollToEndOfMessageList().ConfigureAwait(false);
       }

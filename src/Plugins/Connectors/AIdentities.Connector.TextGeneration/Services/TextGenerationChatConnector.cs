@@ -118,7 +118,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       }
    }
 
-   static string GetResponsePrefix(AIdentity aIdentity) => $"### {aIdentity.Name}: ";
+   static string GetResponsePrefix(AIdentity aIdentity) => $"{aIdentity.Name}: ";
 
    private static string? CleanUpResponse(ChatCompletionResponse? responseData, AIdentity aIdentity)
    {
@@ -232,18 +232,27 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    {
       var defaultParameters = DefaultParameters;
 
+      var instructions = request.Messages.Where(request => request.Role == DefaultConversationalRole.System).Select(request => request.Content).ToList();
+
       // we need now to build the prompt since textgeneration api has just a single prompt field, not a list of messages with roles
       var sb = new StringBuilder();
+      foreach (var instruction in instructions.Take(1))
+      {
+         sb.AppendLine(instruction);
+      }
+
+
       foreach (var message in request.Messages)
       {
          // we add a new line to space more the messages belonging to different roles, not sure if it's needed
          if (message.Role == DefaultConversationalRole.System)
          {
-            sb.AppendLine($"INSTRUCTION: {message.Content}");
+            continue;
+            //sb.AppendLine($"{message.Content}");
          }
          else
          {
-            sb.AppendLine($"### {message.Name}: {message.Content}");
+            sb.AppendLine($"{message.Name}: {message.Content}");
          }
       }
       sb.AppendLine(GetResponsePrefix(request.AIdentity)); //append already the assistant role, so the completion will start from here and we can remove it later
