@@ -6,6 +6,12 @@ public partial class ReplyToPrompt : Skill
    /// We expect the conversation history to be in the context with this key.
    /// </summary>
    public const string CONVERSATION_HISTORY_KEY = nameof(CognitiveChatMissionContext.ConversationHistory);
+
+   /// <summary>
+   /// We expect the conversation participants to be in the context with this key.
+   /// </summary>
+   public const string PARTICIPATING_AIDENTITIES_KEY = nameof(CognitiveChatMissionContext.ParticipatingAIdentities);
+
    /// <summary>
    /// If this contextual variable is set, the skill will reply to the message instead of the last message conversation.
    /// </summary>
@@ -39,6 +45,12 @@ public partial class ReplyToPrompt : Skill
          yield return context.ActionThought("I don't have a chat history to examine, using the prompt instead");
       }
 
+      // check in the context if there is a conversation
+      if (!TryExtractFromContext<Dictionary<Guid, ParticipatingAIdentity>>(PARTICIPATING_AIDENTITIES_KEY, context, out var participants))
+      {
+         yield return context.ActionThought("I don't have a conversation to examine, using the prompt instead");
+      }
+
       // check in the con
       if (TryExtractFromContext<ConversationMessage>(MESSAGE_TO_REPLY_TO_KEY, context, out var messageToReplyToKey))
       {
@@ -65,9 +77,20 @@ public partial class ReplyToPrompt : Skill
          }
       }
 
+      var participantNames = participants?.Select(p => p.Value.AIdentity.Name) ?? Array.Empty<string>();
+      if (!participantNames.Contains("User"))
+      {
+         participantNames = participantNames.Append("User");
+      }
+
       var streamedResult = connector.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest(aidentity)
       {
-         Messages = PromptTemplates.BuildPromptMessages(aidentity, history),
+         Messages = PromptTemplates.BuildPromptMessages(
+            aidentity,
+            history,
+            participantNames
+            ),
+         StopSequences = participantNames.Select(p => $"\n{p}:").ToList()
          //MaxGeneratedTokens = 200
       }, cancellationToken).ConfigureAwait(false);
 
@@ -78,6 +101,18 @@ public partial class ReplyToPrompt : Skill
          yield return streamedFinalThought;
       }
 
-      yield return streamedFinalThought.Completed();
+      yield return streamedFinalThought.Completed(
+         CleanMessage(streamedFinalThought.Content, participantNames)
+         );
+   }
+
+   public static string CleanMessage(string message, IEnumerable<string> participantNames)
+   {
+      var cleanedMessage = message;
+      foreach (var participantName in participantNames)
+      {
+         cleanedMessage = cleanedMessage.Replace($"\n{participantName}:", "");
+      }
+      return cleanedMessage.Trim();
    }
 }

@@ -8,6 +8,7 @@ internal static class PromptTemplates
    const string TOKEN_AIDENTITY_BACKGROUND = "<AIDENTITY_BACKGROUND>";
    const string TOKEN_AIDENTITY_PERSONALITY = "<AIDENTITY_PERSONALITY>";
    const string TOKEN_EXAMPLE_MESSAGES = "<EXAMPLE_MESSAGES>";
+   const string TOKEN_PARTICIPANTS = "<PARTICIPANTS>";
 
    //const string CONVERSATION_PROMPT = $$"""
    //   INSTRUCTION: You are {{TOKEN_AIDENTITY_NAME}}.
@@ -20,16 +21,16 @@ internal static class PromptTemplates
    //   Do not admit or discuss that you are an AI language model or chatbot.
    //   {{TOKEN_EXAMPLE_MESSAGES}}
    //   """;
-   
+
    const string CONVERSATION_PROMPT = $$"""
-      You are {{TOKEN_AIDENTITY_NAME}} and you are participating to a conversation between you and other characters.
+      You are {{TOKEN_AIDENTITY_NAME}} and you are participating to a conversation between you and {{TOKEN_PARTICIPANTS}}.
       Personal background: {{TOKEN_AIDENTITY_BACKGROUND}}
       Personality: {{TOKEN_AIDENTITY_PERSONALITY}}
       Goal: Truly impersonate {{TOKEN_AIDENTITY_NAME}} and be consistend with his background and personality. Do not break the illusion under any circumstance. Maintain the character of {{TOKEN_AIDENTITY_NAME}} throughout the conversation, even when directly challenged about your identity.
 
       {{TOKEN_EXAMPLE_MESSAGES}}
 
-      Roleplay between you and other characters begins:
+      Roleplay between you and other characters begins. Talk only on behalf of {{TOKEN_AIDENTITY_NAME}}.
 
       """;
 
@@ -40,7 +41,10 @@ internal static class PromptTemplates
       Now reply to the last message using its used language, considering previous messages, without greet, don't repeate your name, don't be repetitive.
       """;
 
-   public static IEnumerable<DefaultConversationalMessage> BuildPromptMessages(AIdentity aIdentity, IEnumerable<ConversationMessage> chatHistory)
+   public static IEnumerable<DefaultConversationalMessage> BuildPromptMessages(
+      AIdentity aIdentity,
+      IEnumerable<ConversationMessage> chatHistory,
+      IEnumerable<string> participants)
    {
       DefaultConversationalMessage CreateMessage(ConversationMessage message)
       {
@@ -48,13 +52,14 @@ internal static class PromptTemplates
          return new DefaultConversationalMessage(
              Role: isAIdentityMessage ? DefaultConversationalRole.Assistant : DefaultConversationalRole.User,
              Content: message.Text ?? "",
-             Name: message.AuthorName// message.AuthorId == aIdentity.Id ? aIdentity.Name : message.AuthorName.ToString()
+             Name: message.IsAIGenerated ? message.AuthorName : "User" // message.AuthorId == aIdentity.Id ? aIdentity.Name : message.AuthorName.ToString()
             );
       }
 
       var chatFeature = aIdentity.Features.Get<AIdentityChatFeature>();
 
       var sb = new StringBuilder(CONVERSATION_PROMPT)
+         .Replace(TOKEN_PARTICIPANTS, BuildParticipants(aIdentity, participants))
          .Replace(TOKEN_AIDENTITY_NAME, aIdentity.Name)
          .Replace(TOKEN_AIDENTITY_BACKGROUND, chatFeature?.Background?
             .Replace("\r\n", "")
@@ -94,6 +99,21 @@ internal static class PromptTemplates
       //}
    }
 
+   private static string BuildParticipants(AIdentity aIdentity, IEnumerable<string> participants)
+   {
+      participants = participants.Where(p => p != aIdentity.Name);
+
+      if (!participants.Any()) return "other characters";
+
+      var participantCount = participants.Count();
+      if (participantCount == 1) return $"another character: {participants.First()}";
+
+      var sb = new StringBuilder($"{participantCount + 1} characters: ");
+      sb.Append(string.Join(", ", participants));
+
+      return sb.ToString();
+   }
+
    /// <summary>
    /// Build the example messages prompt chunk that would show to the LLM
    /// how the AIdentity should respond to the user.
@@ -106,7 +126,8 @@ internal static class PromptTemplates
       var exampleMessages = chatFeature?.ExampleMessages;
       if (exampleMessages is null or { Count: 0 }) return null;
 
-      var sb = new StringBuilder(EXAMPLE_MESSAGES_INSTRUCTION)
+      var sb = new StringBuilder()
+         .AppendLine(EXAMPLE_MESSAGES_INSTRUCTION)
          .Replace(TOKEN_AIDENTITY_NAME, aidentityName);
 
       foreach (var exampleMessage in exampleMessages)

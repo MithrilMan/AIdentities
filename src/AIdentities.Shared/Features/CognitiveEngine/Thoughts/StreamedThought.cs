@@ -39,13 +39,14 @@ public abstract record StreamedThought : Thought, IStreamedThought
    /// Return a new StreamThought Mark the stramed thought as completed.
    /// Subsequent calls to AppendContent will throw an exception.
    /// </summary>
+   /// <param name="finalContent">
+   /// The final content of the thought.
+   /// If null, the content of the thought will be the one set by the last call to AppendContent.
+   /// </param>
    /// <returns></returns>
-   public StreamedThought Completed()
+   public StreamedThought Completed(string? finalContent = null) => this with
    {
-
-      return this with
-      {
-         IsStreamComplete = true
-      };
-   }
+      Content = finalContent ?? Content,
+      IsStreamComplete = true
+   };
 }

@@ -118,7 +118,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       }
    }
 
-   static string GetResponsePrefix(AIdentity aIdentity) => $"{aIdentity.Name}: ";
+   static string GetResponsePrefix(AIdentity aIdentity) => $"{aIdentity.Name}:";
 
    private static string? CleanUpResponse(ChatCompletionResponse? responseData, AIdentity aIdentity)
    {
@@ -255,7 +255,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
             sb.AppendLine($"{message.Name}: {message.Content}");
          }
       }
-      sb.AppendLine(GetResponsePrefix(request.AIdentity)); //append already the assistant role, so the completion will start from here and we can remove it later
+      sb.Append(GetResponsePrefix(request.AIdentity)); //append already the assistant role, so the completion will start from here and we can remove it later
 
       var chatRequest = new ChatCompletionRequest(
          prompt: sb.ToString(),
