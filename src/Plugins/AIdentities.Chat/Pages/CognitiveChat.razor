@@ -69,7 +69,7 @@
                               <ChildContent>
                                  <MudText Class="mud-theme-secondary" Typo="Typo.subtitle1" Align="Align.Center">@aid.Name</MudText>
                                  <MudDivider />
-                                 <MudMenuItem OnClick="() => ReplyToSelectedMessage(aid)" Disabled="_state.SelectedMessage is null">Reply to selected message</MudMenuItem>
+                                 <MudMenuItem OnClick="() => ReplyToSelectedMessage(aid, _state.SelectedMessage)" Disabled="_state.SelectedMessage is null">Reply to selected message</MudMenuItem>
                                  <MudMenuItem OnClick="() => ReplyToLastMessage(aid)">Reply to last message</MudMenuItem>
                               </ChildContent>
                            </MudMenu>

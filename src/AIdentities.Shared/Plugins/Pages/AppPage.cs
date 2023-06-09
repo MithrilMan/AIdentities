@@ -203,7 +203,7 @@ public abstract class AppPage<TAppComponent, TAppPageSettings> : ComponentBase, 
          await InvokeAsync(async () =>
          {
             await actionAsync().ConfigureAwait(false);
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged).ConfigureAwait(false);
          }).ConfigureAwait(false);
       }, interval, PageCancellationToken);
 

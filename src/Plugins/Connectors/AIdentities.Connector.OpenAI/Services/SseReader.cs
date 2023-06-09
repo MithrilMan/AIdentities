@@ -1,5 +1,8 @@
 ﻿// Inspired by https://github.com/Azure/azure-sdk-for-net/blob/0ae9e6f717a176527aebcc819294b24e7463a884/sdk/openai/Azure.AI.OpenAI/src/Helpers/SseReader.cs
 
+using System.IO;
+using System.Threading;
+
 namespace AIdentities.Connector.OpenAI.Services;
 
 /// <summary>
@@ -44,7 +47,22 @@ public sealed class SseReader : IDisposable
          if (line.Value.IsEmpty) throw new InvalidDataException("event expected.");
 
          var empty = await TryReadLineAsync().ConfigureAwait(false);
-         if (empty != null && !empty.Value.IsEmpty) throw new NotSupportedException("Multi-filed events not supported.");
+         if (empty != null && !empty.Value.IsEmpty)
+         {
+            var fullContent = line + empty.Value.ToString() + await _reader.ReadToEndAsync().ConfigureAwait(false);
+            ErrorResponse? error = null;
+            try
+            {
+               error = JsonSerializer.Deserialize<ErrorResponse>(fullContent);
+            }
+            catch { }
+
+            if (error?.Error is not null)
+            {
+               throw new Exception($"Request failed with status code {error.Error.Code}: {error.Error.Message}");
+            }
+            throw new NotSupportedException("Multi-filed events not supported. Content: " + fullContent);
+         }
 
          if (!line.Value.IsComment)
          {

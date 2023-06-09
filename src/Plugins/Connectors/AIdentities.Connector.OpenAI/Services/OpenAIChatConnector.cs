@@ -171,7 +171,16 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       int cumulativeCompletionTokens = 0;
       while (true && !cancellationToken.IsCancellationRequested)
       {
-         SseLine? sseEvent = await sseReader.TryReadSingleFieldEventAsync().ConfigureAwait(false);
+         SseLine? sseEvent = null;
+         try
+         {
+            sseEvent = await sseReader.TryReadSingleFieldEventAsync().ConfigureAwait(false);
+         }
+         catch (Exception ex)
+         {
+            _logger.LogError(ex, "Error while reading SSE stream: {Message}", ex.Message);
+            throw;
+         }
          if (sseEvent == null) break;
 
          ReadOnlyMemory<char> name = sseEvent.Value.FieldName;
@@ -221,7 +230,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       Model = request.ModelId ?? DefaultModel,
       PresencePenalty = request.RepetitionPenality,
       N = request.CompletionResults,
-      Stop = request.StopSequences,
+      Stop = request.StopSequences?.Take(4),
       Stream = requireStream,
       Temperature = request.Temperature,
       TopP = request.TopPSamplings,

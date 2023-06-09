@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using AIdentities.Shared.Features.Core.SpeechRecognition;
 using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
+using AIdentities.Shared.Utils;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.JSInterop;
 using Toolbelt.Blazor.HotKeys2;
@@ -12,6 +13,7 @@ namespace AIdentities.Chat.Pages;
 public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionListener
 {
    const int CHAT_KEEPER_THINKING_ANIMATION_DURATION = 3000;
+   const int SCROLL_TO_BOTTOM_THROTTLE = 250;
    const string PAGE_TITLE = "Cognitive Chat";
    const string PAGE_URL = "/cognitive-chat";
    const string PAGE_DESCRIPTION = "Chat with AIdentities and humans, let them chat freely and assist anytime there is a skill you know to execute";
@@ -33,6 +35,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
    /// The mission that will be assigned to the <see cref="_chatKeeper"/> instance.
    /// </summary>
    [Inject] private CognitiveChatMission CognitiveChatMission { get; set; } = null!;
+   public Action ScrollToEndOfMessageList { get; private set; } = default!;
 
    /// <summary>
    /// reference to the _chatKeeper instance
@@ -71,6 +74,13 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
       {
          SpeechRecognitionService.InitializeSpeechRecognitionAsync(this);
       }
+
+      ScrollToEndOfMessageList = ThrottleAsync(async () =>
+      {
+         await InvokeAsync(async ()
+            => await ScrollService.ScrollToBottom(LIST_SELECTOR).ConfigureAwait(true)
+            ).ConfigureAwait(false);
+      }, TimeSpan.FromMilliseconds(SCROLL_TO_BOTTOM_THROTTLE));
    }
 
 
@@ -140,13 +150,14 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
             }
 
             streamingMessage.UpdateText(streamedThought.Content);
-            await ScrollToEndOfMessageList().ConfigureAwait(false);
+            ScrollToEndOfMessageList();
 
             if (streamedThought.IsStreamComplete)
             {
                streamingMessage.IsComplete = true;
                _streamingMessages.Remove(streamedThought.Id, out _);
                await UpdateChatStorageIfNeeded(thought, streamingMessage).ConfigureAwait(false);
+               ScrollToEndOfMessageList();
             }
          }
       }
@@ -167,7 +178,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
                 isComplete: true
                );
 
-            await ScrollToEndOfMessageList().ConfigureAwait(false);
+            ScrollToEndOfMessageList();
             await UpdateChatStorageIfNeeded(thought, message).ConfigureAwait(false);
          }
       }
@@ -320,7 +331,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
 
          _state.Message = string.Empty;
 
-         await ScrollToEndOfMessageList().ConfigureAwait(false);
+         ScrollToEndOfMessageList();
          await HandlePrompt(message).ConfigureAwait(false);
       }
    }
@@ -346,12 +357,11 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
       await InvokeAsync(StateHasChanged).ConfigureAwait(false);
    }
 
-   private async Task ScrollToEndOfMessageList()
-   {
-      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-      await Task.Delay(250).ConfigureAwait(false);
-      await ScrollService.ScrollToBottom(LIST_SELECTOR).ConfigureAwait(false);
-   }
+   //private async Task ScrollToEndOfMessageList()
+   //{
+   //   await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+   //   await ScrollService.ScrollToBottom(LIST_SELECTOR).ConfigureAwait(false);
+   //}
 
    async Task OnConversationChanged(Conversation conversation)
    {
@@ -365,10 +375,10 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
       try
       {
          conversation = await ChatStorage.LoadConversationAsync(conversation.Id).ConfigureAwait(false);
-         await ScrollToEndOfMessageList().ConfigureAwait(false);
+         ScrollToEndOfMessageList();
 
          await _state.InitializeConversation(conversation).ConfigureAwait(false);
-         await ScrollToEndOfMessageList().ConfigureAwait(false);
+         ScrollToEndOfMessageList();
       }
       catch (Exception ex)
       {
@@ -558,18 +568,26 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
 
    void OnIsModeratorModeEnabledChanged() => CognitiveChatMission.SetModeratedMode(_state.IsModeratorModeEnabled);
    public void SetNextTalker(AIdentity aIdentity) => CognitiveChatMission.SetNextTalker(aIdentity);
-   async Task ReplyToLastMessage(AIdentity talker)
+   Task ReplyToLastMessage(AIdentity talker)
    {
-      if (_state.NoConversation) return;
+      if (_state.NoConversation) return Task.CompletedTask;
 
-      SetNextTalker(talker);
-      await CognitiveChatMission.ReplyToMessageAsync(_state.CurrentConversation.Messages.LastOrDefault()).ConfigureAwait(false);
+      return ReplyToSelectedMessage(talker, _state.CurrentConversation.Messages.LastOrDefault());
    }
 
-   Task ReplyToSelectedMessage(AIdentity talker)
+   async Task ReplyToSelectedMessage(AIdentity talker, ConversationMessage? message)
    {
+      if (message is null) return;
+
       SetNextTalker(talker);
-      return CognitiveChatMission.ReplyToMessageAsync(_state.SelectedMessage);
+      try
+      {
+         await CognitiveChatMission.ReplyToMessageAsync(message).ConfigureAwait(false);
+      }
+      catch (Exception ex)
+      {
+         NotificationService.ShowError("Error while replying to message: " + ex.Message);
+      }
    }
 
    IEnumerable<ConversationMessage> GetMessagesToDisplay()
