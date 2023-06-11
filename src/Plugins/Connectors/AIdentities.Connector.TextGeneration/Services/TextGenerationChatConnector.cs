@@ -78,7 +78,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
 
    public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request, CancellationToken cancellationToken)
    {
-      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
+      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request);
 
       _logger.DumpAsJson("Performing request", apiRequest);
       var sw = Stopwatch.StartNew();
@@ -137,7 +137,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
 
    public async IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
+      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request);
 
       _logger.DumpAsJson("Performing stream request", apiRequest.Prompt);
       var sw = Stopwatch.StartNew();
@@ -192,7 +192,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream)
+   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request)
    {
       var defaultParameters = DefaultParameters;
 

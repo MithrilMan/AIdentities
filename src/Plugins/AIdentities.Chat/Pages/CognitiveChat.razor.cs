@@ -596,7 +596,8 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
 
       return _state.CurrentConversation.Messages
          .Union(_streamingMessages.Values.ToList())
-         .OrderBy(m => m.CreationDate);
+         .OrderBy(m => m.CreationDate)
+         .ToList(); // prevent enumeration changed exception
    }
 
    async Task StartVoiceRecognition() => await SpeechRecognitionService.StartSpeechRecognitionAsync(

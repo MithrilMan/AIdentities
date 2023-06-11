@@ -79,7 +79,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
 
    public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request, CancellationToken cancellationToken)
    {
-      var apiRequest = BuildCompletionRequest(request, false);
+      var apiRequest = BuildCompletionRequest(request);
 
       _logger.DumpAsJson("Performing request", apiRequest);
 
@@ -138,7 +138,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
 
    public async IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      var apiRequest = BuildCompletionRequest(request, false);
+      var apiRequest = BuildCompletionRequest(request);
 
       _logger.DumpAsJson("Performing stream request", apiRequest.Prompt);
       var sw = Stopwatch.StartNew();
@@ -189,7 +189,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private CompletionRequest BuildCompletionRequest(ICompletionRequest request, bool requireStream)
+   private CompletionRequest BuildCompletionRequest(ICompletionRequest request)
    {
       var defaultParameters = DefaultParameters;
 
