@@ -1,5 +1,7 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Net.Http.Json;
+using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors.Completion;
@@ -136,91 +138,50 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
 
    public async IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      // stream is not supported yet, fallback to normal request
-      var response = await RequestCompletionAsync(request, cancellationToken).ConfigureAwait(false);
+      var apiRequest = BuildCompletionRequest(request, false);
 
-      //using (ClientWebSocket webSocket = new ClientWebSocket())
-      //{
-      //   await webSocket.ConnectAsync(ChatStreamedEndPoint, cancellationToken).ConfigureAwait(false);
+      _logger.DumpAsJson("Performing stream request", apiRequest.Prompt);
+      var sw = Stopwatch.StartNew();
 
-      //   byte[] receiveBuffer = new byte[1024];
-      //   while (webSocket.State == WebSocketState.Open)
-      //   {
-      //      var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), cancellationToken).ConfigureAwait(false);
-      //      if (result.MessageType == WebSocketMessageType.Text)
-      //      {
-      //         string receivedMessage = System.Text.Encoding.UTF8.GetString(receiveBuffer, 0, result.Count);
-      //         yield return receivedMessage;
-      //      }
-      //   }
-      //}
+      using ClientWebSocket webSocket = new ClientWebSocket();
+      await webSocket.ConnectAsync(StreamedEndPoint, cancellationToken).ConfigureAwait(false);
 
-      if (response is null) yield break;
+      await webSocket.SendAsync(JsonSerializer.SerializeToUtf8Bytes(apiRequest), WebSocketMessageType.Text, true, cancellationToken).ConfigureAwait(false);
 
-      yield return new DefaultCompletionStreamedResponse
+      byte[] receiveBuffer = new byte[1024];
+      while (webSocket.State == WebSocketState.Open)
       {
-         GeneratedMessage = response.GeneratedMessage,
-         PromptTokens = response.PromptTokens,
-         CumulativeTotalTokens = response.TotalTokens,
-         CumulativeCompletionTokens = response.CompletionTokens,
-         CumulativeResponseTime = response.ResponseTime
-      };
+         var result = await webSocket.ReceiveAsync(new ArraySegment<byte>(receiveBuffer), cancellationToken).ConfigureAwait(false);
+         if (result.MessageType == WebSocketMessageType.Text)
+         {
+            var response = JsonDocument.Parse(receiveBuffer.AsMemory(0, result.Count));
 
-      //ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, true);
-      //_logger.LogDebug("Performing request ${apiRequest}", apiRequest.Messages);
+            //nothing to do, we expect an event. either "text_stream" or "stream_end"
+            if (!response.RootElement.TryGetProperty("event", out var eventType)) yield break;
 
-      //var sw = Stopwatch.StartNew();
+            switch (eventType.GetString())
+            {
+               case "stream_end":
+                  yield break;
+               case "text_stream":
+                  var generatedText = response.RootElement.GetProperty("text").GetString();
+                  yield return new DefaultCompletionStreamedResponse
+                  {
+                     GeneratedMessage = generatedText,
+                     PromptTokens = null,
+                     CumulativeTotalTokens = null, //TODO use a proper tokenizer
+                     CumulativeCompletionTokens = null,
+                     CumulativeResponseTime = sw.Elapsed
+                  };
+                  break;
+               default:
+                  _logger.LogError("Unexpected event type: {EventType}", eventType.GetString());
+                  yield break;
+            }
+         }
+      }
 
-      //using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
-      //{
-      //   Content = JsonContent.Create(apiRequest, null, _serializerOptions)
-      //};
-      //httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
-
-      //using var httpResponseMessage = await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-
-      //var stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-      //await using var streamScope = stream.ConfigureAwait(false);
-      //using var streamReader = new StreamReader(stream);
-      //while (streamReader.EndOfStream is false)
-      //{
-      //   cancellationToken.ThrowIfCancellationRequested();
-      //   var line = (await streamReader.ReadLineAsync(cancellationToken).ConfigureAwait(false))!;
-
-      //   if (line.StartsWith(STREAM_DATA_MARKER))
-      //      line = line[_streamDataMarkerLength..];
-
-      //   if (string.IsNullOrWhiteSpace(line)) continue; //empty line
-
-      //   if (line == "[DONE]") break;
-
-      //   ChatCompletionResponse? streamedResponse = null;
-      //   try
-      //   {
-      //      streamedResponse = JsonSerializer.Deserialize<ChatCompletionResponse>(line);
-      //   }
-      //   catch (Exception)
-      //   {
-      //      // if we can't deserialize the response, it's probably because it's an error, try to deserialize
-      //      // the rest of the stream as an error message
-      //      line += await streamReader.ReadToEndAsync(cancellationToken).ConfigureAwait(false);
-      //      var error = JsonSerializer.Deserialize<ErrorResponse>(line);
-      //      if (error?.Error is not null)
-      //         throw new Exception($"Request failed with status code {error.Error.Code}: {error.Error.Message}");
-      //   }
-
-      //   if (streamedResponse is not null)
-      //   {
-      //      yield return new ConversationalStreamedResponse
-      //      {
-      //         GeneratedMessage = streamedResponse?.Choices.FirstOrDefault()?.Message?.Content,
-      //         PromptTokens = streamedResponse?.Usage?.PromptTokens,
-      //         CumulativeTotalTokens = streamedResponse?.Usage?.TotalTokens,
-      //         CumulativeCompletionTokens = streamedResponse?.Usage?.CompletionTokens,
-      //         CumulativeResponseTime = sw.Elapsed
-      //      };
-      //   }
-      //}
+      sw.Stop();
    }
 
    /// <summary>
@@ -234,8 +195,6 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
 
       var completionRequest = new CompletionRequest(request.Prompt, defaultParameters);
 
-      //TopASamplings ignored
-      //if(request.TopASamplings != null) { }
       if (request.MaxGeneratedTokens != null) { completionRequest.MaxNewTokens = request.MaxGeneratedTokens; }
       if (request.RepetitionPenality != null) { completionRequest.RepetitionPenalty = request.RepetitionPenality; }
       if (request.RepetitionPenalityRange != null) { completionRequest.EncoderRepetitionPenalty = request.RepetitionPenalityRange; }
@@ -251,8 +210,6 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       // request.LogitBias
       // request.ModelId
       // request.TailFreeSampling
-      // request.TopASamplings
-      // request.UserId
 
       return completionRequest;
    }

@@ -1,11 +1,10 @@
 ﻿using System.Text;
-using Bogus;
 
 namespace AIdentities.Chat.Skills.IntroduceYourself;
 
 internal static class PromptTemplates
 {
-   public static IEnumerable<DefaultConversationalMessage> GetIntroductionPrompt(AIdentity aIdentity)
+   public static IEnumerable<DefaultConversationalMessage> GetIntroductionPrompt(AIdentity aIdentity, IEnumerable<string> participants)
    {
       var chatFeature = aIdentity.Features.Get<AIdentityChatFeature>();
       var background = chatFeature?.Background;
@@ -19,29 +18,31 @@ internal static class PromptTemplates
       //   """);
 
       var sb = new StringBuilder()
-         .AppendLine($"You are {aIdentity.Name} and you are participating to a new conversation.");
+         .AppendLine($"You are {aIdentity.Name} and you are participating to a conversation between you and {PromptTokens.TOKEN_PARTICIPANTS}");
 
       if (background != null)
       {
          sb.AppendLine($"Personal background: {background
             .Replace("\r\n", "")
-            .Replace("\n", "")
-            }");
+            .Replace("\n", "")}");
       }
 
       if (personality != null)
       {
          sb.AppendLine($"Personality: {personality
             .Replace("\r\n", "")
-            .Replace("\n", "")
-            }");
+            .Replace("\n", "")}");
       }
 
       sb.AppendLine($"""
       Goal: Based on your characteristics above, chime in saying something briefly that fits your personality.
       """)
-         .AppendLine(ReplyToPrompt.PromptTemplates.BuildExamples(chatFeature, aIdentity.Name ?? "Assistant"))
-         .AppendLine("Roleplay begins, you are joining a conversation between you and other characters:");
+         .AppendLine(PromptUtils.BuildAIdentityMessageStyleExamples(chatFeature, aIdentity.Name ?? "Assistant"))
+         .AppendLine($"Roleplay between you and {PromptTokens.TOKEN_PARTICIPANTS} begins. Talk only on behalf of {PromptTokens.TOKEN_AIDENTITY_NAME}.");
+      ;
+
+      sb.Replace(PromptTokens.TOKEN_PARTICIPANTS, PromptUtils.BuildParticipants(aIdentity, participants))
+         .Replace(PromptTokens.TOKEN_AIDENTITY_NAME, aIdentity.Name);
 
       yield return new DefaultConversationalMessage(
          Content: sb.ToString(),
@@ -49,10 +50,10 @@ internal static class PromptTemplates
          Name: aIdentity.Name
       );
 
-      yield return new DefaultConversationalMessage(
-         Content: $"Hey it seems someone is joining us, look, it's {aIdentity.Name}",
-         Role: DefaultConversationalRole.User,
-         Name: "Guest"
-         );
+      //yield return new DefaultConversationalMessage(
+      //   Content: $"Hey it seems someone is joining us, look, it's {aIdentity.Name}",
+      //   Role: DefaultConversationalRole.User,
+      //   Name: "Guest"
+      //   );
    }
 }

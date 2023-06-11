@@ -14,6 +14,13 @@ public partial class GenerativeChatMessage : ComponentBase
    [Parameter] public EventCallback<ConversationMessage> OnPlayAudio { get; set; }
    [Parameter] public EventCallback<ConversationMessage> OnStopAudio { get; set; }
 
+   bool HasAudio => Message.Audio is { Length: > 0 };
+
+   bool IsGeneratingSpeech => Message is ExtendedConversationMessage and { IsGeneratingSpeech: true };
+
+   bool IsCompleteMessage => Message is not ExtendedConversationMessage
+      || Message is ExtendedConversationMessage and { IsComplete: true };
+
    private async Task CopyToClipboard()
    {
       await JSRuntime.InvokeVoidAsync("navigator.clipboard.writeText", Message.Text).ConfigureAwait(false);

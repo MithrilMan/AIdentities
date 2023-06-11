@@ -155,10 +155,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
 
       var sw = Stopwatch.StartNew();
 
-      using var response = await _retryPolicy.ExecuteAsync(async () =>
-      {
-         return await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-      }).ConfigureAwait(false);
+      var response = await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
       using var sseReader = new SseReader(await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false));
 
       SharpToken.GptEncoding? tokenizer = null;

@@ -32,7 +32,14 @@
                   }
                </div>
                <MudPaper Class="pa-1 overflow-x-auto" Elevation="2" Style="@MessageStyle">
-                  <MudMarkdown Value="@Message.Text" />
+                  @if (IsCompleteMessage)
+                  {
+                     <MudMarkdown Value="@Message.Text" />
+                  }
+                  else
+                  {
+                     <pre>@Message.Text</pre>
+                  }
                </MudPaper>
             </MudStack>
             <MudSpacer />
@@ -73,7 +80,14 @@
             <MudStack Row="true" AlignItems="AlignItems.Center" Spacing="0">
                <MudSpacer />
                <MudPaper Class="pa-1 overflow-x-auto mud-theme-primary" Elevation="2" Style="@MessageStyle">
-                  <MudMarkdown Value="@Message.Text" />
+                  @if (IsCompleteMessage)
+                  {
+                     <MudMarkdown Value="@Message.Text" />
+                  }
+                  else
+                  {
+                     <pre>@Message.Text</pre>
+                  }
                </MudPaper>
                <div style="width: 46px" class="@MessageIconClass">
                   @if (IsGeneratingSpeech)
@@ -101,9 +115,4 @@
    protected string MessageIconClass => CssBuilder.Default("d-flex flex-shrink-0 justify-center")
       .AddClass("animate__animated animate__heartBeat animate__infinite", IsGeneratingSpeech)
       .Build();
-
-
-   bool IsGeneratingSpeech => Message is ExtendedConversationMessage extendedMessage && extendedMessage.IsGeneratingSpeech;
-
-   bool HasAudio => Message.Audio is { Length: > 0 };
 }

@@ -141,7 +141,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
 
       foreach (var aidentityId in conversation.AIdentityIds)
       {
-         AddParticipant(aidentityId, false);
+         await AddParticipant(aidentityId, false).ConfigureAwait(false);
       }
 
       Context.NextTalker = Context.ParticipatingAIdentities.Count > 0 ? Context.ParticipatingAIdentities.FirstOrDefault().Value.AIdentity : null;

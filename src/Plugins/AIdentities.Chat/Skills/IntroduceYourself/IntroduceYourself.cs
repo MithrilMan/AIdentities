@@ -4,6 +4,11 @@ namespace AIdentities.Chat.Skills.IntroduceYourself;
 
 public partial class IntroduceYourself : Skill
 {
+   /// <summary>
+   /// We expect the conversation participants to be in the context with this key.
+   /// </summary>
+   public const string PARTICIPATING_AIDENTITIES_KEY = nameof(CognitiveChatMissionContext.ParticipatingAIdentities);
+
    readonly ILogger<IntroduceYourself> _logger;
 
    public IntroduceYourself(ILogger<IntroduceYourself> logger)
@@ -33,9 +38,21 @@ public partial class IntroduceYourself : Skill
 
       var aidentity = context.AIdentity;
 
+      // check in the context if there is a conversation
+      if (!TryExtractFromContext<Dictionary<Guid, ParticipatingAIdentity>>(PARTICIPATING_AIDENTITIES_KEY, context, out var participants))
+      {
+         yield return context.ActionThought("I don't have a conversation to examine, using the prompt instead");
+      }
+
+      var participantNames = participants?.Select(p => p.Value.AIdentity.Name) ?? Array.Empty<string>();
+      if (!participantNames.Contains("User"))
+      {
+         participantNames = participantNames.Append("User");
+      }
+
       var streamedResult = connector.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest(aidentity)
       {
-         Messages = PromptTemplates.GetIntroductionPrompt(aidentity),
+         Messages = PromptTemplates.GetIntroductionPrompt(aidentity, participantNames),
          Temperature = 0.7f, //TODO: make this configurable based on the AIdentity
          MaxGeneratedTokens = 100 //TODO: make this configurable based on the AIdentity
       }, cancellationToken).ConfigureAwait(false);

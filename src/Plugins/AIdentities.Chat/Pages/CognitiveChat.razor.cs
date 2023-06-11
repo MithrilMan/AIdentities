@@ -124,7 +124,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
       {
          if (thought.AIdentityId == CognitiveChatMission.ChatKeeper.Id)
          {
-            if (!_streamingChatKeeperThoughts.TryGetValue(streamedThought.Id, out var streamingThought))
+            if (!_streamingChatKeeperThoughts.TryGetValue(streamedThought.Id, out _))
             {
                _streamingChatKeeperThoughts[streamedThought.Id] = streamedThought;
             }
