@@ -1,16 +1,26 @@
 ﻿using System.Diagnostics.CodeAnalysis;
-using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
 using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 using AIdentities.Shared.Features.CognitiveEngine.Thoughts;
+using Fluid;
 
 namespace AIdentities.Shared.Features.CognitiveEngine.Skills;
 
 public abstract class Skill : ISkill
 {
-   SkillDefinition ISkill.Definition { get; set; } = default!;
+   protected ILogger Logger { get; }
+   protected IAIdentityProvider AIdentityProvider { get; }
+   protected FluidParser TemplateParser { get; }
 
+   SkillDefinition ISkill.Definition { get; set; } = default!;
    public SkillDefinition Definition => ((ISkill)this).Definition;
    public string Name => ((ISkill)this).Definition.Name;
+
+   public Skill(ILogger logger, IAIdentityProvider aIdentityProvider, FluidParser templateParser)
+   {
+      Logger = logger;
+      AIdentityProvider = aIdentityProvider;
+      TemplateParser = templateParser;
+   }
 
    public async IAsyncEnumerable<Thought> ExecuteAsync(
       Prompt prompt,
@@ -30,6 +40,15 @@ public abstract class Skill : ISkill
          yield return thought;
       }
    }
+
+   /// <summary>
+   /// This method is called when the skill is discovered by the engine.
+   /// Skills are instantiated once and are stateless, so the default prompt templates have to be created once too.
+   /// If a skill is customizable per AIdentity, a best practice is to create the default prompt templates once per AIdentity,
+   /// ensuring to react to AIdentity changes (e.g. by caching compiled templates along with the prompt hash, in order to 
+   /// invalidate them when the AIdentity changes).
+   /// </summary>
+   protected abstract void CreateDefaultPromptTemplates();
 
    /// <summary>
    /// Check if the inputs are valid.

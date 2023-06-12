@@ -79,7 +79,7 @@ public class BooruAIdentityImporter : IAIdentityImporter
             string base64Data = Convert.ToBase64String(buffer);
             var newAIdentity = new AIdentity
             {
-               Name = decodedJson.Name,
+               Name = decodedJson.Name ?? Guid.NewGuid().ToString(),
                Description = decodedJson.Description,
                //FirstMessage = decodedJson.First_Mes,
                Personality = decodedJson.Personality,

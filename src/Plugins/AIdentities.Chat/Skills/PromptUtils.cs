@@ -33,7 +33,7 @@ public static class PromptUtils
       if (exampleMessages is null or { Count: 0 }) return null;
 
       var sb = new StringBuilder()
-         .AppendLine(PromptTokens.EXAMPLE_MESSAGES_INSTRUCTION)
+         .AppendLine(EXAMPLE_MESSAGES_INSTRUCTION)
          .Replace(PromptTokens.TOKEN_AIDENTITY_NAME, aidentityName);
 
       foreach (var exampleMessage in exampleMessages)

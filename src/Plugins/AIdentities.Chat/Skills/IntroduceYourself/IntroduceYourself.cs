@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Fluid;
 
 namespace AIdentities.Chat.Skills.IntroduceYourself;
 
@@ -9,12 +10,8 @@ public partial class IntroduceYourself : Skill
    /// </summary>
    public const string PARTICIPATING_AIDENTITIES_KEY = nameof(CognitiveChatMissionContext.ParticipatingAIdentities);
 
-   readonly ILogger<IntroduceYourself> _logger;
-
-   public IntroduceYourself(ILogger<IntroduceYourself> logger)
-   {
-      _logger = logger;
-   }
+   public IntroduceYourself(ILogger<IntroduceYourself> logger, IAIdentityProvider aIdentityProvider, FluidParser templateParser)
+      : base(logger, aIdentityProvider, templateParser) { }
 
    protected override bool ValidateInputs(
       Prompt prompt,

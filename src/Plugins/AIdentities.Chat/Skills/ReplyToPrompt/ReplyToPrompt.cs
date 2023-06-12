@@ -1,4 +1,6 @@
-﻿namespace AIdentities.Chat.Skills.ReplyToPrompt;
+﻿using Fluid;
+
+namespace AIdentities.Chat.Skills.ReplyToPrompt;
 
 public partial class ReplyToPrompt : Skill
 {
@@ -17,15 +19,10 @@ public partial class ReplyToPrompt : Skill
    /// </summary>
    public const string MESSAGE_TO_REPLY_TO_KEY = nameof(CognitiveChatMissionContext.MessageToReplyTo);
 
-   readonly ILogger<ReplyToPrompt> _logger;
-   readonly IAIdentityProvider _aIdentityProvider;
+   public ReplyToPrompt(ILogger<ReplyToPrompt> logger, IAIdentityProvider aIdentityProvider, FluidParser templateParser)
+      : base(logger, aIdentityProvider, templateParser) { }
 
-   public ReplyToPrompt(ILogger<ReplyToPrompt> logger, IAIdentityProvider aIdentityProvider)
-   {
-      _logger = logger;
-      _aIdentityProvider = aIdentityProvider;
-
-   }
+   protected override void CreateDefaultPromptTemplates() { }
 
    protected override async IAsyncEnumerable<Thought> ExecuteAsync(
       SkillExecutionContext context,
@@ -66,7 +63,7 @@ public partial class ReplyToPrompt : Skill
          var conversationMessage = prompt switch
          {
             UserPrompt userPrompt => new ConversationMessage(prompt.Text, userPrompt.UserId, "User"),
-            AIdentityPrompt aIdentityPrompt => new ConversationMessage(prompt.Text, _aIdentityProvider.Get(aIdentityPrompt.AIdentityId) ?? aidentity),
+            AIdentityPrompt aIdentityPrompt => new ConversationMessage(prompt.Text, AIdentityProvider.Get(aIdentityPrompt.AIdentityId) ?? aidentity),
             _ => null
          };
          if (conversationMessage is not null)

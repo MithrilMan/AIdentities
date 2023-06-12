@@ -1,21 +1,22 @@
 ﻿using AIdentities.Shared.Services.EventBus;
+using Fluid;
 
 namespace AIdentities.Chat.Skills.InviteToChat;
 
 public partial class InviteToChat : Skill
 {
-   readonly ILogger<InviteToChat> _logger;
-   readonly IAIdentityProvider _aIdentityProvider;
    readonly IEventBus _eventBus;
 
    public InviteToChat(ILogger<InviteToChat> logger,
                        IAIdentityProvider aIdentityProvider,
+                       FluidParser templateParser,
                        IEventBus eventBus)
+      : base(logger, aIdentityProvider, templateParser)
    {
-      _logger = logger;
-      _aIdentityProvider = aIdentityProvider;
       _eventBus = eventBus;
    }
+
+   protected override void CreateDefaultPromptTemplates() { }
 
    protected override async IAsyncEnumerable<Thought> ExecuteAsync(
       SkillExecutionContext context,
@@ -26,8 +27,8 @@ public partial class InviteToChat : Skill
       var characteristicsToHave = CharacteristicToHave(context);
       if (characteristicsToHave != null)
       {
-         var aidentity = _aIdentityProvider.
-            All()
+         var aidentity = AIdentityProvider
+            .All()
             .FirstOrDefault(a => a.Personality?.Contains(characteristicsToHave, StringComparison.InvariantCultureIgnoreCase) ?? false);
 
          if (aidentity is null)
@@ -46,7 +47,7 @@ public partial class InviteToChat : Skill
          var whoToInvite = WhoToInvite(context);
          if (whoToInvite is not null)
          {
-            var aidentity = _aIdentityProvider.Get(whoToInvite);
+            var aidentity = AIdentityProvider.Get(whoToInvite);
 
             if (aidentity is null)
             {

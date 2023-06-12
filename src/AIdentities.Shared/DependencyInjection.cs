@@ -1,5 +1,4 @@
-﻿using AIdentities.Shared.Features.AIdentities.Services;
-using AIdentities.Shared.Features.CognitiveEngine;
+﻿using AIdentities.Shared.Features.CognitiveEngine;
 using AIdentities.Shared.Features.CognitiveEngine.Components;
 using AIdentities.Shared.Features.CognitiveEngine.Engines.Reflexive;
 using AIdentities.Shared.Features.CognitiveEngine.Memory.Conversation;
@@ -7,6 +6,7 @@ using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Features.Core.SpeechRecognition;
 using AIdentities.Shared.Plugins.Connectors;
 using AIdentities.Shared.Services.EventBus;
+using Fluid;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AIdentities.Shared;
@@ -34,6 +34,9 @@ public static class DependencyInjection
       services.AddScoped(typeof(IConnectorsManager<>), typeof(ConnectorsManager<>));
 
       services.AddScoped<ISpeechRecognitionService, BrowserSpeechRecognitionService>();
+
+      // register a singleton instance of the FluidParser to be used by the various cognitive engines.
+      services.AddSingleton(sp => new FluidParser(new FluidParserOptions() { AllowFunctions = false }));
 
       RegisterCogntiveEngines(services);
 

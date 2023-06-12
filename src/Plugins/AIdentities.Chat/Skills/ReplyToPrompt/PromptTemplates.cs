@@ -107,9 +107,6 @@ internal static class PromptTemplates
       IEnumerable<string> participants,
       AIdentityChatFeature chatFeature)
    {
-      var foundTokens = new HashSet<string>();
-      //find all tokens contained in the FullPrompt
-     
 
       var sb = new StringBuilder()
          .Append(chatFeature.FullPrompt)
@@ -124,5 +121,11 @@ internal static class PromptTemplates
             .Replace("\n", "")
             ?? "")
          ;
+
+      yield return new DefaultConversationalMessage(
+         Role: DefaultConversationalRole.System,
+         Content: sb.ToString(),
+         Name: null
+         );
    }
 }
