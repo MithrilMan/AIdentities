@@ -54,7 +54,7 @@ public abstract class Skill : ISkill
    protected abstract IAsyncEnumerable<Thought> ExecuteAsync(SkillExecutionContext context, CancellationToken cancellationToken);
 
    /// <summary>
-   /// Extracts the typeod arguments from the text.
+   /// Tries to extracts the typed arguments from the text.
    /// </summary>
    /// <typeparam name="TReturnValue">The type of the arguments to extract.</typeparam>
    /// <param name="text">The text to extract the arguments from.</param>

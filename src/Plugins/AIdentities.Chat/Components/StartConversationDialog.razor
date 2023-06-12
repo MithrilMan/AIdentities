@@ -6,7 +6,7 @@
                <MudAvatar Size="Size.Medium"><MudImage Src="@_state.SelectedAIdentity?.Image" /></MudAvatar>
             </MudStack>
             <MudAutocomplete T="AIdentity" AutoFocus="true" Immediate="true" Variant="Variant.Filled"
-                             @bind-Value="_state.SelectedAIdentity" For="@(() => _state.SelectedAIdentity)"
+            @bind-Value="_state.SelectedAIdentity" For="@(() => _state.SelectedAIdentity)"
                              SearchFunc="@Search" ToStringFunc="@AIdentityConverter"
                              Placeholder="Select the AIdentity you want to talk with">
                <ItemTemplate>
@@ -34,7 +34,10 @@
 
    private Task<IEnumerable<AIdentity>> Search(string value)
    {
-      var allItems = AIdentityProvider.All();
+      var allItems = AIdentityProvider.All()
+         .OrderBy(a => a.Name, StringComparer.OrdinalIgnoreCase)
+         .AsEnumerable();
+
       if (string.IsNullOrWhiteSpace(value))
       {
          return Task.FromResult(allItems);

@@ -3,6 +3,8 @@
 namespace AIdentities.Chat.Skills;
 public static class PromptUtils
 {
+   public const string EXAMPLE_MESSAGES_INSTRUCTION = $"This is how {PromptTokens.TOKEN_AIDENTITY_NAME} should talk";
+
    public static string BuildParticipants(AIdentity aIdentity, IEnumerable<string> participants)
    {
       participants = participants.Where(p => p != aIdentity.Name);

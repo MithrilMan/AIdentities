@@ -17,8 +17,6 @@ public partial class ReplyToPrompt : Skill
    /// </summary>
    public const string MESSAGE_TO_REPLY_TO_KEY = nameof(CognitiveChatMissionContext.MessageToReplyTo);
 
-   static readonly JsonSerializerOptions _jsonOptionExample = new() { WriteIndented = true };
-
    readonly ILogger<ReplyToPrompt> _logger;
    readonly IAIdentityProvider _aIdentityProvider;
 

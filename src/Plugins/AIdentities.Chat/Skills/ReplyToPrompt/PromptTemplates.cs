@@ -50,6 +50,16 @@ internal static class PromptTemplates
 
       var chatFeature = aIdentity.Features.Get<AIdentityChatFeature>();
 
+      if (chatFeature is { UseFullPrompt: true })
+      {
+         foreach (var item in BuildWithFullPrompt(aIdentity, chatHistory, participants, chatFeature))
+         {
+            yield return item;
+         }
+         yield break;
+      }
+
+
       var sb = new StringBuilder(CONVERSATION_PROMPT)
          .Replace(PromptTokens.TOKEN_PARTICIPANTS, PromptUtils.BuildParticipants(aIdentity, participants))
          .Replace(PromptTokens.TOKEN_AIDENTITY_NAME, aIdentity.Name)
@@ -89,5 +99,30 @@ internal static class PromptTemplates
       //{
       //   yield return CreateMessage(chatHistory.Last());
       //}
+   }
+
+   private static IEnumerable<DefaultConversationalMessage> BuildWithFullPrompt(
+      AIdentity aIdentity,
+      IEnumerable<ConversationMessage> chatHistory,
+      IEnumerable<string> participants,
+      AIdentityChatFeature chatFeature)
+   {
+      var foundTokens = new HashSet<string>();
+      //find all tokens contained in the FullPrompt
+     
+
+      var sb = new StringBuilder()
+         .Append(chatFeature.FullPrompt)
+         .Replace(PromptTokens.TOKEN_PARTICIPANTS, PromptUtils.BuildParticipants(aIdentity, participants))
+         .Replace(PromptTokens.TOKEN_AIDENTITY_NAME, aIdentity.Name)
+         .Replace(PromptTokens.TOKEN_AIDENTITY_BACKGROUND, chatFeature?.Background?
+            .Replace("\r\n", "")
+            .Replace("\n", "")
+            ?? "")
+         .Replace(PromptTokens.TOKEN_AIDENTITY_PERSONALITY, aIdentity.Personality?
+            .Replace("\r\n", "")
+            .Replace("\n", "")
+            ?? "")
+         ;
    }
 }
