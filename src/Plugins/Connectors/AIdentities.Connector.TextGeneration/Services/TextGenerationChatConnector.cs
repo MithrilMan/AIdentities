@@ -1,11 +1,15 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Threading;
 using AIdentities.Shared.Features.AIdentities.Models;
 using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Http.Features;
+using Polly.Retry;
+using Polly;
 
 namespace AIdentities.Connector.TextGeneration.Services;
 public class TextGenerationChatConnector : IConversationalConnector, IDisposable
@@ -34,6 +38,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    public IFeatureCollection Features => new FeatureCollection();
 
    private HttpClient _client = default!;
+   readonly AsyncRetryPolicy _retryPolicy;
    private readonly JsonSerializerOptions _serializerOptions;
 
    public TextGenerationChatConnector(ILogger<TextGenerationChatConnector> logger, IPluginSettingsManager settingsManager)
@@ -46,8 +51,37 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
          DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
       };
 
+      _retryPolicy = CreateRetryPolicy();
+
       _settingsManager.OnSettingsUpdated += OnSettingsUpdated;
       ApplySettings(_settingsManager.Get<TextGenerationSettings>());
+   }
+
+   /// <summary>
+   /// Creates the retry policy for the cognitive engine.
+   /// This is applied everytime a call to a generation API fails with an
+   /// exception specified in the retry policy.
+   /// The default implementation is a simple exponential backoff that tries 3 times
+   /// and catch all exceptions.
+   /// </summary>
+   /// <returns></returns>
+   private AsyncRetryPolicy CreateRetryPolicy()
+   {
+      // Define the retry policy
+      var retryPolicy = Policy
+         .Handle<Exception>()
+         .WaitAndRetryAsync(
+         3,
+         retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+         (exception, timeSpan, retryCount, context) =>
+         {
+            _logger.LogWarning("Retry {RetryCount} due to {ExceptionType} with message {Message}",
+                               retryCount,
+                               exception.GetType().Name,
+                               exception.Message);
+         });
+
+      return retryPolicy;
    }
 
    private void ApplySettings(TextGenerationSettings settings)
@@ -135,21 +169,40 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       return response;
    }
 
-   public async IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, CancellationToken cancellationToken)
    {
-      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request);
-
-      _logger.DumpAsJson("Performing stream request", apiRequest.Prompt);
       var sw = Stopwatch.StartNew();
 
-      using ClientWebSocket webSocket = new ClientWebSocket();
-      await webSocket.ConnectAsync(ChatStreamedEndPoint, cancellationToken).ConfigureAwait(false);
+      return ProcessStreamResponse(
+         request: BuildChatCompletionRequest(request),
+         stopWatch: sw,
+         cancellationToken: cancellationToken
+         );
+   }
 
-      //JsonContent content = JsonContent.Create(apiRequest, mediaType: null, null);
-      // oobabooga TextGeneration API implementation requires content-lenght
-      //await content.LoadIntoBufferAsync().ConfigureAwait(false);
+   private async IAsyncEnumerable<IConversationalStreamedResponse> ProcessStreamResponse(
+      ChatCompletionRequest request,
+      Stopwatch stopWatch,
+      [EnumeratorCancellation] CancellationToken cancellationToken)
+   {
+      _logger.DumpAsJson("Performing stream request", request.Prompt);
 
-      await webSocket.SendAsync(JsonSerializer.SerializeToUtf8Bytes(apiRequest), WebSocketMessageType.Text, true, cancellationToken).ConfigureAwait(false);
+      using ClientWebSocket webSocket = await _retryPolicy.ExecuteAsync(async () =>
+      {
+         var client = new ClientWebSocket();
+         try
+         {
+            await client.ConnectAsync(ChatStreamedEndPoint, cancellationToken).ConfigureAwait(false);
+            await client.SendAsync(JsonSerializer.SerializeToUtf8Bytes(request), WebSocketMessageType.Text, true, cancellationToken).ConfigureAwait(false);
+         }
+         catch (Exception)
+         {
+            client?.Dispose();
+            throw;
+         }
+
+         return client;
+      }).ConfigureAwait(false);
 
       byte[] receiveBuffer = new byte[1024];
       while (webSocket.State == WebSocketState.Open)
@@ -174,7 +227,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
                      PromptTokens = null,
                      CumulativeTotalTokens = null, //TODO use a proper tokenizer
                      CumulativeCompletionTokens = null,
-                     CumulativeResponseTime = sw.Elapsed
+                     CumulativeResponseTime = stopWatch.Elapsed
                   };
                   break;
                default:
@@ -183,8 +236,6 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
             }
          }
       }
-
-      sw.Stop();
    }
 
    /// <summary>

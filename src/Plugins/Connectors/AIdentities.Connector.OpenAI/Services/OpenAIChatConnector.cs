@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
@@ -142,28 +143,45 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       }
    }
 
-   public async IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, CancellationToken cancellationToken)
    {
-      ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, true);
-      _logger.DumpAsJson("Performing stream request", apiRequest.Messages);
-
-      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
-      {
-         Content = JsonContent.Create(apiRequest, null, _serializerOptions)
-      };
-      httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
-
-      var sw = Stopwatch.StartNew();
-
-      var response = await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-      using var sseReader = new SseReader(await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false));
-
       SharpToken.GptEncoding? tokenizer = null;
       try
       {
          tokenizer = SharpToken.GptEncoding.GetEncodingForModel(request.ModelId ?? DefaultModel);
       }
       catch { _logger.LogDebug("Unable to find tokenizer for model {ModelId}, token counter not available", request.ModelId); }
+
+      var sw = Stopwatch.StartNew();
+
+      return ProcessStreamResponse(
+         request: BuildChatCompletionRequest(request, true),
+         stopWatch: sw,
+         tokenizer: tokenizer,
+         cancellationToken: cancellationToken
+         );
+   }
+
+   private async IAsyncEnumerable<IConversationalStreamedResponse> ProcessStreamResponse(
+      ChatCompletionRequest request,
+      Stopwatch stopWatch,
+      SharpToken.GptEncoding? tokenizer,
+     [EnumeratorCancellation] CancellationToken cancellationToken)
+   {
+      _logger.DumpAsJson("Performing stream request", request.Messages);
+
+      using var apiRequest = new HttpRequestMessage(HttpMethod.Post, EndPoint)
+      {
+         Content = JsonContent.Create(request, null, _serializerOptions)
+      };
+      apiRequest.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+      using var response = await _retryPolicy.ExecuteAsync(async () =>
+      {
+         return await _client.SendAsync(apiRequest, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+      }).ConfigureAwait(false);
+
+      using var sseReader = new SseReader(await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false));
 
       int cumulativeCompletionTokens = 0;
       while (true && !cancellationToken.IsCancellationRequested)
@@ -202,11 +220,10 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
                PromptTokens = streamedResponse.Usage?.PromptTokens,
                CumulativeTotalTokens = streamedResponse.Usage?.TotalTokens,
                CumulativeCompletionTokens = cumulativeCompletionTokens,
-               CumulativeResponseTime = sw.Elapsed
+               CumulativeResponseTime = stopWatch.Elapsed
             };
          }
       }
-      sw.Stop();
    }
 
    /// <summary>

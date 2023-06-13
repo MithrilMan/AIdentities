@@ -13,6 +13,8 @@ public partial class IntroduceYourself : Skill
    public IntroduceYourself(ILogger<IntroduceYourself> logger, IAIdentityProvider aIdentityProvider, FluidParser templateParser)
       : base(logger, aIdentityProvider, templateParser) { }
 
+   protected override void CreateDefaultPromptTemplates() { }
+
    protected override bool ValidateInputs(
       Prompt prompt,
       SkillExecutionContext context,
