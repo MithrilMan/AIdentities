@@ -61,8 +61,6 @@ public partial class CognitiveChat
       /// </summary>
       public IPlayAudioStream PlayAudioStream { get; private set; } = default!;
 
-      public string ParticipatingAIdentitiesTooltip => string.Join(", ", CognitiveChatMission.ParticipatingAIdentities.Select(aidentity => aidentity.Name));
-
       public CognitiveChatMission CognitiveChatMission { get; private set; } = default!;
 
       public IAIdentityProvider AIdentityProvider { get; private set; } = default!;
@@ -95,6 +93,20 @@ public partial class CognitiveChat
       /// </summary>
       public bool IsExecutingSkill => ExecutingSkill != null;
 
+      /// <summary>
+      /// True if the conversation is being loaded.
+      /// </summary>
+      public bool IsLoadingConversation { get; set; }
+
+      /// <summary>
+      /// The next talker skills.
+      /// </summary>
+      public List<string> AvailableNextTalkerSkills { get; } = new();
+
+      /// <summary>
+      /// The active next talker skill.
+      /// If the user sends a message, this skill will be used to reply to it.
+      /// </summary>
       public string? ActiveSkill { get; set; }
 
       public void Initialize(CognitiveChatMission cognitiveChatMission, IAIdentityProvider aidentityProvider, IPlayAudioStream playAudioStream)
@@ -106,8 +118,13 @@ public partial class CognitiveChat
 
       public async Task InitializeConversation(Conversation conversation)
       {
+         ActiveSkill = null;
          await PlayAudioStream.StopAudioFiles().ConfigureAwait(false);
          await CognitiveChatMission.StartNewConversationAsync(conversation).ConfigureAwait(false);
+         if (AIdentityProvider.Get(conversation.AIdentityIds.FirstOrDefault()) is AIdentity aidentity)
+         {
+            SetNextTalker(aidentity);
+         }
          SelectedMessage = conversation.Messages.FirstOrDefault();
       }
 
@@ -116,6 +133,21 @@ public partial class CognitiveChat
          _ = PlayAudioStream.StopAudioFiles();
          ChatKeeperThoughts.Clear();
          CognitiveChatMission.ClearConversation();
+         ActiveSkill = null;
+      }
+
+      public void SetNextTalker(AIdentity aIdentity)
+      {
+         // If the next talker is the same as the current one, do nothing.
+         if (!CognitiveChatMission.SetNextTalker(aIdentity)) return;
+
+         ActiveSkill = null;
+         AvailableNextTalkerSkills.Clear();
+
+         var aIdentityFeatureSkills = aIdentity.Features.Get<AIdentityFeatureSkills>();
+         if (aIdentityFeatureSkills is not { AreSkillsEnabled: true, EnabledSkills.Count: > 0 }) return;
+
+         AvailableNextTalkerSkills.AddRange(aIdentityFeatureSkills.EnabledSkills.Select(skillName => skillName));
       }
    }
 

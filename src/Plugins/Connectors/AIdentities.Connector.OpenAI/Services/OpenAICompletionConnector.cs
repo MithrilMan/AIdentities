@@ -35,6 +35,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
    protected string DefaultModel => _settingsManager.Get<OpenAISettings>().DefaultCompletionModel;
 
    private HttpClient _client = default!;
+   private OpenAISettings _settings = default!;
    readonly AsyncRetryPolicy _retryPolicy;
    private readonly JsonSerializerOptions _serializerOptions;
 
@@ -96,6 +97,8 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
 
    private void ApplySettings(OpenAISettings settings)
    {
+      _settings = settings;
+
       // we can't modify a HttpClient once it's created, so we need to dispose it and create a new one
       _client?.Dispose();
       _client = new HttpClient

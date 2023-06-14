@@ -11,6 +11,9 @@ public partial class TabGeneric
 
          RuleFor(x => x.Description)
             .NotEmpty();
+
+         RuleFor(x => x.Personality)
+            .NotEmpty();
       }
    }
    readonly Validator _validator = new Validator();

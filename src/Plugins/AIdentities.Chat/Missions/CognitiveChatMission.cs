@@ -146,9 +146,7 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
          await AddParticipant(aidentityId, false).ConfigureAwait(false);
       }
 
-      Context.NextTalker = participants.Count > 0 ? participants.FirstOrDefault().Value.AIdentity : null;
-
-      if (conversation.Messages is not { Count: > 0 })
+      if (conversation.MessageCount == 0)
       {
          // if the conversation is empty, we ask the first AIdentity that participate to the discussion, to start talking.
          var firstParticipant = participants.First().Value.CognitiveEngine;
@@ -208,10 +206,19 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       await AddParticipant(aidentity.Id, makeAIdentityIntroduceItself: true).ConfigureAwait(false);
    }
 
-   public void SetNextTalker(AIdentity aIdentity)
+   /// <summary>
+   /// Set the next talker.
+   /// If the aidentity is already the next talker, nothing happens.
+   /// </summary>
+   /// <param name="aIdentity">The next talker</param>
+   /// <returns>true if the next talker has been changed, false otherwise</returns>
+   public bool SetNextTalker(AIdentity aIdentity)
    {
+      if (Context.NextTalker == aIdentity) return false;
+
       Context.NextTalker = aIdentity;
       Thoughts.Writer.TryWrite(new ActionThought(null, ChatKeeper, $"The next talker will be {aIdentity.Name}"));
+      return true;
    }
 
    public void SetModeratedMode(bool moderatedMode)

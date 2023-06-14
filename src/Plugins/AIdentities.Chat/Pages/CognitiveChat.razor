@@ -9,6 +9,13 @@
    </MudPaper>
 </MudOverlay>
 
+<MudOverlay Visible="@_state.IsLoadingConversation" DarkBackground="true">
+   <MudPaper>
+      <MudProgressLinear Indeterminate="true" />
+      <MudText Typo="Typo.h4">Loading Conversation</MudText>
+   </MudPaper>
+</MudOverlay>
+
 <MudGrid Class="flex-grow-1" Spacing="1" Justify="Justify.SpaceBetween">
    <MudItem xs="9" Class="mud-height-full d-flex flex-column gap-1">
       <MudPaper>
@@ -64,11 +71,11 @@
                      </MudPopover>
                   </div>
 
-                  @foreach (var aid in _state.ParticipatingAIdentities)
+                  @foreach (var aid in _state.ParticipatingAIdentities.ToList())
                   {
                      @if (_state.IsModeratorModeEnabled)
                      {
-                        <div class="cursor-pointer" @onclick="@(() => SetNextTalker(aid))">
+                        <div class="cursor-pointer" @onclick="@(() => _state.SetNextTalker(aid))">
                            <MudMenu AnchorOrigin="Origin.BottomLeft" Color="Color.Tertiary" Size="Size.Large" ActivationEvent="MouseEvent.MouseOver">
                               <ActivatorContent>
                                  <MudAvatar Size="Size.Medium" Class="@GetParticipantClass(aid)"><MudImage Src="@aid.GetImageUri()" /></MudAvatar>
@@ -92,15 +99,14 @@
                </div>
                @if (_state.IsModeratorModeEnabled)
                {
-                  <MudSelectExtended T="string" ItemCollection="@GetAIdentitySkills(CognitiveChatMission.Context.NextTalker)"
-                  @bind-Value="_state.ActiveSkill"
-                                     ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium"
-                                     InputClass="ma-0" AutoFocus="true">
-                  </MudSelectExtended>
-                  @*@foreach (var skill in GetAIdentitySkills(aid))
-                  {
-                     <MudMenuItem OnClick="() => ExecuteSkillAsync(aid, skill)">@skill.Name</MudMenuItem>
-                  }*@
+                  <MudComboBox @bind-Value="@_state.ActiveSkill" @bind-Text="@_state.ActiveSkill" Variant="Variant.Filled" ToggleSelection="true"
+                               Placeholder="Select next talker skill, or clear to simply reply" Clearable="true"
+                               Editable="true" InputPresenter="MudExtensions.Enums.ValuePresenter.Chip">
+                     @foreach (var skill in _state.AvailableNextTalkerSkills)
+                     {
+                        <MudComboBoxItem Value="@skill" Text="@skill">@skill</MudComboBoxItem>
+                     }
+                  </MudComboBox>
                }
                @if (_showAddAIdentityDialog)
                {

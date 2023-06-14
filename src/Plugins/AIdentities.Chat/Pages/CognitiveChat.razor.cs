@@ -372,34 +372,39 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
       await InvokeAsync(StateHasChanged).ConfigureAwait(false);
    }
 
-   //private async Task ScrollToEndOfMessageList()
-   //{
-   //   await InvokeAsync(StateHasChanged).ConfigureAwait(false);
-   //   await ScrollService.ScrollToBottom(LIST_SELECTOR).ConfigureAwait(false);
-   //}
-
    async Task OnConversationChanged(Conversation conversation)
    {
-      await PlayAudioStream.StopAudioFiles().ConfigureAwait(false);
-      if (conversation == null)
-      {
-         _state.CloseConversation();
-         return;
-      }
+      _state.IsLoadingConversation = true;
+      await InvokeAsync(StateHasChanged).ConfigureAwait(false);
 
       try
       {
-         conversation = await ChatStorage.LoadConversationAsync(conversation.Id).ConfigureAwait(false);
-         ScrollToEndOfMessageList();
+         await PlayAudioStream.StopAudioFiles().ConfigureAwait(false);
+         if (conversation == null)
+         {
+            _state.CloseConversation();
+            return;
+         }
 
-         await _state.InitializeConversation(conversation).ConfigureAwait(false);
-         ScrollToEndOfMessageList();
+         try
+         {
+            conversation = await ChatStorage.LoadConversationAsync(conversation.Id).ConfigureAwait(false);
+            ScrollToEndOfMessageList();
+
+            await _state.InitializeConversation(conversation).ConfigureAwait(false);
+            ScrollToEndOfMessageList();
+         }
+         catch (Exception ex)
+         {
+            NotificationService.ShowError($"Failed to load conversation: {ex.Message}");
+            _state.CloseConversation();
+            return;
+         }
       }
-      catch (Exception ex)
+      finally
       {
-         NotificationService.ShowError($"Failed to load conversation: {ex.Message}");
-         _state.CloseConversation();
-         return;
+         _state.IsLoadingConversation = false;
+         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
       }
    }
 
@@ -582,11 +587,6 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
    }
 
    void OnIsModeratorModeEnabledChanged() => CognitiveChatMission.SetModeratedMode(_state.IsModeratorModeEnabled);
-   public void SetNextTalker(AIdentity aIdentity)
-   {
-      CognitiveChatMission.SetNextTalker(aIdentity);
-      _state.ActiveSkill = null;
-   }
 
    Task ReplyToLastMessage(AIdentity talker)
    {
@@ -599,7 +599,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
    {
       if (message is null) return;
 
-      SetNextTalker(talker);
+      _state.SetNextTalker(talker);
       try
       {
          await CognitiveChatMission.ReplyToMessageAsync(message).ConfigureAwait(false);
@@ -614,7 +614,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
    {
       if (_state.NoConversation) return Enumerable.Empty<ConversationMessage>();
 
-      return _state.CurrentConversation.Messages
+      return _state.CurrentConversation.Messages.ToList()
          .Union(_streamingMessages.Values.ToList())
          .OrderBy(m => m.CreationDate)
          .ToList(); // prevent enumeration changed exception
@@ -678,20 +678,6 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
       _state.PlayingSpeechCancellationTokenSource?.Dispose();
       _state.MessageGenerationCancellationTokenSource?.Dispose();
       _ = PlayAudioStream.StopAudioFiles();
-   }
-
-   IList<string> GetAIdentitySkills(AIdentity? aIdentity)
-   {
-      if (aIdentity is null) return new List<string>();
-
-      var aIdentityFeatureSkills = aIdentity.Features.Get<AIdentityFeatureSkills>();
-      if (aIdentityFeatureSkills is not { AreSkillsEnabled: true, EnabledSkills.Count: > 0 }) return new List<string>();
-
-      return aIdentityFeatureSkills.EnabledSkills.Select(skillName => skillName).ToList();
-
-      //return aIdentityFeatureSkills
-      //   .EnabledSkills.Select(skillName => SkillManager.GetSkillDefinition(skillName))
-      //   .Where(skillDefinition => skillDefinition is not null)!;
    }
 
    async Task ExecuteSkillAsync(AIdentity aIdentity, SkillDefinition skillDefinition)
