@@ -8,7 +8,7 @@ public class SkillExecutionContext
 {
    public CognitiveContext CognitiveContext { get; }
 
-   public IMissionContext? MissionContext { get; }
+   public MissionContext? MissionContext { get; }
 
    /// <summary>
    /// The AIdentity that is executing the skill.
@@ -29,7 +29,7 @@ public class SkillExecutionContext
 
    readonly ConcurrentDictionary<string, object?> _state = new();
 
-   public SkillExecutionContext(ISkill skill, CognitiveContext cognitiveContext, IMissionContext? missionContext)
+   public SkillExecutionContext(ISkill skill, CognitiveContext cognitiveContext, MissionContext? missionContext)
    {
       CurrentSkill = skill.Definition;
       CognitiveContext = cognitiveContext;

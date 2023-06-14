@@ -7,7 +7,7 @@ public class CognitiveChatMissionContext : MissionContext
    /// </summary>
    public Conversation? CurrentConversation
    {
-      get => GetOrDefault<Conversation>(nameof(CurrentConversation));
+      get => GetOrDefault<Conversation?>(nameof(CurrentConversation), null);
       set => SetOrRemove(nameof(CurrentConversation), value);
    }
 
@@ -16,7 +16,7 @@ public class CognitiveChatMissionContext : MissionContext
    /// </summary>
    public IConversationHistory? ConversationHistory
    {
-      get => GetOrDefault<IConversationHistory>(nameof(ConversationHistory));
+      get => GetOrDefault<IConversationHistory?>(nameof(ConversationHistory), null);
       set => SetOrRemove(nameof(ConversationHistory), value);
    }
 
@@ -34,7 +34,7 @@ public class CognitiveChatMissionContext : MissionContext
    /// </summary>
    public bool IsModeratedModeEnabled
    {
-      get => GetOrDefault<bool>(nameof(IsModeratedModeEnabled));
+      get => GetOrDefault<bool>(nameof(IsModeratedModeEnabled), false);
       set => SetOrRemove(nameof(IsModeratedModeEnabled), value);
    }
 
@@ -43,7 +43,7 @@ public class CognitiveChatMissionContext : MissionContext
    /// </summary>
    public AIdentity? NextTalker
    {
-      get => GetOrDefault<AIdentity?>(nameof(NextTalker));
+      get => GetOrDefault<AIdentity?>(nameof(NextTalker), null);
       set => SetOrRemove(nameof(NextTalker), value);
    }
 
@@ -54,7 +54,7 @@ public class CognitiveChatMissionContext : MissionContext
    /// </summary>
    public ConversationMessage? MessageToReplyTo
    {
-      get => GetOrDefault<ConversationMessage?>(nameof(MessageToReplyTo));
+      get => GetOrDefault<ConversationMessage?>(nameof(MessageToReplyTo), null);
       set => SetOrRemove(nameof(MessageToReplyTo), value);
    }
 }

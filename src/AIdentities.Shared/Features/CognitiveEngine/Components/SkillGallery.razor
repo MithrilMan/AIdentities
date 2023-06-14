@@ -24,18 +24,16 @@
          {
             <MudItem xs="12" sm="6" md="3" lg="2">
                <MudCard Class="mud-height-full" Elevation="3">
-                  <MudCardHeader Class="mud-theme-secondary py-2 pl-2">
-                     <CardHeaderActions>
-                        @if (CanBeSelected)
-                        {
-                           <MudStack Spacing="0">
-                              <MudText>Enable</MudText>
-                              <MudSwitchM3 T="bool" Checked="@_state.SelectedSkills.Contains(skill.Name)"
-                                           CheckedChanged="@((isChecked) => OnSelectedSkillChanged(skill, isChecked))" />
-                           </MudStack>
-                        }
-                     </CardHeaderActions>
-                     <CardHeaderContent><h2>@skill.Name</h2></CardHeaderContent>
+                  <MudCardHeader Class="mud-theme-secondary py-2 d-flex flex-column align-stretch">
+                     <h2 class="text-ellipsis" title="@skill.Name">@skill.Name</h2>
+                     @if (CanBeSelected)
+                     {
+                        <MudStack Row="true" AlignItems="AlignItems.Center" Justify="Justify.FlexEnd">
+                           <MudText>Enable</MudText>
+                           <MudSwitchM3 T="bool" Checked="@_state.SelectedSkills.Contains(skill.Name)"
+                                        CheckedChanged="@((isChecked) => OnSelectedSkillChanged(skill, isChecked))" />
+                        </MudStack>
+                     }
                   </MudCardHeader>
                   <MudCardContent Class="pa-2">
                      <MudText Typo="Typo.subtitle1">Activation:</MudText>

@@ -73,7 +73,7 @@ public interface ICognitiveEngine
    /// </param>
    /// <param name="cancellationToken">The cancellation token.</param>
    /// <returns>A stream of thoughts generated during the prompt handling.</returns>
-   IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, IMissionContext? missionContext, CancellationToken cancellationToken);
+   IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, MissionContext? missionContext, CancellationToken cancellationToken);
 
    /// <summary>
    /// Executes a specific skill.

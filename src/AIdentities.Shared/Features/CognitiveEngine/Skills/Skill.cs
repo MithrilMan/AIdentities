@@ -20,6 +20,8 @@ public abstract class Skill : ISkill
       Logger = logger;
       AIdentityProvider = aIdentityProvider;
       TemplateParser = templateParser;
+
+      CreateDefaultPromptTemplates();
    }
 
    public async IAsyncEnumerable<Thought> ExecuteAsync(
@@ -119,24 +121,25 @@ public abstract class Skill : ISkill
    /// <returns>The extracted arguments.</returns>
    public virtual bool TryExtractFromContext<TReturnValue>(string key,
       SkillExecutionContext context,
-      [MaybeNullWhen(false)] out TReturnValue args) where TReturnValue : class
+      [MaybeNullWhen(false)] out TReturnValue args) //where TReturnValue : class
    {
 
-      var result = context.CognitiveContext.GetOrDefault<TReturnValue?>(key);
-      if (result != null)
+      if (context.CognitiveContext.TryGet<TReturnValue>(key, out var extractedValue))
       {
-         args = result;
+         args = extractedValue;
          return true;
       }
 
-      result = context.MissionContext?.GetOrDefault<TReturnValue?>(key);
-      if (result != null)
+      if (context.MissionContext is not null)
       {
-         args = result;
-         return true;
+         if (context.MissionContext.TryGet<TReturnValue>(key, out extractedValue))
+         {
+            args = extractedValue;
+            return true;
+         }
       }
 
-      args = null;
+      args = default;
       return false;
    }
 

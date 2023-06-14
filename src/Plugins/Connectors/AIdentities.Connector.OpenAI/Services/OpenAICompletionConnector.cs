@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using AIdentities.Connector.OpenAI.Models;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors.Completion;
-using Bogus;
+using AIdentities.Shared.Utils;
 using Microsoft.AspNetCore.Http.Features;
 using Polly;
 using Polly.Retry;
@@ -113,21 +113,27 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
    /// </summary>
    /// <param name="request">The <see cref="DefaultCompletionRequest"/> to build from.</param>
    /// <returns>The built <see cref="DefaultCompletionRequest"/>.</returns>
-   private CreateCompletionRequest BuildCreateCompletionRequest(ICompletionRequest request, bool requireStream) => new CreateCompletionRequest
+   private CreateCompletionRequest BuildCreateCompletionRequest(ICompletionRequest request, bool requireStream)
    {
-      FrequencyPenalty = request.RepetitionPenalityRange,
-      MaxTokens = request.MaxGeneratedTokens,
-      Prompt = request.Prompt,
-      Suffix = request.Suffix,
-      Model = request.ModelId ?? DefaultModel,
-      PresencePenalty = request.RepetitionPenality,
-      N = request.CompletionResults,
-      Stop = request.StopSequences,
-      Stream = requireStream,
-      Temperature = request.Temperature,
-      TopP = request.TopPSamplings,
-      User = request.UserId,
-   };
+      var apiRequest = new CreateCompletionRequest
+      {
+         FrequencyPenalty = request.RepetitionPenalityRange,
+         MaxTokens = request.MaxGeneratedTokens,
+         Prompt = request.Prompt,
+         Suffix = request.Suffix,
+         Model = request.ModelId ?? DefaultModel,
+         PresencePenalty = request.RepetitionPenality,
+         N = request.CompletionResults,
+         Stop = request.StopSequences,
+         Stream = requireStream,
+         Temperature = request.Temperature,
+         TopP = request.TopPSamplings,
+         User = request.UserId,
+      };
+
+      _logger.DumpAsJson($"Performing {(requireStream ? "streamed" : "")} completion request", apiRequest);
+      return apiRequest;
+   }
 
    public void Dispose()
    {
@@ -138,9 +144,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
    {
       var apiRequest = BuildCreateCompletionRequest(request, false);
 
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
       var sw = Stopwatch.StartNew();
-
       using var response = await _retryPolicy.ExecuteAsync(async () =>
       {
          return await _client.PostAsJsonAsync(EndPoint, apiRequest, _serializerOptions, cancellationToken: cancellationToken).ConfigureAwait(false);
@@ -174,21 +178,6 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
    public async IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       CreateCompletionRequest apiRequest = BuildCreateCompletionRequest(request, true);
-      _logger.LogDebug("Performing request ${apiRequest}", apiRequest.Prompt);
-
-      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
-      {
-         Content = JsonContent.Create(apiRequest, null, _serializerOptions)
-      };
-      httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
-
-      var sw = Stopwatch.StartNew();
-
-      using var response = await _retryPolicy.ExecuteAsync(async () =>
-      {
-         return await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
-      }).ConfigureAwait(false);
-      using var sseReader = new SseReader(await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false));
 
       SharpToken.GptEncoding? tokenizer = null;
       try
@@ -197,6 +186,19 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       }
       catch { _logger.LogDebug("Unable to find tokenizer for model {ModelId}, token counter not available", request.ModelId); }
 
+      using var httpRequestMessage = new HttpRequestMessage(HttpMethod.Post, EndPoint)
+      {
+         Content = JsonContent.Create(apiRequest, null, _serializerOptions)
+      };
+      httpRequestMessage.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+      var sw = Stopwatch.StartNew();
+      using var response = await _retryPolicy.ExecuteAsync(async () =>
+      {
+         return await _client.SendAsync(httpRequestMessage, HttpCompletionOption.ResponseHeadersRead, cancellationToken).ConfigureAwait(false);
+      }).ConfigureAwait(false);
+
+      using var sseReader = new SseReader(await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false));
       int cumulativeCompletionTokens = 0;
       while (true && !cancellationToken.IsCancellationRequested)
       {

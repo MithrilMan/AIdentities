@@ -1,9 +1,15 @@
-﻿using Fluid;
+﻿using AIdentities.Shared.Plugins.Connectors.Completion;
+using Fluid;
 
 namespace AIdentities.Chat.Skills.CreateStableDiffusionPrompt;
 
 public partial class CreateStableDiffusionPrompt : Skill
 {
+   /// <summary>
+   /// We expect the conversation history to be in the context with this key.
+   /// </summary>
+   public const string CONVERSATION_HISTORY_KEY = nameof(CognitiveChatMissionContext.ConversationHistory);
+
    private IFluidTemplate _defaultTemplate = default!;
 
    public CreateStableDiffusionPrompt(ILogger<CreateStableDiffusionPrompt> logger, IAIdentityProvider aIdentityProvider, FluidParser templateParser)
@@ -12,15 +18,74 @@ public partial class CreateStableDiffusionPrompt : Skill
    protected override void CreateDefaultPromptTemplates()
    {
       _defaultTemplate = TemplateParser.Parse(PROMPT);
+
+      // Register the ConversationMessage type so that it can be used in the template
+      TemplateOptions.Default.MemberAccessStrategy.Register<ConversationMessage>();
    }
 
-   protected override IAsyncEnumerable<Thought> ExecuteAsync(SkillExecutionContext context, CancellationToken cancellationToken)
+   protected override async IAsyncEnumerable<Thought> ExecuteAsync(SkillExecutionContext context,
+                                                                   [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      return Enumerable.Empty<Thought>().ToAsyncEnumerable();
+      var templateContext = CreateTemplateContext(context);
+      var prompt = _defaultTemplate.Render(templateContext);
+
+      var completionConnector = context.GetDefaultCompletionConnector();
+
+      yield return context.ActionThought($"Creating a stable diffusion prompt for {context.AIdentity.Name}");
+      var responses = await completionConnector.RequestCompletionAsStreamAsync(new DefaultCompletionRequest
+      {
+         Prompt = prompt,
+      }, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+
+      var response = string.Join("", responses.Select(r => r.GeneratedMessage));
+      SetGeneratedPrompt(context, response);
+      yield return context.ActionThought($"I've stored the prompts in SetGeneratedPrompt");
+
+      yield return context.FinalThought(response);
    }
 
-   private object CreateTemplateModel(SkillExecutionContext context) => new
+   private TemplateContext CreateTemplateContext(SkillExecutionContext context)
    {
-      PromptSpecifications = PromptSpecifications(context),
-   };
+      var aidentity = context.AIdentity;
+      var chatFeature = aidentity.Features.Get<AIdentityChatFeature>();
+
+      // check in the context if there is a conversation history
+      if (!TryExtractFromContext<IConversationHistory>(CONVERSATION_HISTORY_KEY, context, out var conversationHistory))
+      {
+         Logger.LogWarning("No conversation history found in the context, using the prompt instead");
+      }
+
+      IEnumerable<ConversationMessage>? history = null;
+      if (conversationHistory is not null)
+      {
+         history = conversationHistory.GetConversationHistory(aidentity, null);
+      }
+      else
+      {
+         var prompt = context.PromptChain.Peek();
+         var conversationMessage = prompt switch
+         {
+            UserPrompt userPrompt => new ConversationMessage(prompt.Text, userPrompt.UserId, "User"),
+            AIdentityPrompt aIdentityPrompt => new ConversationMessage(prompt.Text, AIdentityProvider.Get(aIdentityPrompt.AIdentityId) ?? aidentity),
+            _ => null
+         };
+
+         if (conversationMessage is not null)
+         {
+            history = new ConversationMessage[] { conversationMessage };
+         }
+      }
+
+      var templateContext = new TemplateContext(
+            new
+            {
+               Personality = aidentity.Personality.AsSingleLine(),
+               Background = chatFeature?.Background.AsSingleLine(),
+               PromptsCount = TryExtractFromContext<int>("PromptsCount", context, out var promptsCount) ? promptsCount : 1,
+               PromptSpecifications = PromptSpecifications(context),
+               ConversationHistory = history ?? Array.Empty<ConversationMessage>(),
+            });
+
+      return templateContext;
+   }
 }

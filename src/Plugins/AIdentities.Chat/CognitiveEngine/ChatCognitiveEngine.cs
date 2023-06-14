@@ -28,7 +28,7 @@ public class ChatCognitiveEngine : CognitiveEngine<CognitiveContext>
 
    public override async IAsyncEnumerable<Thought> HandlePromptAsync(
       Prompt prompt,
-      IMissionContext? missionContext,
+      MissionContext? missionContext,
       [EnumeratorCancellation] CancellationToken cancellationToken)
    {
 

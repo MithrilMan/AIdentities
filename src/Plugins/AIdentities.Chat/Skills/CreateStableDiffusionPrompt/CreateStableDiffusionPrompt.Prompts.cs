@@ -29,10 +29,13 @@ public partial class CreateStableDiffusionPrompt
       - When generating prompts, reduce abstract psychological and emotional descriptions.
 
       This is your PERSONALITY: {{Personality}}
-      This is the IMAGE-CONTEXT: {{ImageContext}}
-      X: {{ X() }}
-      I want you to write me a list of {{PromptsCount}} detailed prompts exactly about the IMAGE-CONTEXT:
-      Prompt: 
-      
+      This is your BACKGROUND: {{Background}}
+      I want you to write me a list of {{PromptsCount}} detailed prompts exactly about the IMAGE-CONTEXT that you can obtain from this conversation history:
+      {%- for message in ConversationHistory %}
+      {{ message.AuthorName }}: {{message.Text}}
+      {%- endfor %}
+
+      Generate {{PromptsCount}} Prompts:
+      1: 
       """;
 }

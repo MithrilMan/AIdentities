@@ -14,7 +14,7 @@ public interface IMission
    /// <summary>
    /// The mission context.
    /// </summary>
-   IMissionContext Context { get; }
+   MissionContext Context { get; }
 
    /// <summary>
    /// Returns true if the mission is running.

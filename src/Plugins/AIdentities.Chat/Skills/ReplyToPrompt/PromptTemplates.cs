@@ -63,14 +63,8 @@ internal static class PromptTemplates
       var sb = new StringBuilder(CONVERSATION_PROMPT)
          .Replace(PromptTokens.TOKEN_PARTICIPANTS, PromptUtils.BuildParticipants(aIdentity, participants))
          .Replace(PromptTokens.TOKEN_AIDENTITY_NAME, aIdentity.Name)
-         .Replace(PromptTokens.TOKEN_AIDENTITY_BACKGROUND, chatFeature?.Background?
-            .Replace("\r\n", "")
-            .Replace("\n", "")
-            ?? "")
-         .Replace(PromptTokens.TOKEN_AIDENTITY_PERSONALITY, aIdentity.Personality?
-            .Replace("\r\n", "")
-            .Replace("\n", "")
-            ?? "")
+         .Replace(PromptTokens.TOKEN_AIDENTITY_BACKGROUND, chatFeature?.Background?.AsSingleLine())
+         .Replace(PromptTokens.TOKEN_AIDENTITY_PERSONALITY, aIdentity.Personality?.AsSingleLine())
          .Replace(PromptTokens.TOKEN_EXAMPLE_MESSAGES, PromptUtils.BuildAIdentityMessageStyleExamples(chatFeature, aIdentity.Name ?? "Assistant"));
 
 
@@ -112,14 +106,8 @@ internal static class PromptTemplates
          .Append(chatFeature.FullPrompt)
          .Replace(PromptTokens.TOKEN_PARTICIPANTS, PromptUtils.BuildParticipants(aIdentity, participants))
          .Replace(PromptTokens.TOKEN_AIDENTITY_NAME, aIdentity.Name)
-         .Replace(PromptTokens.TOKEN_AIDENTITY_BACKGROUND, chatFeature?.Background?
-            .Replace("\r\n", "")
-            .Replace("\n", "")
-            ?? "")
-         .Replace(PromptTokens.TOKEN_AIDENTITY_PERSONALITY, aIdentity.Personality?
-            .Replace("\r\n", "")
-            .Replace("\n", "")
-            ?? "")
+         .Replace(PromptTokens.TOKEN_AIDENTITY_BACKGROUND, chatFeature?.Background?.AsSingleLine())
+         .Replace(PromptTokens.TOKEN_AIDENTITY_PERSONALITY, aIdentity.Personality?.AsSingleLine())
          ;
 
       yield return new DefaultConversationalMessage(

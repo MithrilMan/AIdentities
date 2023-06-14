@@ -1,6 +1,7 @@
 ﻿using AIdentities.Chat.CognitiveEngine;
 using AIdentities.Chat.Components;
 using AIdentities.Chat.Persistence;
+using AIdentities.Chat.Skills.CreateStableDiffusionPrompt;
 using AIdentities.Chat.Skills.IntroduceYourself;
 using AIdentities.Chat.Skills.InviteToChat;
 using AIdentities.Chat.Skills.ReplyToPrompt;
@@ -38,6 +39,7 @@ public class PluginEntry : BasePluginEntry<PluginEntry>
          .AddScoped<ISkill, InviteToChat>()
          .AddScoped<ISkill, IntroduceYourself>()
          .AddScoped<ISkill, ReplyToPrompt>()
+         .AddScoped<ISkill, CreateStableDiffusionPrompt>()
          ;
    }
 }

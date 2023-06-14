@@ -85,6 +85,18 @@ public partial class CognitiveChat
       /// </summary>
       public bool IsRecognizingVoice { get; set; }
 
+      /// <summary>
+      /// The skill that is currently being executed.
+      /// </summary>
+      public SkillDefinition? ExecutingSkill { get; set; }
+
+      /// <summary>
+      /// True if a skill is currently being executed.
+      /// </summary>
+      public bool IsExecutingSkill => ExecutingSkill != null;
+
+      public string? ActiveSkill { get; set; }
+
       public void Initialize(CognitiveChatMission cognitiveChatMission, IAIdentityProvider aidentityProvider, IPlayAudioStream playAudioStream)
       {
          CognitiveChatMission = cognitiveChatMission;

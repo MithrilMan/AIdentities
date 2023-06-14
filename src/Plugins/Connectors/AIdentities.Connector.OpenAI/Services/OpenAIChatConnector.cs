@@ -112,7 +112,6 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
-      _logger.DumpAsJson("Performing stream request", apiRequest.Messages);
       var sw = Stopwatch.StartNew();
 
       using HttpResponseMessage response = await _retryPolicy.ExecuteAsync(async () =>
@@ -231,25 +230,31 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream) => new ChatCompletionRequest
+   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream)
    {
-      FrequencyPenalty = request.RepetitionPenalityRange,
-      MaxTokens = request.MaxGeneratedTokens,
-      Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
+      var apiRequest = new ChatCompletionRequest
       {
-         Content = m.Content,
-         Name = SanitizeName(m.Name),
-         Role = MapRole(m.Role)
-      }).ToList(),
-      Model = request.ModelId ?? DefaultModel,
-      PresencePenalty = request.RepetitionPenality,
-      N = request.CompletionResults,
-      Stop = request.StopSequences?.Take(4),
-      Stream = requireStream,
-      Temperature = request.Temperature,
-      TopP = request.TopPSamplings,
-      User = request.UserId,
-   };
+         FrequencyPenalty = request.RepetitionPenalityRange,
+         MaxTokens = request.MaxGeneratedTokens,
+         Messages = request.Messages.Select(m => new ChatCompletionRequestMessage
+         {
+            Content = m.Content,
+            Name = SanitizeName(m.Name),
+            Role = MapRole(m.Role)
+         }).ToList(),
+         Model = request.ModelId ?? DefaultModel,
+         PresencePenalty = request.RepetitionPenality,
+         N = request.CompletionResults,
+         Stop = request.StopSequences?.Take(4),
+         Stream = requireStream,
+         Temperature = request.Temperature,
+         TopP = request.TopPSamplings,
+         User = request.UserId,
+      };
+
+      _logger.DumpAsJson($"Performing {(requireStream ? "streamed" : "")} chat request", apiRequest);
+      return apiRequest;
+   }
 
    /// <summary>
    /// Sanitizes a name to be used in the request.

@@ -9,7 +9,7 @@ namespace AIdentities.Shared.Features.CognitiveEngine.Mission;
 /// A mission can have a set of constraints that affect the way the cognitive engine will work.
 /// </summary>
 public class Mission<TMissionContext> : IMission, IDisposable
-   where TMissionContext : IMissionContext, new()
+   where TMissionContext : MissionContext, new()
 {
    /// <inheritdoc/>
    public string Goal { get; set; } = "";
@@ -23,7 +23,7 @@ public class Mission<TMissionContext> : IMission, IDisposable
    public CancellationToken MissionRunningCancellationToken { get; private set; }
 
    /// <inheritdoc/>
-   IMissionContext IMission.Context { get => Context; }
+   MissionContext IMission.Context { get => Context; }
 
    /// <inheritdoc/>
    public ICognitiveEngine? MissionRunner { get; private set; }

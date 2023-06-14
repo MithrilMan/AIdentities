@@ -22,16 +22,12 @@ internal static class PromptTemplates
 
       if (background != null)
       {
-         sb.AppendLine($"Personal background: {background
-            .Replace("\r\n", "")
-            .Replace("\n", "")}");
+         sb.AppendLine($"Personal background: {background.AsSingleLine()}");
       }
 
       if (personality != null)
       {
-         sb.AppendLine($"Personality: {personality
-            .Replace("\r\n", "")
-            .Replace("\n", "")}");
+         sb.AppendLine($"Personality: {personality.AsSingleLine()}");
       }
 
       sb.AppendLine($"""

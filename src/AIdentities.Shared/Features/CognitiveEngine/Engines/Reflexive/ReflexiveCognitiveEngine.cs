@@ -31,7 +31,7 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
       : base(logger, aIdentity, defaultConversationalConnector, defaultCompletionConnector, skillManager) { }
 
 
-   public override async IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, IMissionContext? missionContext, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public override async IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, MissionContext? missionContext, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       if (IsFirstPrompt)
       {
@@ -135,7 +135,7 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
    /// </returns>
    protected virtual async IAsyncEnumerable<Thought> HandleFirstPrompt(
       Prompt prompt,
-      IMissionContext? missionContext,
+      MissionContext? missionContext,
       [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       await Task.CompletedTask.ConfigureAwait(false);
@@ -153,7 +153,7 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
    protected virtual async IAsyncEnumerable<Thought> HandleUnknownCommandDetected(
       Prompt prompt,
       string detectedSkillName,
-      IMissionContext? missionContext,
+      MissionContext? missionContext,
       [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       await Task.CompletedTask.ConfigureAwait(false);
@@ -169,7 +169,7 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
    /// <returns>A stream of thoughts.</returns>
    protected virtual async IAsyncEnumerable<Thought> HandleNoCommandDetected(
       Prompt prompt,
-      IMissionContext? missionContext,
+      MissionContext? missionContext,
       [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       await Task.CompletedTask.ConfigureAwait(false);

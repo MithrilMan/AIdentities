@@ -1,4 +1,6 @@
 ﻿using System.Collections.Concurrent;
+using AIdentities.Shared.Features.CognitiveEngine.Skills;
+using System.Security.Cryptography;
 using AIdentities.Shared.Features.Core.SpeechRecognition;
 using AIdentities.Shared.Plugins.Connectors.TextToSpeech;
 using AIdentities.Shared.Utils;
@@ -30,6 +32,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
    [Inject] private IEnumerable<ITextToSpeechConnector> TextToSpeechConnectors { get; set; } = null!;
    [Inject] private IPlayAudioStream PlayAudioStream { get; set; } = null!;
    [Inject] private ISpeechRecognitionService SpeechRecognitionService { get; set; } = null!;
+   [Inject] private ISkillManager SkillManager { get; set; } = default!;
 
    /// <summary>
    /// The mission that will be assigned to the <see cref="_chatKeeper"/> instance.
@@ -343,10 +346,22 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
 
       try
       {
-         await HandleThoughts(CognitiveChatMission.TalkToMissionRunnerAsync(
-            prompt: new UserPrompt(Guid.Empty, message.Text ?? ""), // TODO handle the user id
-            cancellationToken: _state.MessageGenerationCancellationTokenSource.Token
+         // if there is an active skill, use it instead of handle this as a standard message
+         if (
+            CognitiveChatMission.Context.IsModeratedModeEnabled
+            && CognitiveChatMission.Context.NextTalker is not null
+            && _state.ActiveSkill is not null
+            && SkillManager.GetSkillDefinition(_state.ActiveSkill) is SkillDefinition skill)
+         {
+            await ExecuteSkillAsync(CognitiveChatMission.Context.NextTalker, skill).ConfigureAwait(false);
+         }
+         else
+         {
+            await HandleThoughts(CognitiveChatMission.TalkToMissionRunnerAsync(
+               prompt: new UserPrompt(Guid.Empty, message.Text ?? ""), // TODO handle the user id
+               cancellationToken: _state.MessageGenerationCancellationTokenSource.Token
             )).ConfigureAwait(false);
+         }
       }
       catch (Exception ex)
       {
@@ -567,7 +582,12 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
    }
 
    void OnIsModeratorModeEnabledChanged() => CognitiveChatMission.SetModeratedMode(_state.IsModeratorModeEnabled);
-   public void SetNextTalker(AIdentity aIdentity) => CognitiveChatMission.SetNextTalker(aIdentity);
+   public void SetNextTalker(AIdentity aIdentity)
+   {
+      CognitiveChatMission.SetNextTalker(aIdentity);
+      _state.ActiveSkill = null;
+   }
+
    Task ReplyToLastMessage(AIdentity talker)
    {
       if (_state.NoConversation) return Task.CompletedTask;
@@ -658,5 +678,46 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
       _state.PlayingSpeechCancellationTokenSource?.Dispose();
       _state.MessageGenerationCancellationTokenSource?.Dispose();
       _ = PlayAudioStream.StopAudioFiles();
+   }
+
+   IList<string> GetAIdentitySkills(AIdentity? aIdentity)
+   {
+      if (aIdentity is null) return new List<string>();
+
+      var aIdentityFeatureSkills = aIdentity.Features.Get<AIdentityFeatureSkills>();
+      if (aIdentityFeatureSkills is not { AreSkillsEnabled: true, EnabledSkills.Count: > 0 }) return new List<string>();
+
+      return aIdentityFeatureSkills.EnabledSkills.Select(skillName => skillName).ToList();
+
+      //return aIdentityFeatureSkills
+      //   .EnabledSkills.Select(skillName => SkillManager.GetSkillDefinition(skillName))
+      //   .Where(skillDefinition => skillDefinition is not null)!;
+   }
+
+   async Task ExecuteSkillAsync(AIdentity aIdentity, SkillDefinition skillDefinition)
+   {
+      if (_state.NoConversation) return;
+
+      var message = _state.SelectedMessage ?? _state.CurrentConversation.Messages.LastOrDefault();
+
+      try
+      {
+         _state.ExecutingSkill = skillDefinition;
+         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+         await CognitiveChatMission.ExecuteSkillAsync(
+            prompt: new UserPrompt(Guid.Empty, message?.Text ?? ""),
+            aIdentity: aIdentity,
+            skillDefinition: skillDefinition
+            ).ConfigureAwait(false);
+      }
+      catch (Exception ex)
+      {
+         NotificationService.ShowError("Error while executing skill: " + ex.Message);
+      }
+      finally
+      {
+         _state.ExecutingSkill = null;
+         await InvokeAsync(StateHasChanged).ConfigureAwait(false);
+      }
    }
 }

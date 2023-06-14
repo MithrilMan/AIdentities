@@ -2,6 +2,13 @@
 
 <PluginResource TPlugin="PluginEntry" ResourceType="PluginResourceType.EmbeddedStyle" />
 
+<MudOverlay Visible="@_state.IsExecutingSkill" DarkBackground="true">
+   <MudPaper>
+      <MudProgressLinear Indeterminate="true" />
+      <MudText Typo="Typo.h4">Executing skill @_state.ExecutingSkill?.Name</MudText>
+   </MudPaper>
+</MudOverlay>
+
 <MudGrid Class="flex-grow-1" Spacing="1" Justify="Justify.SpaceBetween">
    <MudItem xs="9" Class="mud-height-full d-flex flex-column gap-1">
       <MudPaper>
@@ -83,6 +90,18 @@
                      }
                   }
                </div>
+               @if (_state.IsModeratorModeEnabled)
+               {
+                  <MudSelectExtended T="string" ItemCollection="@GetAIdentitySkills(CognitiveChatMission.Context.NextTalker)"
+                  @bind-Value="_state.ActiveSkill"
+                                     ValuePresenter="MudExtensions.Enums.ValuePresenter.Chip" ChipSize="Size.Medium"
+                                     InputClass="ma-0" AutoFocus="true">
+                  </MudSelectExtended>
+                  @*@foreach (var skill in GetAIdentitySkills(aid))
+                  {
+                     <MudMenuItem OnClick="() => ExecuteSkillAsync(aid, skill)">@skill.Name</MudMenuItem>
+                  }*@
+               }
                @if (_showAddAIdentityDialog)
                {
                   <AIdentitySelector AutoFocus="true" Class="ma-0" Placeholder="Select an AIdentity to invite." Style="border-radius:0"

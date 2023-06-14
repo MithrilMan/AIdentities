@@ -1,4 +1,6 @@
-﻿namespace AIdentities.Shared.Features.CognitiveEngine;
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace AIdentities.Shared.Features.CognitiveEngine;
 
 public class CognitiveContext
 {
@@ -22,19 +24,18 @@ public class CognitiveContext
    /// <param name="defaultValue">The default value to return if the key is not present or the value is not of the given type.
    /// The default value cannot be null and will be stored in the dictionary.
    /// </param>
-   /// <returns>The value of the given key in the State dictionary or the default (non null) value.</returns>
-   /// <exception cref="ArgumentNullException"></exception>
-   public T GetOrDefault<T>(string key, T defaultValue)
+   /// <returns>The value of the given key in the State dictionary or the default value.</returns>
+   [return: NotNullIfNotNull(nameof(defaultValue))]
+   public T? GetOrDefault<T>(string key, T? defaultValue)
    {
-      if (defaultValue is null) throw new ArgumentNullException(nameof(defaultValue));
+      if (State.TryGetValue(key, out var obj) && obj is T value) return value;
 
-      if (!State.TryGetValue(key, out var obj) || obj is not T value)
+      if (defaultValue != null)
       {
-         value = defaultValue;
-         State[key] = value!;
+         State[key] = defaultValue;
       }
 
-      return value;
+      return defaultValue;
    }
 
    /// <summary>
@@ -44,14 +45,16 @@ public class CognitiveContext
    /// <typeparam name="T">The type of the value to get.</typeparam>
    /// <param name="key">The key of the value to get.</param>
    /// <returns>The value of the given key in the State dictionary or the default value of the type.</returns>
-   public T? GetOrDefault<T>(string key)
+   public bool TryGet<T>(string key, [MaybeNullWhen(false)] out T value)
    {
-      if (!State.TryGetValue(key, out var obj) || obj is not T value)
+      if (!State.TryGetValue(key, out var obj) || obj is not T extractedValue)
       {
-         return default;
+         value = default;
+         return false;
       }
 
-      return value;
+      value = extractedValue;
+      return true;
    }
 
    /// <summary>

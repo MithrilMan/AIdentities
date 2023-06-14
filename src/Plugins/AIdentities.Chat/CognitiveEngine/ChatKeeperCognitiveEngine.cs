@@ -31,14 +31,14 @@ public class ChatKeeperCognitiveEngine : ReflexiveCognitiveEngine<CognitiveConte
    /// <inheritdoc/>
    protected override IAsyncEnumerable<Thought> HandleNoCommandDetected(
       Prompt prompt,
-      IMissionContext? missionContext,
+      MissionContext? missionContext,
       CancellationToken cancellationToken)
       => KeepConversationGoing(prompt, missionContext, cancellationToken).Prepend(ActionThought("I haven't detected any command to execute, let them talk."));
 
    protected override IAsyncEnumerable<Thought> HandleUnknownCommandDetected(
       Prompt prompt,
       string detectedSkillName,
-      IMissionContext? missionContext,
+      MissionContext? missionContext,
       CancellationToken cancellationToken)
       => KeepConversationGoing(prompt, missionContext, cancellationToken).Prepend(ActionThought($"I thought I found the skill {detectedSkillName} but I was wrong, it doesn't exists."));
 
@@ -53,7 +53,7 @@ public class ChatKeeperCognitiveEngine : ReflexiveCognitiveEngine<CognitiveConte
    /// <returns>A stream of thoughts</returns>
    protected virtual async IAsyncEnumerable<Thought> KeepConversationGoing(
       Prompt prompt,
-      IMissionContext? missionContext,
+      MissionContext? missionContext,
       [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       // we want to handle only CognitiveChatMissionContext

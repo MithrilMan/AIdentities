@@ -1,15 +1,14 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
+using System.Net;
 using System.Net.Http.Json;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using System.Text;
-using System.Threading;
 using AIdentities.Shared.Features.AIdentities.Models;
 using AIdentities.Shared.Features.Core.Services;
 using Microsoft.AspNetCore.Http.Features;
-using Polly.Retry;
 using Polly;
+using Polly.Retry;
 
 namespace AIdentities.Connector.TextGeneration.Services;
 public class TextGenerationChatConnector : IConversationalConnector, IDisposable
@@ -114,7 +113,6 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request);
 
-      _logger.DumpAsJson("Performing request", apiRequest);
       var sw = Stopwatch.StartNew();
 
       try
@@ -122,7 +120,10 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
          JsonContent content = JsonContent.Create(apiRequest, mediaType: null, null);
          // oobabooga TextGeneration API implementation requires content-lenght
          await content.LoadIntoBufferAsync().ConfigureAwait(false);
-         using HttpResponseMessage response = await _client.PostAsync(ChatEndPoint, content, cancellationToken).ConfigureAwait(false);
+         using var response = await _retryPolicy.ExecuteAsync(async () =>
+         {
+            return await _client.PostAsync(ChatEndPoint, content, cancellationToken).ConfigureAwait(false);
+         }).ConfigureAwait(false);
 
          _logger.DumpAsJson("Request completed", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
@@ -185,8 +186,6 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       Stopwatch stopWatch,
       [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      _logger.DumpAsJson("Performing stream request", request.Prompt);
-
       using ClientWebSocket webSocket = await _retryPolicy.ExecuteAsync(async () =>
       {
          var client = new ClientWebSocket();
@@ -292,6 +291,9 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       // request.LogitBias
       // request.ModelId
       // request.TailFreeSampling
+
+      _logger.DumpAsJson("Performing chat request", chatRequest);
+
       return chatRequest;
    }
 

@@ -137,19 +137,21 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
       _conversationHistory.SetConversation(conversation);
 
       Context.CurrentConversation = conversation;
-      Context.ParticipatingAIdentities.Clear();
 
+      var participants = Context.ParticipatingAIdentities;
+
+      participants.Clear();
       foreach (var aidentityId in conversation.AIdentityIds)
       {
          await AddParticipant(aidentityId, false).ConfigureAwait(false);
       }
 
-      Context.NextTalker = Context.ParticipatingAIdentities.Count > 0 ? Context.ParticipatingAIdentities.FirstOrDefault().Value.AIdentity : null;
+      Context.NextTalker = participants.Count > 0 ? participants.FirstOrDefault().Value.AIdentity : null;
 
       if (conversation.Messages is not { Count: > 0 })
       {
          // if the conversation is empty, we ask the first AIdentity that participate to the discussion, to start talking.
-         var firstParticipant = Context.ParticipatingAIdentities.First().Value.CognitiveEngine;
+         var firstParticipant = participants.First().Value.CognitiveEngine;
 
          await MakeAIdentityIntroduce(firstParticipant).ConfigureAwait(false);
       }
@@ -158,20 +160,20 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
    private async Task MakeAIdentityIntroduce(ICognitiveEngine whoToIntroduce)
    {
       // we bypass mission constraints on this skill because it's needed to start a conversation.
-      var replyToPromptSkill = _skillManager.Get<IntroduceYourself>();
-      if (replyToPromptSkill is null)
+      var skill = _skillManager.Get<IntroduceYourself>();
+      if (skill is null)
       {
          _logger.LogWarning("The skill {skillName} is not available and will not be used.", nameof(IntroduceYourself));
          return;
       }
 
       var skillExecutionContext = new SkillExecutionContext(
-         replyToPromptSkill,
+         skill,
          whoToIntroduce.Context,
          Context
          );
 
-      await EnqueueThoughtsAsync(replyToPromptSkill.ExecuteAsync(
+      await EnqueueThoughtsAsync(skill.ExecuteAsync(
          new AIdentityPrompt(ChatKeeper.Id, "Introduce Yourself"),
          skillExecutionContext,
          Context.MissionRunningCancellationToken)).ConfigureAwait(false);
@@ -251,7 +253,9 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
          return;
       }
 
-      if (!Context.ParticipatingAIdentities.ContainsKey(aidentity.Id))
+      var participants = Context.ParticipatingAIdentities;
+
+      if (!participants.ContainsKey(aidentity.Id))
       {
          // all the AIdentities that participate to the conversation are using ConversationalCognitiveEngine
          var cognitiveEngine = _cognitiveEngineProvider.CreateCognitiveEngine<ChatCognitiveEngine>(aidentity, configure: (c) =>
@@ -273,5 +277,34 @@ internal class CognitiveChatMission : Mission<CognitiveChatMissionContext>,
             await MakeAIdentityIntroduce(participatingAIdentity.CognitiveEngine).ConfigureAwait(false);
          }
       }
+   }
+
+   public async Task ExecuteSkillAsync(Prompt prompt, AIdentity aIdentity, SkillDefinition skillDefinition)
+   {
+      if (Context.CurrentConversation is null) throw new InvalidOperationException("The conversation is not started.");
+
+      var skill = _skillManager.Get(skillDefinition.Name)
+         ?? throw new InvalidOperationException($"The skill {skillDefinition.Name} is not available.");
+
+      var skillExecutionContext = new SkillExecutionContext(
+         skill,
+         GetAIdentityCognitiveEngine(aIdentity).Context,
+         Context
+         );
+
+      await EnqueueThoughtsAsync(skill.ExecuteAsync(
+         prompt,
+         skillExecutionContext,
+         Context.MissionRunningCancellationToken)).ConfigureAwait(false);
+   }
+
+   ICognitiveEngine GetAIdentityCognitiveEngine(AIdentity aIdentity)
+   {
+      if (Context.CurrentConversation is null) throw new InvalidOperationException("The conversation is not started.");
+
+      var cognitiveEngine = Context.ParticipatingAIdentities[aIdentity.Id].CognitiveEngine
+         ?? throw new InvalidOperationException($"The AIdentity {aIdentity.Name} is not participating to the conversation.");
+
+      return cognitiveEngine;
    }
 }

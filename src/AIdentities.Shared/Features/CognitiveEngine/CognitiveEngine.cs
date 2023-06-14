@@ -127,7 +127,7 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    }
 
    /// <inheritdoc />
-   public abstract IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, IMissionContext? missionContext, CancellationToken cancellationToken);
+   public abstract IAsyncEnumerable<Thought> HandlePromptAsync(Prompt prompt, MissionContext? missionContext, CancellationToken cancellationToken);
 
    public IAsyncEnumerable<Thought> ExecuteSkill(ISkill skill, Prompt prompt, SkillExecutionContext? skillExecutionContext, CancellationToken cancellationToken)
    {

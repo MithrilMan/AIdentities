@@ -1,11 +1,12 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Net.WebSockets;
 using System.Runtime.CompilerServices;
 using AIdentities.Shared.Features.Core.Services;
 using AIdentities.Shared.Plugins.Connectors.Completion;
 using Microsoft.AspNetCore.Http.Features;
+using Polly;
+using Polly.Retry;
 
 namespace AIdentities.Connector.TextGeneration.Services;
 public class TextGenerationCompletionConnector : ICompletionConnector, IDisposable
@@ -35,6 +36,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
    public IFeatureCollection Features => new FeatureCollection();
 
    private HttpClient _client = default!;
+   readonly AsyncRetryPolicy _retryPolicy;
    private readonly JsonSerializerOptions _serializerOptions;
 
    public TextGenerationCompletionConnector(ILogger<TextGenerationChatConnector> logger, IPluginSettingsManager settingsManager)
@@ -47,8 +49,37 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
          DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
       };
 
+      _retryPolicy = CreateRetryPolicy();
+
       _settingsManager.OnSettingsUpdated += OnSettingsUpdated;
       ApplySettings(_settingsManager.Get<TextGenerationSettings>());
+   }
+
+   /// <summary>
+   /// Creates the retry policy for the cognitive engine.
+   /// This is applied everytime a call to a generation API fails with an
+   /// exception specified in the retry policy.
+   /// The default implementation is a simple exponential backoff that tries 3 times
+   /// and catch all exceptions.
+   /// </summary>
+   /// <returns></returns>
+   private AsyncRetryPolicy CreateRetryPolicy()
+   {
+      // Define the retry policy
+      var retryPolicy = Policy
+         .Handle<Exception>()
+         .WaitAndRetryAsync(
+         3,
+         retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+         (exception, timeSpan, retryCount, context) =>
+         {
+            _logger.LogWarning("Retry {RetryCount} due to {ExceptionType} with message {Message}",
+                               retryCount,
+                               exception.GetType().Name,
+                               exception.Message);
+         });
+
+      return retryPolicy;
    }
 
    private void ApplySettings(TextGenerationSettings settings)
@@ -81,8 +112,6 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
    {
       var apiRequest = BuildCompletionRequest(request);
 
-      _logger.DumpAsJson("Performing request", apiRequest);
-
       var sw = Stopwatch.StartNew();
       try
       {
@@ -90,7 +119,10 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
 
          // oobabooga TextGeneration API implementation requires content-lenght
          await content.LoadIntoBufferAsync().ConfigureAwait(false);
-         using HttpResponseMessage response = await _client.PostAsync(EndPoint, content, cancellationToken).ConfigureAwait(false);
+         using var response = await _retryPolicy.ExecuteAsync(async () =>
+         {
+            return await _client.PostAsync(EndPoint, content, cancellationToken).ConfigureAwait(false);
+         }).ConfigureAwait(false);
 
          _logger.DumpAsJson("Request completed", await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false));
 
@@ -136,17 +168,38 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       return response;
    }
 
-   public async IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      var apiRequest = BuildCompletionRequest(request);
-
-      _logger.DumpAsJson("Performing stream request", apiRequest.Prompt);
       var sw = Stopwatch.StartNew();
 
-      using ClientWebSocket webSocket = new ClientWebSocket();
-      await webSocket.ConnectAsync(StreamedEndPoint, cancellationToken).ConfigureAwait(false);
+      return ProcessStreamResponse(
+         request: BuildCompletionRequest(request),
+         stopWatch: sw,
+         cancellationToken: cancellationToken
+         );
+   }
 
-      await webSocket.SendAsync(JsonSerializer.SerializeToUtf8Bytes(apiRequest), WebSocketMessageType.Text, true, cancellationToken).ConfigureAwait(false);
+   private async IAsyncEnumerable<ICompletionStreamedResponse> ProcessStreamResponse(
+      CompletionRequest request,
+      Stopwatch stopWatch,
+      [EnumeratorCancellation] CancellationToken cancellationToken)
+   {
+      using ClientWebSocket webSocket = await _retryPolicy.ExecuteAsync(async () =>
+      {
+         var client = new ClientWebSocket();
+         try
+         {
+            await client.ConnectAsync(StreamedEndPoint, cancellationToken).ConfigureAwait(false);
+            await client.SendAsync(JsonSerializer.SerializeToUtf8Bytes(request), WebSocketMessageType.Text, true, cancellationToken).ConfigureAwait(false);
+         }
+         catch (Exception)
+         {
+            client?.Dispose();
+            throw;
+         }
+
+         return client;
+      }).ConfigureAwait(false);
 
       byte[] receiveBuffer = new byte[1024];
       while (webSocket.State == WebSocketState.Open)
@@ -171,7 +224,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
                      PromptTokens = null,
                      CumulativeTotalTokens = null, //TODO use a proper tokenizer
                      CumulativeCompletionTokens = null,
-                     CumulativeResponseTime = sw.Elapsed
+                     CumulativeResponseTime = stopWatch.Elapsed
                   };
                   break;
                default:
@@ -180,8 +233,6 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
             }
          }
       }
-
-      sw.Stop();
    }
 
    /// <summary>
@@ -210,6 +261,8 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       // request.LogitBias
       // request.ModelId
       // request.TailFreeSampling
+
+      _logger.DumpAsJson("Performing completion request", completionRequest);
 
       return completionRequest;
    }

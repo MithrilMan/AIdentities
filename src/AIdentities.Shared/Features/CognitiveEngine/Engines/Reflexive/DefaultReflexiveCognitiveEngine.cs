@@ -29,7 +29,7 @@ public class DefaultReflexiveCognitiveEngine : ReflexiveCognitiveEngine<Cognitiv
 
    protected override IAsyncEnumerable<Thought> HandleNoCommandDetected(
       Prompt prompt,
-      IMissionContext? missionContext,
+      MissionContext? missionContext,
       CancellationToken cancellationToken)
    {
       return base.HandleNoCommandDetected(prompt, missionContext, cancellationToken);
