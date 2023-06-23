@@ -35,18 +35,13 @@ public partial class CreateStableDiffusionPrompt : Skill
       var templateContext = CreateTemplateContext(context);
 
       yield return context.ActionThought($"Creating a summary of the request");
-      //var requestSummary = await completionConnector.RequestCompletionAsync(new DefaultCompletionRequest
-      //{
-      //   Prompt = _defaultRequestSummary.Render(templateContext),
-      //}, cancellationToken).ConfigureAwait(false);
-
-      var responses1 = await completionConnector.RequestCompletionAsStreamAsync(new DefaultCompletionRequest
+      var requestSummary = await completionConnector.RequestCompletionAsync(new DefaultCompletionRequest
       {
          Prompt = _defaultRequestSummary.Render(templateContext),
-      }, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+      }, cancellationToken).ConfigureAwait(false);
+      yield return context.ActionThought(requestSummary?.GeneratedMessage ?? "");
 
-      var summary = string.Join("", responses1.Select(r => r.GeneratedMessage));
-      yield return context.FinalThought(summary);
+      templateContext.SetValue("RequestSummary", requestSummary?.GeneratedMessage ?? "");
 
       var prompt = _defaultTemplate.Render(templateContext);
       yield return context.ActionThought($"Creating a stable diffusion prompt for {context.AIdentity.Name}");

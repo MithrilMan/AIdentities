@@ -1,19 +1,32 @@
 ﻿namespace AIdentities.Chat.Skills.CreateStableDiffusionPrompt;
 public partial class CreateStableDiffusionPrompt
 {
-   const string PROMPT_REQUEST_SUMMARY = """
-      You are "{{AIdentityName}}".
-      {{AIdentityName}} personality: {{Personality}}
+   //const string PROMPT_REQUEST_SUMMARY = """
+   //   You are "{{AIdentityName}}".
+   //   {{AIdentityName}} personality: {{Personality}}
 
-      Goal: understand the conversation history and write a detailed summary of an image that would describe the conversation history context.
+   //   Goal: understand the conversation history and write a detailed summary of an image that would describe the conversation history context.
       
-      This is a conversation history between you, "{{AIdentityName}}", and one or more other persons.
+   //   This is a conversation history between you, "{{AIdentityName}}", and one or more other persons.
+   //   {%- for message in ConversationHistory %}
+   //   {{ message.AuthorName }}: {{message.Text}}
+   //   {%- endfor %}
+      
+   //   Extract from the conversation history above a detailed description of what people partecipating to the conversation, except you, "{{AIdentityName}}", requested.
+   //   Description: 
+   //   """;
+   
+   const string PROMPT_REQUEST_SUMMARY = """
+      This is a sequence of conversation messages between you, "{{AIdentityName}}", and one or more persons. Summarize how the prompt should be based on the following conversation.
+
+      Conversation:
+      ---
       {%- for message in ConversationHistory %}
       {{ message.AuthorName }}: {{message.Text}}
       {%- endfor %}
-      
-      Extract from the conversation history above a detailed description of what people partecipating to the conversation, except you, "{{AIdentityName}}", requested.
-      Description: 
+      ---
+
+      Summary: 
       """;
 
    const string PROMPT = """
@@ -43,13 +56,10 @@ public partial class CreateStableDiffusionPrompt
       - Multiple modifiers can be used to provide more specific details.
       - When generating prompts, reduce abstract psychological and emotional descriptions.
 
-      
-      Conversation history:
-      {%- for message in ConversationHistory %}
-      {{ message.AuthorName }}: {{message.Text}}
-      {%- endfor %}
+      Goal: Write a list of {{PromptsCount}} detailed prompts, following above rules, based on this request:
+      Request: {{RequestSummary}}
 
-      Goal: Write a list of {{PromptsCount}} detailed prompts, following above rules, based on this conversation history above:
+      Prompts:
       1: 
       """;
 }
