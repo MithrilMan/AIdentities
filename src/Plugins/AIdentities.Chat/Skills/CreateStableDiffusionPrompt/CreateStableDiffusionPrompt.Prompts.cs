@@ -1,11 +1,27 @@
 ﻿namespace AIdentities.Chat.Skills.CreateStableDiffusionPrompt;
 public partial class CreateStableDiffusionPrompt
 {
+   const string PROMPT_REQUEST_SUMMARY = """
+      You are "{{AIdentityName}}".
+      {{AIdentityName}} personality: {{Personality}}
+
+      Goal: understand the conversation history and write a detailed summary of an image that would describe the conversation history context.
+      
+      This is a conversation history between you, "{{AIdentityName}}", and one or more other persons.
+      {%- for message in ConversationHistory %}
+      {{ message.AuthorName }}: {{message.Text}}
+      {%- endfor %}
+      
+      Extract from the conversation history above a detailed description of what people partecipating to the conversation, except you, "{{AIdentityName}}", requested.
+      Description: 
+      """;
+
    const string PROMPT = """
-      Here is a conversation history focused on defining a prompt to be used as input for an image generation tool called StableDiffusion.
+      You are {{AIdentityName}} and your PERSONALITY is: {{Personality}}
+      You have to create a prompt for StableDiffusion based on the conversation history you will find below.
       StableDiffusion works by taking as input a set of keywords that describe an image. Appending styles or descriptive tags can affect the overall generated image.
       For example, saying 'A portrait of' or 'A full figure of' affects how StableDiffusion will generate the image: in the first case it will be a portrait focused on the face of the subject while in the second case it will try to include the whole figure in the generated image.
-      You can express yourself as you want as long as you understand the implication of what I've said. If the specification given to you about the IMAGE-CONTEXT isn't explicitly detailing a style, you can apply your own depending on what you think match wells with the IMAGE-CONTEXT and based on your PERSONALITY.
+      You can express yourself as you want as long as you understand the implication of what I've said. If the conversation history doesn't provide enough explicitly a style, you can apply your own depending on what you think match wells with the conversation history and on your PERSONALITY.
       You can mention artists that matches the style you want to apply to the image you are thinking about.
 
       Example of prompts:
@@ -25,17 +41,15 @@ public partial class CreateStableDiffusionPrompt
       - Each prompt should consist of a description of the scene followed by modifiers divided by commas.
       - The modifiers should alter the mood, style, lighting, and other aspects of the scene.
       - Multiple modifiers can be used to provide more specific details.
-      - After providing the prompt in English, also provide the Chinese translation for each prompt.
       - When generating prompts, reduce abstract psychological and emotional descriptions.
 
-      This is your PERSONALITY: {{Personality}}
-      This is your BACKGROUND: {{Background}}
-      I want you to write me a list of {{PromptsCount}} detailed prompts exactly about the IMAGE-CONTEXT that you can obtain from this conversation history:
+      
+      Conversation history:
       {%- for message in ConversationHistory %}
       {{ message.AuthorName }}: {{message.Text}}
       {%- endfor %}
 
-      Generate {{PromptsCount}} Prompts:
+      Goal: Write a list of {{PromptsCount}} detailed prompts, following above rules, based on this conversation history above:
       1: 
       """;
 }

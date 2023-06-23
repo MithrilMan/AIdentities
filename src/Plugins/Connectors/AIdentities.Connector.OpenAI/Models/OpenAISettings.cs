@@ -7,7 +7,7 @@ public class OpenAISettings : IPluginSettings
    public const string DEFAULT_CHAT_ENDPOINT = "https://api.openai.com/v1/chat/completions";
    public const string DEFAULT_COMPLETION_MODEL = "text-davinci-003";
    public const string DEFAULT_COMPLETION_ENDPOINT = "https://api.openai.com/v1/completions";
-   public const int DEFAULT_TIMEOUT = 30000;
+   public const int DEFAULT_TIMEOUT = 2 * 60 * 1000;
 
    /// <summary>
    /// Enable or disable the OpenAI API.
@@ -37,7 +37,7 @@ public class OpenAISettings : IPluginSettings
    /// <summary>
    /// OpenAI API Key.
    /// </summary>
-   public string? ApiKey { get; set; } = default!;  
+   public string? ApiKey { get; set; } = default!;
 
    /// <summary>
    /// The default timeout for the API.

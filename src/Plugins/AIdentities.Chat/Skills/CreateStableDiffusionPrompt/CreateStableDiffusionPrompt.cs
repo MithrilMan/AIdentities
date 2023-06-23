@@ -1,5 +1,7 @@
-﻿using AIdentities.Shared.Plugins.Connectors.Completion;
+﻿using System.Reflection.Metadata;
+using AIdentities.Shared.Plugins.Connectors.Completion;
 using Fluid;
+using Fluid.Ast;
 
 namespace AIdentities.Chat.Skills.CreateStableDiffusionPrompt;
 
@@ -10,6 +12,7 @@ public partial class CreateStableDiffusionPrompt : Skill
    /// </summary>
    public const string CONVERSATION_HISTORY_KEY = nameof(CognitiveChatMissionContext.ConversationHistory);
 
+   private IFluidTemplate _defaultRequestSummary = default!;
    private IFluidTemplate _defaultTemplate = default!;
 
    public CreateStableDiffusionPrompt(ILogger<CreateStableDiffusionPrompt> logger, IAIdentityProvider aIdentityProvider, FluidParser templateParser)
@@ -17,6 +20,7 @@ public partial class CreateStableDiffusionPrompt : Skill
 
    protected override void CreateDefaultPromptTemplates()
    {
+      _defaultRequestSummary = TemplateParser.Parse(PROMPT_REQUEST_SUMMARY);
       _defaultTemplate = TemplateParser.Parse(PROMPT);
 
       // Register the ConversationMessage type so that it can be used in the template
@@ -26,11 +30,25 @@ public partial class CreateStableDiffusionPrompt : Skill
    protected override async IAsyncEnumerable<Thought> ExecuteAsync(SkillExecutionContext context,
                                                                    [EnumeratorCancellation] CancellationToken cancellationToken)
    {
-      var templateContext = CreateTemplateContext(context);
-      var prompt = _defaultTemplate.Render(templateContext);
-
       var completionConnector = context.GetDefaultCompletionConnector();
 
+      var templateContext = CreateTemplateContext(context);
+
+      yield return context.ActionThought($"Creating a summary of the request");
+      //var requestSummary = await completionConnector.RequestCompletionAsync(new DefaultCompletionRequest
+      //{
+      //   Prompt = _defaultRequestSummary.Render(templateContext),
+      //}, cancellationToken).ConfigureAwait(false);
+
+      var responses1 = await completionConnector.RequestCompletionAsStreamAsync(new DefaultCompletionRequest
+      {
+         Prompt = _defaultRequestSummary.Render(templateContext),
+      }, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+
+      var summary = string.Join("", responses1.Select(r => r.GeneratedMessage));
+      yield return context.FinalThought(summary);
+
+      var prompt = _defaultTemplate.Render(templateContext);
       yield return context.ActionThought($"Creating a stable diffusion prompt for {context.AIdentity.Name}");
       var responses = await completionConnector.RequestCompletionAsStreamAsync(new DefaultCompletionRequest
       {
@@ -79,6 +97,7 @@ public partial class CreateStableDiffusionPrompt : Skill
       var templateContext = new TemplateContext(
             new
             {
+               AIdentityName = aidentity.Name.AsSingleLine(),
                Personality = aidentity.Personality.AsSingleLine(),
                Background = chatFeature?.Background.AsSingleLine(),
                PromptsCount = TryExtractFromContext<int>("PromptsCount", context, out var promptsCount) ? promptsCount : 1,

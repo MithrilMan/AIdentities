@@ -6,7 +6,7 @@ public class TextGenerationSettings : IPluginSettings
    public const string DEFAULT_MODEL = "";
    public const string DEFAULT_COMPLETION_ENDPOINT = "http://localhost:5000/api/v1/generate";
    public const string DEFAULT_STREAMED_COMPLETION_ENDPOINT = "ws://localhost:5005/api/v1/stream";
-   public const int DEFAULT_TIMEOUT = 30000;
+   public const int DEFAULT_TIMEOUT = 2 * 60 * 1000;
 
    /// <summary>
    /// Enable or disable the TextGeneration API.

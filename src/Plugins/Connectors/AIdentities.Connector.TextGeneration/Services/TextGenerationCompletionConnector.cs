@@ -215,6 +215,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
             switch (eventType.GetString())
             {
                case "stream_end":
+                  await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Stream completed", cancellationToken).ConfigureAwait(false);
                   yield break;
                case "text_stream":
                   var generatedText = response.RootElement.GetProperty("text").GetString();
