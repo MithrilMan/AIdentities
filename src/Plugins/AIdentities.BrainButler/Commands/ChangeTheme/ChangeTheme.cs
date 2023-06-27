@@ -108,7 +108,7 @@ public class ChangeTheme : CommandDefinition
          var outputBuilder = new StringBuilder();
          int consumedPaletteTokens = 0;
          var completions = connector.RequestCompletionAsStreamAsync(
-            new DefaultCompletionRequest(new AIdentiy.BrainButler(), prompt)
+            new CompletionRequest(new AIdentiy.BrainButler(), prompt)
             {
                MaxGeneratedTokens = 500
             }, cancellationToken)

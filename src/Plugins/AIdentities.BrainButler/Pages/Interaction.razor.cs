@@ -113,7 +113,7 @@ public partial class Interaction : AppPage<Interaction>
       {
          var prompt = PromptGenerator.GenerateFindCommandPrompt(userRequest);
 
-         var response = await _state.CompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest(
+         var response = await _state.CompletionConnector.RequestCompletionAsync(new CompletionRequest(
             AIdentity: _brainButler,
             Prompt: prompt
             )
@@ -170,7 +170,7 @@ public partial class Interaction : AppPage<Interaction>
             return;
          }
 
-         response = await _state.CompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest(
+         response = await _state.CompletionConnector.RequestCompletionAsync(new CompletionRequest(
             AIdentity: _brainButler,
             Prompt: prompt
             )

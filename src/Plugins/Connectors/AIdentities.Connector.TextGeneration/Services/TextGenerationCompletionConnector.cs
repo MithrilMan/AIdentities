@@ -108,7 +108,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<DefaultCompletionResponse?> RequestCompletionAsync(DefaultCompletionRequest request, CancellationToken cancellationToken)
+   public async Task<Shared.Plugins.Connectors.Completion.CompletionResponse?> RequestCompletionAsync(Shared.Plugins.Connectors.Completion.CompletionRequest request, CancellationToken cancellationToken)
    {
       var apiRequest = BuildCompletionRequest(request);
 
@@ -131,7 +131,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
             var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
             sw.Stop();
-            return new DefaultCompletionResponse
+            return new Shared.Plugins.Connectors.Completion.CompletionResponse
             {
                GeneratedMessage = CleanUpResponse(responseData),
                PromptTokens = default,
@@ -168,7 +168,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       return response;
    }
 
-   public IAsyncEnumerable<DefaultCompletionStreamedResponse> RequestCompletionAsStreamAsync(DefaultCompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public IAsyncEnumerable<CompletionStreamedResponse> RequestCompletionAsStreamAsync(Shared.Plugins.Connectors.Completion.CompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       var sw = Stopwatch.StartNew();
 
@@ -179,8 +179,8 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
          );
    }
 
-   private async IAsyncEnumerable<DefaultCompletionStreamedResponse> ProcessStreamResponse(
-      CompletionRequest request,
+   private async IAsyncEnumerable<CompletionStreamedResponse> ProcessStreamResponse(
+      Models.API.CompletionRequest request,
       Stopwatch stopWatch,
       [EnumeratorCancellation] CancellationToken cancellationToken)
    {
@@ -219,7 +219,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
                   yield break;
                case "text_stream":
                   var generatedText = response.RootElement.GetProperty("text").GetString();
-                  yield return new DefaultCompletionStreamedResponse
+                  yield return new CompletionStreamedResponse
                   {
                      GeneratedMessage = generatedText,
                      PromptTokens = null,
@@ -241,11 +241,11 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private CompletionRequest BuildCompletionRequest(DefaultCompletionRequest request)
+   private Models.API.CompletionRequest BuildCompletionRequest(Shared.Plugins.Connectors.Completion.CompletionRequest request)
    {
       var defaultParameters = DefaultParameters;
 
-      var completionRequest = new CompletionRequest(request.Prompt, defaultParameters);
+      var completionRequest = new Models.API.CompletionRequest(request.Prompt, defaultParameters);
 
       if (request.MaxGeneratedTokens != null) { completionRequest.MaxNewTokens = request.MaxGeneratedTokens; }
       if (request.RepetitionPenality != null) { completionRequest.RepetitionPenalty = request.RepetitionPenality; }

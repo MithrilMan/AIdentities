@@ -37,7 +37,7 @@ public partial class CreateStableDiffusionPrompt : Skill
       yield return context.ActionThought($"Creating a summary of the request");
 
       var requestSummary = (await completionConnector.RequestCompletionAsync(
-         new DefaultCompletionRequest(context.AIdentity, _defaultRequestSummary.Render(templateContext)),
+         new CompletionRequest(context.AIdentity, _defaultRequestSummary.Render(templateContext)),
          cancellationToken).ConfigureAwait(false))
          ?.GeneratedMessage ?? "";
 
@@ -48,7 +48,7 @@ public partial class CreateStableDiffusionPrompt : Skill
       yield return context.ActionThought($"Creating a stable diffusion prompt for {context.AIdentity.Name}");
 
       var responses = await completionConnector.RequestCompletionAsStreamAsync(
-         new DefaultCompletionRequest(context.AIdentity, _defaultRequestSummary.Render(templateContext)),
+         new CompletionRequest(context.AIdentity, _defaultTemplate.Render(templateContext)),
          cancellationToken)
          .ToListAsync(cancellationToken)
          .ConfigureAwait(false);

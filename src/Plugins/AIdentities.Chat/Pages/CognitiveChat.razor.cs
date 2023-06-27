@@ -320,7 +320,7 @@ public partial class CognitiveChat : AppPage<CognitiveChat>, ISpeechRecognitionL
          var message = new ConversationMessage(
             text: _state.Message,
             humanId: Guid.Empty, // TODO handle the user
-            humanName: "ME"
+            humanName: "User"
             );
 
          try

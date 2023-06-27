@@ -17,8 +17,10 @@ public partial class CreateStableDiffusionPrompt
    //   """;
    
    const string PROMPT_REQUEST_SUMMARY = """
-      This is a sequence of conversation messages between you, "{{AIdentityName}}", and one or more persons. Summarize how the prompt should be based on the following conversation.
-
+      This is a sequence of conversation messages between you, "{{AIdentityName}}", and one or more persons.
+      Analize the conversation to understand User requirements that have arisen during the conversation and summarize it.
+      The user may have requested some changes to your proposed descriptions, so write only the final user request in detail.
+      
       Conversation:
       ---
       {%- for message in ConversationHistory %}
@@ -26,7 +28,7 @@ public partial class CreateStableDiffusionPrompt
       {%- endfor %}
       ---
 
-      Summary: 
+      User summarized request: 
       """;
 
    const string PROMPT = """
@@ -56,10 +58,16 @@ public partial class CreateStableDiffusionPrompt
       - Multiple modifiers can be used to provide more specific details.
       - When generating prompts, reduce abstract psychological and emotional descriptions.
 
-      Goal: Write a list of {{PromptsCount}} detailed prompts, following above rules, based on this request:
       Request: {{RequestSummary}}
+      Goal: If the request contains a prompt request, 
+      {%- if PromptsCount == 1 -%}
+      write one detailed prompts, following above rules, based on the request, otherwise ask for more clarification about the prompt.
+      Prompt: 
 
+      {% else -%}
+      write a bullet list of {{PromptsCount}} detailed prompts, following above rules, based on the request, otherwise ask for more clarification about the prompt.
       Prompts:
-      1: 
+  
+      {%- endif -%}
       """;
 }

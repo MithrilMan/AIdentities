@@ -5,7 +5,7 @@
 /// The only expected result from all the required property is <see cref="GeneratedMessage"/>.
 /// Other properties are optional and depend on the <see cref="ICompletionConnector"/> capabilities.
 /// </summary>
-public class DefaultCompletionStreamedResponse
+public class CompletionStreamedResponse
 {
    /// <summary>
    /// The model id used to generate the response.

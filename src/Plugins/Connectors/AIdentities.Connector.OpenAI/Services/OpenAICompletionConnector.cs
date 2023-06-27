@@ -112,11 +112,11 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
    /// <summary>
-   /// Builds a <see cref="DefaultCompletionRequest"/> from a <see cref="ICompletionRequest"/>.
+   /// Builds a <see cref="CompletionRequest"/> from a <see cref="ICompletionRequest"/>.
    /// </summary>
-   /// <param name="request">The <see cref="DefaultCompletionRequest"/> to build from.</param>
-   /// <returns>The built <see cref="DefaultCompletionRequest"/>.</returns>
-   private CreateCompletionRequest BuildCreateCompletionRequest(DefaultCompletionRequest request, bool requireStream)
+   /// <param name="request">The <see cref="CompletionRequest"/> to build from.</param>
+   /// <returns>The built <see cref="CompletionRequest"/>.</returns>
+   private CreateCompletionRequest BuildCreateCompletionRequest(CompletionRequest request, bool requireStream)
    {
       var apiRequest = new CreateCompletionRequest
       {
@@ -143,7 +143,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       _settingsManager.OnSettingsUpdated -= OnSettingsUpdated;
    }
 
-   public async Task<DefaultCompletionResponse?> RequestCompletionAsync(DefaultCompletionRequest request, CancellationToken cancellationToken)
+   public async Task<CompletionResponse?> RequestCompletionAsync(CompletionRequest request, CancellationToken cancellationToken)
    {
       var apiRequest = BuildCreateCompletionRequest(request, false);
 
@@ -160,7 +160,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
          var responseData = await response.Content.ReadFromJsonAsync<CreateCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
          sw.Stop();
-         return new DefaultCompletionResponse
+         return new CompletionResponse
          {
             ModelId = responseData?.Model,
             GeneratedMessage = responseData?.Choices.FirstOrDefault()?.Text,
@@ -178,7 +178,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       }
    }
 
-   public async IAsyncEnumerable<DefaultCompletionStreamedResponse> RequestCompletionAsStreamAsync(DefaultCompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public async IAsyncEnumerable<CompletionStreamedResponse> RequestCompletionAsStreamAsync(CompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       CreateCompletionRequest apiRequest = BuildCreateCompletionRequest(request, true);
 
@@ -224,7 +224,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
                cumulativeCompletionTokens += tokenizer.Encode(message).Count;
             }
 
-            yield return new DefaultCompletionStreamedResponse
+            yield return new CompletionStreamedResponse
             {
                ModelId = streamedResponse.Model,
                GeneratedMessage = message,
