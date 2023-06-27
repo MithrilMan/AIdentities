@@ -109,7 +109,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request, CancellationToken cancellationToken)
+   public async Task<ConversationalResponse?> RequestChatCompletionAsync(ConversationalRequest request, CancellationToken cancellationToken)
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request);
 
@@ -132,7 +132,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
             var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
             sw.Stop();
-            return new DefaultConversationalResponse
+            return new ConversationalResponse
             {
                GeneratedMessage = CleanUpResponse(responseData, request.AIdentity),
                PromptTokens = default,
@@ -170,7 +170,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       return response;
    }
 
-   public IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, CancellationToken cancellationToken)
+   public IAsyncEnumerable<ConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(ConversationalRequest request, CancellationToken cancellationToken)
    {
       var sw = Stopwatch.StartNew();
 
@@ -181,7 +181,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
          );
    }
 
-   private async IAsyncEnumerable<IConversationalStreamedResponse> ProcessStreamResponse(
+   private async IAsyncEnumerable<ConversationalStreamedResponse> ProcessStreamResponse(
       ChatCompletionRequest request,
       Stopwatch stopWatch,
       [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -220,10 +220,11 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
                   await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "Stream completed", cancellationToken).ConfigureAwait(false);
                   yield break;
                case "text_stream":
-                  var generatedText = response.RootElement.GetProperty("text").GetString();
-                  yield return new DefaultConversationalStreamedResponse
+                  var generatedText = response.RootElement.GetProperty("text").GetString()
+                     ?? throw new Exception("Unexpected response from TextGeneration API");
+
+                  yield return new ConversationalStreamedResponse(generatedText)
                   {
-                     GeneratedMessage = generatedText,
                      PromptTokens = null,
                      CumulativeTotalTokens = null, //TODO use a proper tokenizer
                      CumulativeCompletionTokens = null,
@@ -243,11 +244,11 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request)
+   private ChatCompletionRequest BuildChatCompletionRequest(ConversationalRequest request)
    {
       var defaultParameters = DefaultParameters;
 
-      var instructions = request.Messages.Where(request => request.Role == DefaultConversationalRole.System).Select(request => request.Content).ToList();
+      var instructions = request.Messages.Where(request => request.Role == ConversationalRole.System).Select(request => request.Content).ToList();
 
       // we need now to build the prompt since textgeneration api has just a single prompt field, not a list of messages with roles
       var sb = new StringBuilder();
@@ -260,7 +261,7 @@ public class TextGenerationChatConnector : IConversationalConnector, IDisposable
       foreach (var message in request.Messages)
       {
          // we add a new line to space more the messages belonging to different roles, not sure if it's needed
-         if (message.Role == DefaultConversationalRole.System)
+         if (message.Role == ConversationalRole.System)
          {
             continue;
             //sb.AppendLine($"{message.Content}");

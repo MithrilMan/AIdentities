@@ -33,16 +33,16 @@ internal static class PromptTemplates
       Now reply to the last message using its used language, considering previous messages, without greet, don't repeate your name, don't be repetitive.
       """;
 
-   public static IEnumerable<DefaultConversationalMessage> BuildPromptMessages(
+   public static IEnumerable<ConversationalMessage> BuildPromptMessages(
       AIdentity aIdentity,
       IEnumerable<ConversationMessage> chatHistory,
       IEnumerable<string> participants)
    {
-      DefaultConversationalMessage CreateMessage(ConversationMessage message)
+      ConversationalMessage CreateMessage(ConversationMessage message)
       {
          bool isAIdentityMessage = message.AuthorId == aIdentity.Id && message.IsAIGenerated;
-         return new DefaultConversationalMessage(
-             Role: isAIdentityMessage ? DefaultConversationalRole.Assistant : DefaultConversationalRole.User,
+         return new ConversationalMessage(
+             Role: isAIdentityMessage ? ConversationalRole.Assistant : ConversationalRole.User,
              Content: message.Text ?? "",
              Name: message.IsAIGenerated ? message.AuthorName : "User" // message.AuthorId == aIdentity.Id ? aIdentity.Name : message.AuthorName.ToString()
             );
@@ -68,9 +68,9 @@ internal static class PromptTemplates
          .Replace(PromptTokens.TOKEN_EXAMPLE_MESSAGES, PromptUtils.BuildAIdentityMessageStyleExamples(chatFeature, aIdentity.Name ?? "Assistant"));
 
 
-      yield return new DefaultConversationalMessage(
+      yield return new ConversationalMessage(
          Content: sb.ToString(),
-         Role: DefaultConversationalRole.System,
+         Role: ConversationalRole.System,
          Name: null
       );
 
@@ -80,12 +80,12 @@ internal static class PromptTemplates
          yield return CreateMessage(oldMessage);
       }
 
-      yield return new DefaultConversationalMessage(
+      yield return new ConversationalMessage(
          Content: sb.Clear()
             .Append(ADDITIONAL_GUARDRAIL)
             .Replace(PromptTokens.TOKEN_AIDENTITY_NAME, aIdentity.Name)
             .ToString(),
-         Role: DefaultConversationalRole.System,
+         Role: ConversationalRole.System,
          Name: null
       );
 
@@ -95,7 +95,7 @@ internal static class PromptTemplates
       //}
    }
 
-   private static IEnumerable<DefaultConversationalMessage> BuildWithFullPrompt(
+   private static IEnumerable<ConversationalMessage> BuildWithFullPrompt(
       AIdentity aIdentity,
       IEnumerable<ConversationMessage> chatHistory,
       IEnumerable<string> participants,
@@ -110,8 +110,8 @@ internal static class PromptTemplates
          .Replace(PromptTokens.TOKEN_AIDENTITY_PERSONALITY, aIdentity.Personality?.AsSingleLine())
          ;
 
-      yield return new DefaultConversationalMessage(
-         Role: DefaultConversationalRole.System,
+      yield return new ConversationalMessage(
+         Role: ConversationalRole.System,
          Content: sb.ToString(),
          Name: null
          );

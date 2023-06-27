@@ -6,8 +6,8 @@ namespace AIdentities.Shared.Plugins.Connectors.Conversational;
 /// The role of the author of this message.
 /// </summary>
 /// <value>The role of the author of this message.</value>
-[JsonConverter(typeof(JsonStringEnumConverterEx<DefaultConversationalRole>))]
-public enum DefaultConversationalRole
+[JsonConverter(typeof(JsonStringEnumConverterEx<ConversationalRole>))]
+public enum ConversationalRole
 {
    /// <summary>
    /// Enum SystemEnum for system

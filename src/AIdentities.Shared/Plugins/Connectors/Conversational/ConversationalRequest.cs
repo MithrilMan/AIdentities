@@ -6,37 +6,37 @@
 /// The numerical values within the documentation of this interface are indicative, they depend on the model and the connector.
 /// To see what values are supported by a connector, check the documentation of the connector.
 /// </summary>
-public interface IConversationalRequest
+public record ConversationalRequest(AIdentity AIdentity)
 {
    /// <summary>
    /// The ID of the model to use.
    /// </summary>
-   string? ModelId { get; init; }
+   public string? ModelId { get; init; }
 
    /// <summary>
    /// The AIdentity who will generate the text.
    /// </summary>
-   public AIdentity AIdentity { get; init; }
+   public AIdentity AIdentity { get; init; } = AIdentity;
 
    /// <summary>
    /// The messages to generate chat completions for.
    /// </summary>
-   IEnumerable<IConversationalMessage> Messages { get; init; }
+   public List<ConversationalMessage> Messages { get; init; } = new();
 
    /// <summary>
    /// How many chat completion choices to generate for each prompt.
    /// </summary>
-   int? CompletionResults { get; init; }
+   public int? CompletionResults { get; init; }
 
    /// <summary>
    /// The optional sequences to instruct the model to stop generating further tokens once the sequence is encountered.
    /// </summary>
-   IList<string>? StopSequences { get; init; }
+   public IList<string>? StopSequences { get; init; }
 
    /// <summary>
    /// The optional user ID to associate with this request.
    /// </summary>
-   string? UserId { get; init; }
+   public string? UserId { get; init; }
 
    /// <summary>
    /// Determines how creative the model should be.
@@ -46,7 +46,7 @@ public interface IConversationalRequest
    /// In layman terms, the higher the temperature, the more creative the model is, the lower the temperature, the more logical the model is.
    /// Value from 0.1 to 2.0.
    /// </summary>
-   float? Temperature { get; init; }
+   public float? Temperature { get; init; }
 
    /// <summary>
    /// Repetition penalty is used to prevent the model from repeating the same words over and over again.
@@ -54,14 +54,14 @@ public interface IConversationalRequest
    /// Increasing the value too much may result in the model not repeating the same words at all, which may result in the model not making sense and breaking the chat format.
    /// The standard value for chat is approximately 1.0 - 1.05 but may vary depending on the model.
    /// </summary>
-   float? RepetitionPenality { get; init; }
+   public float? RepetitionPenality { get; init; }
 
    /// <summary>
    /// The range of influence of Repetition penalty in tokens.
    /// The repetition penalty is applied to the last N tokens, where N is the value of this parameter.
    /// </summary>
 
-   float? RepetitionPenalityRange { get; init; }
+   public float? RepetitionPenalityRange { get; init; }
 
    /// <summary>
    /// Top-p sampling (aka nucleus sampling) tells the model to pick the next token from the top tokens based on the sum of their probabilities.
@@ -71,7 +71,7 @@ public interface IConversationalRequest
    /// A lower value will result in more predictable and repetitive text, while setting a higher value will result in more diverse but potentially more incoherent or nonsensical text.
    /// range is 0.0 to 1.0.
    /// </summary>
-   float? TopPSamplings { get; init; }
+   public float? TopPSamplings { get; init; }
 
    /// <summary>
    /// Top-k sampling tells the model to pick the next token from the top 'k' tokens in its list, sorted by probability.
@@ -80,7 +80,7 @@ public interface IConversationalRequest
    /// Set to 0 to disable.
    /// Set it to 1 to only use the first token (the most likely word).
    /// </summary>
-   float? TopKSamplings { get; init; }
+   public float? TopKSamplings { get; init; }
 
    /// <summary>
    /// Top-a sampling comes from BlinDL/RWKV-LM <see cref="https://github.com/BlinkDL/RWKV-LM"/>.
@@ -91,7 +91,7 @@ public interface IConversationalRequest
    /// - remove all entries whose probability is less than top_a * p_max^2.
    /// This sampling methods reduces randomness when the model is confident about the next token, but has little effect on creativity.
    /// </summary>
-   float? TopASamplings { get; init; }
+   public float? TopASamplings { get; init; }
 
    /// <summary>
    /// Sets the probability threshold (probability mass) for the typical sampling method.
@@ -100,7 +100,7 @@ public interface IConversationalRequest
    /// In peak distributions this can result in a very small number of tokens being sampled, which can lead to repetitive text.
    /// In smoother distributions this can result in a broader range of tokens being sampled, which can lead to more creative text.
    /// </summary>
-   float? TypicalSampling { get; init; }
+   public float? TypicalSampling { get; init; }
 
    /// <summary>
    /// Tail Free Sampling aims to remove low probability tokens without compromising the creativity of the generated text.
@@ -108,7 +108,7 @@ public interface IConversationalRequest
    /// This sampling method works well on longer pieces of text and can be used in conjunction with other sampling methods.
    /// A value of 1 disabled this sampling method.
    /// </summary>
-   float? TailFreeSampling { get; init; }
+   public float? TailFreeSampling { get; init; }
 
    /// <summary>
    /// The maximum amount of tokens that a AI will generate to respond.
@@ -116,7 +116,7 @@ public interface IConversationalRequest
    /// of 3 tokens. In ChatGPT 1 token is approximatelly 4 characters.
    /// The larger the parameter value, the longer the generation time will be.
    /// </summary>
-   int? MaxGeneratedTokens { get; init; }
+   public int? MaxGeneratedTokens { get; init; }
 
    /// <summary>
    /// How much will the AI remember.
@@ -124,7 +124,7 @@ public interface IConversationalRequest
    /// Note that the maximum available size depends on the model so this parameter
    /// shouldn't exceed the model context size in order to avoid errors.
    /// </summary>
-   int? ContextSize { get; init; }
+   public int? ContextSize { get; init; }
 
    /// <summary>
    /// Modify the likelihood of specified tokens appearing in the completion.

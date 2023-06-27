@@ -69,16 +69,16 @@ public partial class WhatTimeIsIt : CommandDefinition
       var askedTime = DateTime.Now.AddSeconds(args.TimeDifference);
       string result = $"the result of the time {args.TimeDifference} seconds from now is {askedTime}";
 
-      var finalResponse = await connector.RequestChatCompletionAsync(new DefaultConversationalRequest(new AIdentiy.BrainButler())
+      var finalResponse = await connector.RequestChatCompletionAsync(new ConversationalRequest(new AIdentiy.BrainButler())
       {
-         Messages = new List<IConversationalMessage>() {
-            new DefaultConversationalMessage(DefaultConversationalRole.System, "You are Brain Butler, a funny helpful AI agent that loves to make joke when giving back informations.",null),
-            new DefaultConversationalMessage(DefaultConversationalRole.System, $"""
+         Messages = new List<ConversationalMessage>() {
+            new ConversationalMessage(ConversationalRole.System, "You are Brain Butler, a funny helpful AI agent that loves to make joke when giving back informations.",null),
+            new ConversationalMessage(ConversationalRole.System, $"""
                The answer to the user request is: {result}
                Adjust the answer using your funny personality but ensure to include the result that's "{askedTime}".
                Detect and reply using the same user language
                """,null),
-            new DefaultConversationalMessage(DefaultConversationalRole.User, userPrompt, null),
+            new ConversationalMessage(ConversationalRole.User, userPrompt, null),
           }
       }, cancellationToken).ConfigureAwait(false);
 

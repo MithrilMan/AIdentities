@@ -129,17 +129,17 @@ public partial class Interaction : AppPage<Interaction>
             // if it doesn't understand the request, let's try to reply in conversational style
 
             _state.StreamedResponse = new AIResponse { };
-            var streamedResponse = _state.ConversationalConnector!.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest(_brainButler)
+            var streamedResponse = _state.ConversationalConnector!.RequestChatCompletionAsStreamAsync(new ConversationalRequest(_brainButler)
             {
-               Messages = new List<IConversationalMessage>()
+               Messages = new List<ConversationalMessage>()
                {
-                   new DefaultConversationalMessage(
-                      Role: DefaultConversationalRole.System,
+                   new ConversationalMessage(
+                      Role: ConversationalRole.System,
                       Content: "You are Brain Butler, a funny helpful AI agent that loves to make joke when giving back informations.",
                       null
                       ),
-                   new DefaultConversationalMessage(
-                      Role: DefaultConversationalRole.User,
+                   new ConversationalMessage(
+                      Role: ConversationalRole.User,
                       Content: userRequest,
                       null
                       ),

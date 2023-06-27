@@ -33,7 +33,7 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
 
    CognitiveContext ICognitiveEngine.Context => Context;
 
-   protected DefaultConversationalMessage PersonalityInstruction { get; private set; } = default!;
+   protected ConversationalMessage PersonalityInstruction { get; private set; } = default!;
 
    protected AsyncRetryPolicy RetryPolicy { get; private set; }
 
@@ -120,8 +120,8 @@ public abstract class CognitiveEngine<TCognitiveContext> : ICognitiveEngine
    /// </summary>
    protected virtual void SetupAIdentityPersonality()
    {
-      PersonalityInstruction = new DefaultConversationalMessage(
-                 Role: DefaultConversationalRole.System,
+      PersonalityInstruction = new ConversationalMessage(
+                 Role: ConversationalRole.System,
                  Content: AIdentity.Personality!,
                  Name: AIdentity.Name);
    }

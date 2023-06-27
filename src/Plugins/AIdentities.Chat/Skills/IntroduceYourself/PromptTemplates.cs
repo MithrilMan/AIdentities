@@ -4,7 +4,7 @@ namespace AIdentities.Chat.Skills.IntroduceYourself;
 
 internal static class PromptTemplates
 {
-   public static IEnumerable<DefaultConversationalMessage> GetIntroductionPrompt(AIdentity aIdentity, IEnumerable<string> participants)
+   public static IEnumerable<ConversationalMessage> GetIntroductionPrompt(AIdentity aIdentity, IEnumerable<string> participants)
    {
       var chatFeature = aIdentity.Features.Get<AIdentityChatFeature>();
       var background = chatFeature?.Background;
@@ -40,9 +40,9 @@ internal static class PromptTemplates
       sb.Replace(PromptTokens.TOKEN_PARTICIPANTS, PromptUtils.BuildParticipants(aIdentity, participants))
          .Replace(PromptTokens.TOKEN_AIDENTITY_NAME, aIdentity.Name);
 
-      yield return new DefaultConversationalMessage(
+      yield return new ConversationalMessage(
          Content: sb.ToString(),
-         Role: DefaultConversationalRole.System,
+         Role: ConversationalRole.System,
          Name: aIdentity.Name
       );
 

@@ -11,7 +11,7 @@ public interface IConversationalConnector : IConnector
    /// </summary>
    /// <param name="request">The request to perform.</param>
    /// <returns>The response from the chat API.</returns>
-   Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request, CancellationToken cancellationToken);
+   Task<ConversationalResponse?> RequestChatCompletionAsync(ConversationalRequest request, CancellationToken cancellationToken);
 
    /// <summary>
    /// Perform a request to the conversational endpoint.
@@ -19,5 +19,5 @@ public interface IConversationalConnector : IConnector
    /// <param name="request">The request to perform.</param>
    /// <param name="cancellationToken">The cancellation token to stop the stream generation.</param>
    /// <returns>The responses from the stream up to completion.</returns>
-   IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, CancellationToken cancellationToken);
+   IAsyncEnumerable<ConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(ConversationalRequest request, CancellationToken cancellationToken);
 }

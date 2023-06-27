@@ -78,13 +78,13 @@ public partial class ReplyToPrompt : Skill
          participantNames = participantNames.Append("User");
       }
 
-      var streamedResult = connector.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest(aidentity)
+      var streamedResult = connector.RequestChatCompletionAsStreamAsync(new ConversationalRequest(aidentity)
       {
          Messages = PromptTemplates.BuildPromptMessages(
             aidentity,
             history,
             participantNames
-            ),
+            ).ToList(),
          StopSequences = participantNames.Select(p => $"\n{p}:").ToList()
          //MaxGeneratedTokens = 200
       }, cancellationToken).ConfigureAwait(false);

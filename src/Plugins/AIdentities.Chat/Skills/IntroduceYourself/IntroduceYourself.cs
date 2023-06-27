@@ -49,9 +49,9 @@ public partial class IntroduceYourself : Skill
          participantNames = participantNames.Append("User");
       }
 
-      var streamedResult = connector.RequestChatCompletionAsStreamAsync(new DefaultConversationalRequest(aidentity)
+      var streamedResult = connector.RequestChatCompletionAsStreamAsync(new ConversationalRequest(aidentity)
       {
-         Messages = PromptTemplates.GetIntroductionPrompt(aidentity, participantNames),
+         Messages = PromptTemplates.GetIntroductionPrompt(aidentity, participantNames).ToList(),
          Temperature = 0.7f, //TODO: make this configurable based on the AIdentity
          MaxGeneratedTokens = 100 //TODO: make this configurable based on the AIdentity
       }, cancellationToken).ConfigureAwait(false);

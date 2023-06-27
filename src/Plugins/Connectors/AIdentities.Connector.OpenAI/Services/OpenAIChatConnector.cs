@@ -111,7 +111,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<IConversationalResponse?> RequestChatCompletionAsync(IConversationalRequest request, CancellationToken cancellationToken)
+   public async Task<ConversationalResponse?> RequestChatCompletionAsync(ConversationalRequest request, CancellationToken cancellationToken)
    {
       ChatCompletionRequest apiRequest = BuildChatCompletionRequest(request, false);
 
@@ -129,7 +129,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
          var responseData = await response.Content.ReadFromJsonAsync<ChatCompletionResponse>(cancellationToken: cancellationToken).ConfigureAwait(false);
 
          sw.Stop();
-         return new DefaultConversationalResponse
+         return new ConversationalResponse
          {
             GeneratedMessage = responseData?.Choices.FirstOrDefault()?.Message?.Content,
             PromptTokens = responseData?.Usage?.PromptTokens,
@@ -145,7 +145,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       }
    }
 
-   public IAsyncEnumerable<IConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(IConversationalRequest request, CancellationToken cancellationToken)
+   public IAsyncEnumerable<ConversationalStreamedResponse> RequestChatCompletionAsStreamAsync(ConversationalRequest request, CancellationToken cancellationToken)
    {
       SharpToken.GptEncoding? tokenizer = null;
       try
@@ -164,7 +164,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
          );
    }
 
-   private async IAsyncEnumerable<IConversationalStreamedResponse> ProcessStreamResponse(
+   private async IAsyncEnumerable<ConversationalStreamedResponse> ProcessStreamResponse(
       ChatCompletionRequest request,
       Stopwatch stopWatch,
       SharpToken.GptEncoding? tokenizer,
@@ -210,15 +210,16 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
 
          if (streamedResponse is not null)
          {
-            var message = streamedResponse.Choices.FirstOrDefault()?.Message?.Content;
-            if (message is not null && tokenizer is not null)
+            var message = (streamedResponse.Choices.FirstOrDefault()?.Message?.Content)
+               ?? throw new Exception("Received empty message from OpenAI API");
+
+            if (tokenizer is not null)
             {
                cumulativeCompletionTokens += tokenizer.Encode(message).Count;
             }
 
-            yield return new DefaultConversationalStreamedResponse
+            yield return new ConversationalStreamedResponse(message)
             {
-               GeneratedMessage = message,
                PromptTokens = streamedResponse.Usage?.PromptTokens,
                CumulativeTotalTokens = streamedResponse.Usage?.TotalTokens,
                CumulativeCompletionTokens = cumulativeCompletionTokens,
@@ -233,7 +234,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private ChatCompletionRequest BuildChatCompletionRequest(IConversationalRequest request, bool requireStream)
+   private ChatCompletionRequest BuildChatCompletionRequest(ConversationalRequest request, bool requireStream)
    {
       var apiRequest = new ChatCompletionRequest
       {
@@ -285,11 +286,11 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
       return sanitized;
    }
 
-   private static ChatCompletionRoleEnum? MapRole(DefaultConversationalRole role) => role switch
+   private static ChatCompletionRoleEnum? MapRole(ConversationalRole role) => role switch
    {
-      DefaultConversationalRole.User => ChatCompletionRoleEnum.User,
-      DefaultConversationalRole.Assistant => ChatCompletionRoleEnum.Assistant,
-      DefaultConversationalRole.System => ChatCompletionRoleEnum.System,
+      ConversationalRole.User => ChatCompletionRoleEnum.User,
+      ConversationalRole.Assistant => ChatCompletionRoleEnum.Assistant,
+      ConversationalRole.System => ChatCompletionRoleEnum.System,
       _ => throw new NotImplementedException()
    };
 
