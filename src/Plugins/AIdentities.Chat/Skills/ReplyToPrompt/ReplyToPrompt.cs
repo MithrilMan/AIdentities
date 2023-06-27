@@ -78,16 +78,13 @@ public partial class ReplyToPrompt : Skill
          participantNames = participantNames.Append("User");
       }
 
-      var streamedResult = connector.RequestChatCompletionAsStreamAsync(new ConversationalRequest(aidentity)
-      {
-         Messages = PromptTemplates.BuildPromptMessages(
-            aidentity,
-            history,
-            participantNames
-            ).ToList(),
-         StopSequences = participantNames.Select(p => $"\n{p}:").ToList()
-         //MaxGeneratedTokens = 200
-      }, cancellationToken).ConfigureAwait(false);
+      var messages = PromptTemplates.BuildPromptMessages(aidentity, history, participantNames).ToList();
+      var streamedResult = connector.RequestChatCompletionAsStreamAsync(
+         new ConversationalRequest(aidentity, messages)
+         {
+            StopSequences = participantNames.Select(p => $"\n{p}:").ToList()
+            //MaxGeneratedTokens = 200
+         }, cancellationToken).ConfigureAwait(false);
 
       var streamedFinalThought = context.StreamFinalThought("");
       await foreach (var thought in streamedResult)

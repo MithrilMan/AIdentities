@@ -190,11 +190,11 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
       CancellationToken cancellationToken)
    {
       var instruction = PromptTemplates.BuildFindSkillPrompt(prompt, availableSkills);
-      var response = await GetDefaultConnector<ICompletionConnector>().RequestCompletionAsync(new DefaultCompletionRequest
-      {
-         Prompt = instruction,
-         MaxGeneratedTokens = 250,
-      }, cancellationToken).ConfigureAwait(false);
+      var response = await GetDefaultConnector<ICompletionConnector>().RequestCompletionAsync(
+         new CompletionRequest(AIdentity, instruction)
+         {
+            MaxGeneratedTokens = 250,
+         }, cancellationToken).ConfigureAwait(false);
 
       var detectedSkill = SkillRegexUtils.ExtractSkillName().Match(response!.GeneratedMessage!).Value;
       bool skillDetected = !string.IsNullOrEmpty(detectedSkill);
@@ -211,11 +211,11 @@ public abstract class ReflexiveCognitiveEngine<TCognitiveContext> : CognitiveEng
             {
                // try to detect arguments out of the prompt
                instruction = PromptTemplates.BuildGenerateSkillParametersJson(prompt, skill);
-               response = await GetDefaultConnector<ICompletionConnector>().RequestCompletionAsync(new DefaultCompletionRequest
-               {
-                  Prompt = instruction,
-                  MaxGeneratedTokens = 500, //TODO: make this configurable
-               }, cancellationToken).ConfigureAwait(false);
+               response = await GetDefaultConnector<ICompletionConnector>()
+                  .RequestCompletionAsync(new CompletionRequest(AIdentity, instruction)
+                  {
+                     MaxGeneratedTokens = 500, //TODO: make this configurable
+                  }, cancellationToken).ConfigureAwait(false);
 
                jsonArgs = SkillRegexUtils.ExtractJson().Match(response!.GeneratedMessage!).Value;
             }

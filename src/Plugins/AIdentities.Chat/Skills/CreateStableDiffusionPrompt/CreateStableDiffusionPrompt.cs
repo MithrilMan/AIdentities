@@ -35,20 +35,23 @@ public partial class CreateStableDiffusionPrompt : Skill
       var templateContext = CreateTemplateContext(context);
 
       yield return context.ActionThought($"Creating a summary of the request");
-      var requestSummary = await completionConnector.RequestCompletionAsync(new DefaultCompletionRequest
-      {
-         Prompt = _defaultRequestSummary.Render(templateContext),
-      }, cancellationToken).ConfigureAwait(false);
-      yield return context.ActionThought(requestSummary?.GeneratedMessage ?? "");
 
-      templateContext.SetValue("RequestSummary", requestSummary?.GeneratedMessage ?? "");
+      var requestSummary = (await completionConnector.RequestCompletionAsync(
+         new DefaultCompletionRequest(context.AIdentity, _defaultRequestSummary.Render(templateContext)),
+         cancellationToken).ConfigureAwait(false))
+         ?.GeneratedMessage ?? "";
+
+      templateContext.SetValue("RequestSummary", requestSummary);
+      yield return context.ActionThought(requestSummary);
 
       var prompt = _defaultTemplate.Render(templateContext);
       yield return context.ActionThought($"Creating a stable diffusion prompt for {context.AIdentity.Name}");
-      var responses = await completionConnector.RequestCompletionAsStreamAsync(new DefaultCompletionRequest
-      {
-         Prompt = prompt,
-      }, cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
+
+      var responses = await completionConnector.RequestCompletionAsStreamAsync(
+         new DefaultCompletionRequest(context.AIdentity, _defaultRequestSummary.Render(templateContext)),
+         cancellationToken)
+         .ToListAsync(cancellationToken)
+         .ConfigureAwait(false);
 
       var response = string.Join("", responses.Select(r => r.GeneratedMessage));
       SetGeneratedPrompt(context, response);

@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+using AIdentities.Shared.Features.CognitiveEngine.Prompts;
 
 namespace AIdentities.BrainButler.Commands.ChangeTheme;
 
@@ -106,13 +107,14 @@ public class ChangeTheme : CommandDefinition
 
          var outputBuilder = new StringBuilder();
          int consumedPaletteTokens = 0;
-         var completions = connector.RequestCompletionAsStreamAsync(new DefaultCompletionRequest
-         {
-            Prompt = prompt,
-            MaxGeneratedTokens = 500
-         }, cancellationToken)
+         var completions = connector.RequestCompletionAsStreamAsync(
+            new DefaultCompletionRequest(new AIdentiy.BrainButler(), prompt)
+            {
+               MaxGeneratedTokens = 500
+            }, cancellationToken)
             .WithCancellation(cancellationToken)
             .ConfigureAwait(false);
+
          await foreach (var completion in completions)
          {
             outputBuilder.Append(completion.GeneratedMessage);

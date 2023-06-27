@@ -6,22 +6,22 @@
 /// The numerical values within the documentation of this interface are indicative, they depend on the model and the connector.
 /// To see what values are supported by a connector, check the documentation of the connector.
 /// </summary>
-public record ConversationalRequest(AIdentity AIdentity)
+public record ConversationalRequest(AIdentity AIdentity, IEnumerable<ConversationalMessage> Messages)
 {
-   /// <summary>
-   /// The ID of the model to use.
-   /// </summary>
-   public string? ModelId { get; init; }
-
    /// <summary>
    /// The AIdentity who will generate the text.
    /// </summary>
-   public AIdentity AIdentity { get; init; } = AIdentity;
+   public AIdentity AIdentity { get; } = AIdentity;
 
    /// <summary>
    /// The messages to generate chat completions for.
    /// </summary>
-   public List<ConversationalMessage> Messages { get; init; } = new();
+   public IEnumerable<ConversationalMessage> Messages { get; } = Messages;
+
+   /// <summary>
+   /// The ID of the model to use.
+   /// </summary>
+   public string? ModelId { get; init; }
 
    /// <summary>
    /// How many chat completion choices to generate for each prompt.

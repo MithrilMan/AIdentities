@@ -116,7 +116,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
    /// </summary>
    /// <param name="request">The <see cref="DefaultCompletionRequest"/> to build from.</param>
    /// <returns>The built <see cref="DefaultCompletionRequest"/>.</returns>
-   private CreateCompletionRequest BuildCreateCompletionRequest(ICompletionRequest request, bool requireStream)
+   private CreateCompletionRequest BuildCreateCompletionRequest(DefaultCompletionRequest request, bool requireStream)
    {
       var apiRequest = new CreateCompletionRequest
       {
@@ -143,7 +143,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       _settingsManager.OnSettingsUpdated -= OnSettingsUpdated;
    }
 
-   public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request, CancellationToken cancellationToken)
+   public async Task<DefaultCompletionResponse?> RequestCompletionAsync(DefaultCompletionRequest request, CancellationToken cancellationToken)
    {
       var apiRequest = BuildCreateCompletionRequest(request, false);
 
@@ -178,7 +178,7 @@ public class OpenAICompletionConnector : ICompletionConnector, IDisposable
       }
    }
 
-   public async IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public async IAsyncEnumerable<DefaultCompletionStreamedResponse> RequestCompletionAsStreamAsync(DefaultCompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       CreateCompletionRequest apiRequest = BuildCreateCompletionRequest(request, true);
 

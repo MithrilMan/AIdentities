@@ -108,7 +108,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
    public TFeatureType? GetFeature<TFeatureType>() => Features.Get<TFeatureType>();
    public void SetFeature<TFeatureType>(TFeatureType? feature) => Features.Set(feature);
 
-   public async Task<ICompletionResponse?> RequestCompletionAsync(ICompletionRequest request, CancellationToken cancellationToken)
+   public async Task<DefaultCompletionResponse?> RequestCompletionAsync(DefaultCompletionRequest request, CancellationToken cancellationToken)
    {
       var apiRequest = BuildCompletionRequest(request);
 
@@ -168,7 +168,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
       return response;
    }
 
-   public IAsyncEnumerable<ICompletionStreamedResponse> RequestCompletionAsStreamAsync(ICompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
+   public IAsyncEnumerable<DefaultCompletionStreamedResponse> RequestCompletionAsStreamAsync(DefaultCompletionRequest request, [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       var sw = Stopwatch.StartNew();
 
@@ -179,7 +179,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
          );
    }
 
-   private async IAsyncEnumerable<ICompletionStreamedResponse> ProcessStreamResponse(
+   private async IAsyncEnumerable<DefaultCompletionStreamedResponse> ProcessStreamResponse(
       CompletionRequest request,
       Stopwatch stopWatch,
       [EnumeratorCancellation] CancellationToken cancellationToken)
@@ -241,7 +241,7 @@ public class TextGenerationCompletionConnector : ICompletionConnector, IDisposab
    /// </summary>
    /// <param name="request">The <see cref="ChatApiRequest"/> to build from.</param>
    /// <returns>The built <see cref="ChatCompletionRequest"/>.</returns>
-   private CompletionRequest BuildCompletionRequest(ICompletionRequest request)
+   private CompletionRequest BuildCompletionRequest(DefaultCompletionRequest request)
    {
       var defaultParameters = DefaultParameters;
 

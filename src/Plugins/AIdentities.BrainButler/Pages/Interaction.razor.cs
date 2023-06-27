@@ -113,9 +113,11 @@ public partial class Interaction : AppPage<Interaction>
       {
          var prompt = PromptGenerator.GenerateFindCommandPrompt(userRequest);
 
-         var response = await _state.CompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest
+         var response = await _state.CompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest(
+            AIdentity: _brainButler,
+            Prompt: prompt
+            )
          {
-            Prompt = prompt,
             MaxGeneratedTokens = 250
          }, _state.MessageGenerationCancellationTokenSource.Token).ConfigureAwait(false);
 
@@ -129,9 +131,9 @@ public partial class Interaction : AppPage<Interaction>
             // if it doesn't understand the request, let's try to reply in conversational style
 
             _state.StreamedResponse = new AIResponse { };
-            var streamedResponse = _state.ConversationalConnector!.RequestChatCompletionAsStreamAsync(new ConversationalRequest(_brainButler)
-            {
-               Messages = new List<ConversationalMessage>()
+            var streamedResponse = _state.ConversationalConnector!.RequestChatCompletionAsStreamAsync(new ConversationalRequest(
+               AIdentity: _brainButler,
+               Messages: new List<ConversationalMessage>()
                {
                    new ConversationalMessage(
                       Role: ConversationalRole.System,
@@ -143,7 +145,8 @@ public partial class Interaction : AppPage<Interaction>
                       Content: userRequest,
                       null
                       ),
-               },
+               })
+            {
                MaxGeneratedTokens = 500
             }, _state.MessageGenerationCancellationTokenSource.Token).ConfigureAwait(false);
 
@@ -163,14 +166,15 @@ public partial class Interaction : AppPage<Interaction>
          prompt = PromptGenerator.GenerateCommandExtraction(detectedCommand, userRequest, out var commandToExecute);
          if (prompt is null || commandToExecute is null)
          {
-
             await AppendAIReply("Sorry, I didn't understand your request").ConfigureAwait(false);
             return;
          }
 
-         response = await _state.CompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest
+         response = await _state.CompletionConnector.RequestCompletionAsync(new DefaultCompletionRequest(
+            AIdentity: _brainButler,
+            Prompt: prompt
+            )
          {
-            Prompt = prompt,
             MaxGeneratedTokens = 500
          }, _state.MessageGenerationCancellationTokenSource.Token).ConfigureAwait(false);
 
@@ -182,7 +186,7 @@ public partial class Interaction : AppPage<Interaction>
 
          await AppendAIReply(response.GeneratedMessage).ConfigureAwait(false);
 
-         var commandStreamFragments = commandToExecute.ExecuteAsync(
+         var commandStreamFragments = commandToExecute!.ExecuteAsync(
             userPrompt: userRequest,
             inputPrompt: response.GeneratedMessage
             )

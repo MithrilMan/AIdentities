@@ -69,9 +69,9 @@ public partial class WhatTimeIsIt : CommandDefinition
       var askedTime = DateTime.Now.AddSeconds(args.TimeDifference);
       string result = $"the result of the time {args.TimeDifference} seconds from now is {askedTime}";
 
-      var finalResponse = await connector.RequestChatCompletionAsync(new ConversationalRequest(new AIdentiy.BrainButler())
-      {
-         Messages = new List<ConversationalMessage>() {
+      var finalResponse = await connector.RequestChatCompletionAsync(new ConversationalRequest(
+         AIdentity: new AIdentiy.BrainButler(),
+         Messages: new List<ConversationalMessage>() {
             new ConversationalMessage(ConversationalRole.System, "You are Brain Butler, a funny helpful AI agent that loves to make joke when giving back informations.",null),
             new ConversationalMessage(ConversationalRole.System, $"""
                The answer to the user request is: {result}
@@ -80,7 +80,7 @@ public partial class WhatTimeIsIt : CommandDefinition
                """,null),
             new ConversationalMessage(ConversationalRole.User, userPrompt, null),
           }
-      }, cancellationToken).ConfigureAwait(false);
+         ), cancellationToken).ConfigureAwait(false);
 
       yield return new CommandExecutionStreamedFragment(finalResponse?.GeneratedMessage ?? "---BUG---");
    }
