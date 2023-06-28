@@ -56,18 +56,17 @@ public partial class CreateStableDiffusionPrompt
       - Each prompt should consist of a description of the scene followed by modifiers divided by commas.
       - The modifiers should alter the mood, style, lighting, and other aspects of the scene.
       - Multiple modifiers can be used to provide more specific details.
-      - When generating prompts, reduce abstract psychological and emotional descriptions.
+      - When generating prompts, reduce abstract psychological and emotional descriptions and be specific about the requests and don't include anything generic like "include funny elements" but insert some of those elements according to your creativity.
+      - The prompt should contains only words that can be pictured.
 
       Request: {{RequestSummary}}
       Goal: If the request contains a prompt request, 
       {%- if PromptsCount == 1 -%}
       write one detailed prompts, following above rules, based on the request, otherwise ask for more clarification about the prompt.
-      Prompt: 
-
+      Prompt (max 460 characters): 
       {% else -%}
       write a bullet list of {{PromptsCount}} detailed prompts, following above rules, based on the request, otherwise ask for more clarification about the prompt.
       Prompts:
-  
-      {%- endif -%}
+      {% endif -%}
       """;
 }

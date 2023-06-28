@@ -1,7 +1,5 @@
-﻿using System.Reflection.Metadata;
-using AIdentities.Shared.Plugins.Connectors.Completion;
+﻿using AIdentities.Shared.Plugins.Connectors.Completion;
 using Fluid;
-using Fluid.Ast;
 
 namespace AIdentities.Chat.Skills.CreateStableDiffusionPrompt;
 
@@ -31,13 +29,17 @@ public partial class CreateStableDiffusionPrompt : Skill
                                                                    [EnumeratorCancellation] CancellationToken cancellationToken)
    {
       var completionConnector = context.GetDefaultCompletionConnector();
+      var conversationalConnector = context.GetDefaultConversationalConnector();
 
       var templateContext = CreateTemplateContext(context);
 
       yield return context.ActionThought($"Creating a summary of the request");
 
       var requestSummary = (await completionConnector.RequestCompletionAsync(
-         new CompletionRequest(context.AIdentity, _defaultRequestSummary.Render(templateContext)),
+         new CompletionRequest(context.AIdentity, _defaultRequestSummary.Render(templateContext))
+         {
+            MaxGeneratedTokens = 500
+         },
          cancellationToken).ConfigureAwait(false))
          ?.GeneratedMessage ?? "";
 
@@ -48,7 +50,10 @@ public partial class CreateStableDiffusionPrompt : Skill
       yield return context.ActionThought($"Creating a stable diffusion prompt for {context.AIdentity.Name}");
 
       var responses = await completionConnector.RequestCompletionAsStreamAsync(
-         new CompletionRequest(context.AIdentity, _defaultTemplate.Render(templateContext)),
+         new CompletionRequest(context.AIdentity, _defaultTemplate.Render(templateContext))
+         {
+            MaxGeneratedTokens = 200
+         },
          cancellationToken)
          .ToListAsync(cancellationToken)
          .ConfigureAwait(false);

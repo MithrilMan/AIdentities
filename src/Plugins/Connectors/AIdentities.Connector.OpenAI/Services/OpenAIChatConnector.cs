@@ -210,8 +210,7 @@ public class OpenAIChatConnector : IConversationalConnector, IDisposable
 
          if (streamedResponse is not null)
          {
-            var message = (streamedResponse.Choices.FirstOrDefault()?.Message?.Content)
-               ?? throw new Exception("Received empty message from OpenAI API");
+            var message = (streamedResponse.Choices.FirstOrDefault()?.Message?.Content) ?? "";
 
             if (tokenizer is not null)
             {
